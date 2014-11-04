@@ -695,27 +695,33 @@ void drawClockDigital(byte xPos, byte yPos) {
 	int8_t zeroDigitWidth = display.getStrPixelWidth("0");
 	int8_t doubleDotWidth = display.getStrPixelWidth(":");
 	int8_t spacing = display.getStrPixelWidth("00") - 2 * zeroDigitWidth;
+        int8_t xOffset = 0;
 
 	if (iHour < 10)
 	{
 		display.drawStr(xPos, yPos, "0");
-		display.drawStr(xPos + zeroDigitWidth + spacing, yPos, itoa(iHour, s, 10));
+                xOffset += zeroDigitWidth + spacing;
+		display.drawStr(xPos + xOffset, yPos, itoa(iHour, s, 10));
 	}
 	else
 	{
 		display.drawStr(xPos, yPos, itoa(iHour, s, 10));
 	}
 
-	display.drawStr(xPos + (zeroDigitWidth + spacing) * 2, yPos, ":");
+        xOffset += display.getStrPixelWidth(s) + spacing;
+	display.drawStr(xPos + xOffset, yPos, ":");
 
 	if (iMinutes < 10)
 	{
-		display.drawStr(xPos + (doubleDotWidth + spacing) + (zeroDigitWidth + spacing) * 2, yPos, "0");
-		display.drawStr(xPos + (doubleDotWidth + spacing) + (zeroDigitWidth + spacing) * 3, yPos, itoa(iMinutes, s, 10));
+                xOffset += doubleDotWidth + spacing;
+		display.drawStr(xPos + xOffset, yPos, "0");
+                xOffset += zeroDigitWidth + spacing;
+		display.drawStr(xPos + xOffset, yPos, itoa(iMinutes, s, 10));
 	}
 	else
 	{
-		display.drawStr(xPos + (doubleDotWidth + spacing) + (zeroDigitWidth + spacing) * 2, yPos, itoa(iMinutes, s, 10));
+                xOffset += doubleDotWidth + spacing;
+		display.drawStr(xPos + xOffset, yPos, itoa(iMinutes, s, 10));
 	}
 	//Serial.println("drawClockDigital2");
 }
