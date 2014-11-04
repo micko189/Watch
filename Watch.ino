@@ -53,7 +53,7 @@ byte iDay = 20;
 byte iWeek = 0;    // 1: SUN, MON, TUE, WED, THU, FRI,SAT // need to calculate this
 byte iAmPm = 1;    // 0:AM, 1:PM
 byte iHour = 7;
-byte iMinutes = 18;
+byte iMinutes = 22;
 byte iSecond = 0;
 
 #define TIME_BUFFER_MAX 6
@@ -694,7 +694,7 @@ void drawClockDigital(byte xPos, byte yPos) {
 	char s[3] = " ";
 	int8_t zeroDigitWidth = display.getStrPixelWidth("0");
 	int8_t doubleDotWidth = display.getStrPixelWidth(":");
-	int8_t spacing = display.getStrPixelWidth("00") - 2 * zeroDigitWidth;
+	int8_t spacing = 1;
         int8_t xOffset = 0;
 
 	if (iHour < 10)
