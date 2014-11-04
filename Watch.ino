@@ -830,10 +830,10 @@ void drawStartUp() {
 
 	display.drawStr(45, 45, "Arduino v1.0");
 
-	if (startUp++ > 200)
+	if (startUp++ > 20)
 	{
 		startUp = 0;
-		Serial.println("startClockMode");
+		//Serial.println("startClockMode");
 		startClockMode();
 		//Serial.print();
 
@@ -897,7 +897,7 @@ void drawClock() {
 	{
 
 	case CLOCK_STYLE_SIMPLE_DIGIT:
-		Serial.println("drawClock1");
+		//Serial.println("drawClock1");
 		display.drawStr(centerX - 34, centerY - 17, (const char*)pgm_read_word(&(weekString[iWeek])));
 		display.drawStr(centerX + 11, centerY - 17, (const char*)pgm_read_word(&(ampmString[iAmPm])));
 
@@ -928,7 +928,7 @@ void drawClock() {
 
 		break;
 	}
-	Serial.println("drawClockEnd");
+	//Serial.println("drawClockEnd");
 }
 
 // Draw idle page
