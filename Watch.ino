@@ -1,7 +1,4 @@
 /*
-RetroWatch Arduino is a part of open source smart watch project.
-Copyright (C) 2014  Suh Young Bae
-
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -16,17 +13,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see [http://www.gnu.org/licenses/].
 */
 /*
-Retro Watch Arduino v1.0
+Watch Arduino v1.0
 
-Get the latest version, android host app at
-------> https://github.com/godstale/retrowatch
-------> or http://www.hardcopyworld.com
-
-Written by Suh Young Bae (godstale@hotmail.com)
-All text above, and the first splash screen(Adafruit) must be included in any redistribution
 */
 
-//#include <avr/pgmspace.h>
 #include <Wire.h>
 #include <SoftwareSerial.h>
 #include <U8glib.h>
@@ -38,48 +28,6 @@ All text above, and the first splash screen(Adafruit) must be included in any re
 U8GLIB_SSD1306_128X64 display(U8G_I2C_OPT_NONE);	// I2C / TWI 
 
 ///////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-//----- BT instance
-SoftwareSerial BTSerial(2, 3); //Connect HC-06, RX, TX
-///////////////////////////////////////////////////////////////////
-
-//----- Bluetooth transaction parsing
-#define TR_MODE_IDLE 1
-#define TR_MODE_WAIT_CMD 11
-#define TR_MODE_WAIT_MESSAGE 101
-#define TR_MODE_WAIT_TIME 111
-#define TR_MODE_WAIT_ID 121
-#define TR_MODE_WAIT_COMPLETE 201
-
-#define TRANSACTION_START_BYTE 0xfc
-#define TRANSACTION_END_BYTE 0xfd
-
-#define CMD_TYPE_NONE 0x00
-#define CMD_TYPE_RESET_EMERGENCY_OBJ 0x05
-#define CMD_TYPE_RESET_NORMAL_OBJ 0x02
-#define CMD_TYPE_RESET_USER_MESSAGE 0x03
-
-#define CMD_TYPE_ADD_EMERGENCY_OBJ 0x11
-#define CMD_TYPE_ADD_NORMAL_OBJ 0x12
-#define CMD_TYPE_ADD_USER_MESSAGE 0x13
-
-#define CMD_TYPE_DELETE_EMERGENCY_OBJ 0x21
-#define CMD_TYPE_DELETE_NORMAL_OBJ 0x22
-#define CMD_TYPE_DELETE_USER_MESSAGE 0x23
-
-#define CMD_TYPE_SET_TIME 0x31
-#define CMD_TYPE_REQUEST_MOVEMENT_HISTORY 0x32
-#define CMD_TYPE_SET_CLOCK_STYLE 0x33
-#define CMD_TYPE_SET_INDICATOR 0x34
-
-#define CMD_TYPE_PING 0x51
-#define CMD_TYPE_AWAKE 0x52
-#define CMD_TYPE_SLEEP 0x53
-#define CMD_TYPE_REBOOT 0x54
-
-byte TRANSACTION_POINTER = TR_MODE_IDLE;
-byte TR_COMMAND = CMD_TYPE_NONE;
 
 //----- Message item buffer
 #define MSG_COUNT_MAX 7
@@ -187,8 +135,6 @@ void setup()   {
 	iRadius = centerY - 2;
 
 	iWeek = calcDayOfWeekIndex();
-
-	//BTSerial.begin(9600);  // set the data rate for the BT port
 }
 
 
@@ -365,208 +311,6 @@ void updateTime(unsigned long current_time_milis) {
 	else
 	{
 		displayMode = DISPLAY_MODE_START_UP;
-	}
-}
-
-///////////////////////////////////
-//----- BT, Data parsing functions
-///////////////////////////////////
-
-// Parsing packet according to current mode
-boolean receiveBluetoothData() {
-	int isTransactionEnded = false;
-	while (!isTransactionEnded)
-	{
-		if (BTSerial.available())
-		{
-			byte c = BTSerial.read();
-
-			if (c == 0xFF && TRANSACTION_POINTER != TR_MODE_WAIT_MESSAGE) return false;
-
-			if (TRANSACTION_POINTER == TR_MODE_IDLE) {
-				parseStartSignal(c);
-			}
-			else if (TRANSACTION_POINTER == TR_MODE_WAIT_CMD) {
-				parseCommand(c);
-			}
-			else if (TRANSACTION_POINTER == TR_MODE_WAIT_MESSAGE) {
-				parseMessage(c);
-			}
-			else if (TRANSACTION_POINTER == TR_MODE_WAIT_TIME) {
-				parseTime(c);
-			}
-			else if (TRANSACTION_POINTER == TR_MODE_WAIT_ID) {
-				parseId(c);
-			}
-			else if (TRANSACTION_POINTER == TR_MODE_WAIT_COMPLETE) {
-				isTransactionEnded = parseEndSignal(c);
-			}
-
-		}  // End of if(BTSerial.available())
-		else
-		{
-			isTransactionEnded = true;
-		}
-	}  // End of while()
-
-	return true;
-}  // End of receiveBluetoothData()
-
-void parseStartSignal(byte c) {
-	//drawLogChar(c);
-	if (c == TRANSACTION_START_BYTE) {
-		TRANSACTION_POINTER = TR_MODE_WAIT_CMD;
-		TR_COMMAND = CMD_TYPE_NONE;
-	}
-}
-
-void parseCommand(byte c) {
-	if (c == CMD_TYPE_RESET_EMERGENCY_OBJ || c == CMD_TYPE_RESET_NORMAL_OBJ || c == CMD_TYPE_RESET_USER_MESSAGE) {
-		TRANSACTION_POINTER = TR_MODE_WAIT_COMPLETE;
-		TR_COMMAND = c;
-		processTransaction();
-	}
-	else if (c == CMD_TYPE_ADD_EMERGENCY_OBJ || c == CMD_TYPE_ADD_NORMAL_OBJ || c == CMD_TYPE_ADD_USER_MESSAGE) {
-		TRANSACTION_POINTER = TR_MODE_WAIT_MESSAGE;
-		TR_COMMAND = c;
-		if (c == CMD_TYPE_ADD_EMERGENCY_OBJ) {
-			emgParsingChar = 0;
-			if (emgParsingLine >= MSG_COUNT_MAX || emgParsingLine < 0)
-				emgParsingLine = 0;
-		}
-		else if (c == CMD_TYPE_ADD_NORMAL_OBJ) {
-			msgParsingChar = 0;
-			if (msgParsingLine >= MSG_COUNT_MAX || msgParsingLine < 0)
-				msgParsingLine = 0;
-		}
-	}
-	else if (c == CMD_TYPE_DELETE_EMERGENCY_OBJ || c == CMD_TYPE_DELETE_NORMAL_OBJ || c == CMD_TYPE_DELETE_USER_MESSAGE) {
-		TRANSACTION_POINTER = TR_MODE_WAIT_COMPLETE;
-		TR_COMMAND = c;
-	}
-	else if (c == CMD_TYPE_SET_TIME) {
-		TRANSACTION_POINTER = TR_MODE_WAIT_TIME;
-		TR_COMMAND = c;
-	}
-	else if (c == CMD_TYPE_SET_CLOCK_STYLE || c == CMD_TYPE_SET_INDICATOR) {
-		TRANSACTION_POINTER = TR_MODE_WAIT_ID;
-		TR_COMMAND = c;
-	}
-	else {
-		TRANSACTION_POINTER = TR_MODE_IDLE;
-		TR_COMMAND = CMD_TYPE_NONE;
-	}
-}
-
-void parseMessage(byte c) {
-	if (c == TRANSACTION_END_BYTE) {
-		processTransaction();
-		TRANSACTION_POINTER = TR_MODE_IDLE;
-	}
-
-	if (TR_COMMAND == CMD_TYPE_ADD_EMERGENCY_OBJ) {
-		if (emgParsingChar < EMG_BUFFER_MAX) {
-			if (emgParsingChar > 1) {
-				emgBuffer[emgParsingLine][emgParsingChar] = c;
-			}
-			emgParsingChar++;
-		}
-		else {
-			TRANSACTION_POINTER = TR_MODE_WAIT_COMPLETE;
-		}
-	}
-	else if (TR_COMMAND == CMD_TYPE_ADD_NORMAL_OBJ) {
-		if (msgParsingChar < MSG_BUFFER_MAX) {
-			if (msgParsingChar > 1) {
-				msgBuffer[msgParsingLine][msgParsingChar] = c;
-			}
-			msgParsingChar++;
-		}
-		else {
-			TRANSACTION_POINTER = TR_MODE_WAIT_COMPLETE;
-		}
-	}
-	else if (TR_COMMAND == CMD_TYPE_ADD_USER_MESSAGE) {
-		// Not available yet.
-		TRANSACTION_POINTER = TR_MODE_WAIT_COMPLETE;
-	}
-}
-
-void parseTime(byte c) {
-	if (TR_COMMAND == CMD_TYPE_SET_TIME) {
-		if (timeParsingIndex >= 0 && timeParsingIndex < TIME_BUFFER_MAX) {
-			timeBuffer[timeParsingIndex] = (int)c;
-			timeParsingIndex++;
-		}
-		else {
-			processTransaction();
-			TRANSACTION_POINTER = TR_MODE_WAIT_COMPLETE;
-		}
-	}
-}
-
-void parseId(byte c) {
-	if (TR_COMMAND == CMD_TYPE_SET_CLOCK_STYLE) {
-		clockStyle = c;
-		processTransaction();
-	}
-	else if (TR_COMMAND == CMD_TYPE_SET_INDICATOR) {
-		if (c == INDICATOR_ENABLE)
-			updateIndicator = true;
-		else
-			updateIndicator = false;
-		processTransaction();
-	}
-	TRANSACTION_POINTER = TR_MODE_WAIT_COMPLETE;
-}
-
-boolean parseEndSignal(byte c) {
-	if (c == TRANSACTION_END_BYTE) {
-		TRANSACTION_POINTER = TR_MODE_IDLE;
-		return true;
-	}
-	return false;
-}
-
-void processTransaction() {
-	if (TR_COMMAND == CMD_TYPE_RESET_EMERGENCY_OBJ) {
-		init_emg_array();//init_msg_array();
-	}
-	else if (TR_COMMAND == CMD_TYPE_RESET_NORMAL_OBJ) {
-		init_msg_array();//init_emg_array();
-	}
-	else if (TR_COMMAND == CMD_TYPE_RESET_USER_MESSAGE) {
-		// Not available yet.
-	}
-	else if (TR_COMMAND == CMD_TYPE_ADD_NORMAL_OBJ) {
-		msgBuffer[msgParsingLine][0] = 0x01;
-		msgParsingChar = 0;
-		msgParsingLine++;
-		if (msgParsingLine >= MSG_COUNT_MAX)
-			msgParsingLine = 0;
-		setNextDisplayTime(millis(), 0);  // update screen immediately
-	}
-	else if (TR_COMMAND == CMD_TYPE_ADD_EMERGENCY_OBJ) {
-		emgBuffer[emgParsingLine][0] = 0x01;
-		emgParsingChar = 0;
-		emgParsingLine++;
-		if (emgParsingLine >= EMG_COUNT_MAX)
-			emgParsingLine = 0;
-		startEmergencyMode();
-		setNextDisplayTime(millis(), 2000);
-	}
-	else if (TR_COMMAND == CMD_TYPE_ADD_USER_MESSAGE) {
-	}
-	else if (TR_COMMAND == CMD_TYPE_DELETE_EMERGENCY_OBJ || TR_COMMAND == CMD_TYPE_DELETE_NORMAL_OBJ || TR_COMMAND == CMD_TYPE_DELETE_USER_MESSAGE) {
-		// Not available yet.
-	}
-	else if (TR_COMMAND == CMD_TYPE_SET_TIME) {
-		setTimeValue();
-		timeParsingIndex = 0;
-		setNextDisplayTime(millis(), 0);  // update screen immediately
-	}
-	if (TR_COMMAND == CMD_TYPE_SET_CLOCK_STYLE || CMD_TYPE_SET_INDICATOR) {
-		setNextDisplayTime(millis(), 0);  // update screen immediately
 	}
 }
 
@@ -944,27 +688,29 @@ void drawClockDigital(byte xPos, byte yPos) {
 	//Serial.println("drawClockDigital");
 	char s[3] = " ";
 	int8_t zeroDigitWidth = display.getStrPixelWidth("0");
+	int8_t doubleDotWidth = display.getStrPixelWidth(":");
+	int8_t spacing = display.getStrPixelWidth("00") - 2 * zeroDigitWidth;
 
 	if (iHour < 10)
 	{
 		display.drawStr(xPos, yPos, "0");
-		display.drawStr(xPos + zeroDigitWidth + 2, yPos, itoa(iHour, s, 10));
+		display.drawStr(xPos + zeroDigitWidth + spacing, yPos, itoa(iHour, s, 10));
 	}
 	else
 	{
 		display.drawStr(xPos, yPos, itoa(iHour, s, 10));
 	}
 
-	display.drawStr(xPos + (zeroDigitWidth + 2) * 2, yPos, ":");
+	display.drawStr(xPos + (zeroDigitWidth + spacing) * 2, yPos, ":");
 
 	if (iMinutes < 10)
 	{
-		display.drawStr(xPos + (zeroDigitWidth + 2) * 3, yPos, "0");
-		display.drawStr(xPos + (zeroDigitWidth + 2) * 4, yPos, itoa(iMinutes, s, 10));
+		display.drawStr(xPos + (doubleDotWidth + spacing) + (zeroDigitWidth + spacing) * 2, yPos, "0");
+		display.drawStr(xPos + (doubleDotWidth + spacing) + (zeroDigitWidth + spacing) * 3, yPos, itoa(iMinutes, s, 10));
 	}
 	else
 	{
-		display.drawStr(xPos + (zeroDigitWidth + 2) * 3, yPos, itoa(iMinutes, s, 10));
+		display.drawStr(xPos + (doubleDotWidth + spacing) + (zeroDigitWidth + spacing) * 2, yPos, itoa(iMinutes, s, 10));
 	}
 	//Serial.println("drawClockDigital2");
 }
