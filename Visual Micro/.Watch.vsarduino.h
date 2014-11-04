@@ -41,8 +41,49 @@ extern "C" void __cxa_pure_virtual() {;}
 
 //
 //
+void init_msg_array();
+void init_emg_array();
+void setTimeValue();
+bool isLeapYear(short year);
+byte getDaysInMonth(byte month);
+short daysPassedInCurrentYear(byte month, byte day);
+int calcDaysSoFar(short year, byte month, byte day);
+byte calcDayOfWeekIndex();
+void updateTime(unsigned long current_time_milis);
+boolean receiveBluetoothData();
+void parseStartSignal(byte c);
+void parseCommand(byte c);
+void parseMessage(byte c);
+void parseTime(byte c);
+void parseId(byte c);
+boolean parseEndSignal(byte c);
+void processTransaction();
+void onDraw(unsigned long currentTime);
+boolean isDisplayTime(unsigned long currentTime);
+void setNextDisplayTime(unsigned long currentTime, unsigned long nextUpdateTime);
+boolean findNextEmerMessage();
+boolean findNextNormalMessage();
+int countEmergency();
+int countMessage();
+void startClockMode();
+void startEmergencyMode();
+void startMessageMode();
+void startIdleMode();
+void drawIndicator();
+void drawStartUp();
+void drawEmergency();
+void drawMessage();
+void drawClock();
+void drawIdleClock();
+void drawClockDigital(byte xPos, byte yPos);
+void drawClockAnalog(short offsetY, short offsetX, byte radius);
+int getCenterAlignedXOfMsg(int msgIndex);
+int getCenterAlignedXOfEmg(int emgIndex);
+void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3);
+void drawIcon(int posx, int posy, int icon_num);
 
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\cores\arduino\arduino.h"
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\variants\standard\pins_arduino.h" 
-#include "D:\arduino_projets\Watch\Watch.ino"
+#include "C:\Users\milan.ajdinovic\Documents\GitHub\Watch\Watch.ino"
+#include "C:\Users\milan.ajdinovic\Documents\GitHub\Watch\bitmap.h"
 #endif
