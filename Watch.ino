@@ -565,8 +565,13 @@ void drawIndicator() {
 
 // RetroWatch splash screen
 void drawStartUp() {
-
-	//display.drawBitmap(10, 15, 24, 24, IMG_logo_24x24);
+	//Arguments:
+	// u8g : Pointer to the u8g structure(C interface only).
+	// x : X - position(left position of the bitmap).
+	// y : Y - position(upper position of the bitmap).
+	// cnt : Number of bytes of the bitmap in horizontal direction.The width of the bitmap is cnt*8.
+	// h : Height of the bitmap.
+	display.drawBitmap(10, 15, 3, 24, IMG_logo_24x24);
 
 	display.drawStr(45, 12, "Retro");
 
