@@ -47,6 +47,7 @@ char emgCurDisp = 0;
 
 //----- Time
 #define UPDATE_TIME_INTERVAL 60000
+#define UPDATE_TIME_INTERVAL_SEC 1000
 short iYear = 2014;
 byte iMonth = 9;
 byte iDay = 20;
@@ -96,7 +97,7 @@ byte iRadius = 28;
 unsigned long prevClockTime = 0;
 unsigned long prevDisplayTime = 0;
 
-unsigned long next_display_interval = 0;
+//unsigned long next_display_interval = 0;
 unsigned long mode_change_timer = 0;
 #define CLOCK_DISPLAY_TIME 300000
 #define EMER_DISPLAY_TIME 10000
@@ -152,18 +153,15 @@ void loop() {
 	current_time_milis = millis();
 	updateTime(current_time_milis);
 
-	if (true || isDisplayTime(current_time_milis))    // Do not re-draw at every loop (100 tics)
-	{
+	// picture loop
+	display.firstPage();
+	do {
+		// Display routine
+		onDraw(current_time_milis);
+	} while (display.nextPage());
 
-		// picture loop
-		display.firstPage();
-		do {
-			// Display routine
-			onDraw(current_time_milis);
-		} while (display.nextPage());
-	}
-	// rebuild the picture after some delay
-	delay(1000);
+	// rebuild the picture after some delay (100ms)
+	delay(100);
 
 	// If data doesn't arrive, wait for a while to save battery
 	//if (!isReceived)
@@ -273,48 +271,53 @@ byte calcDayOfWeekIndex()
 }
 
 void updateTime(unsigned long current_time_milis) {
-	if (iMinutes >= 0)
-	{
-		if (current_time_milis - prevClockTime > UPDATE_TIME_INTERVAL) // check if one second has elapsed
-		{
-			// Increase time by incrementing minutes
-			iMinutes++;
-			if (iMinutes >= 60)
-			{
-				iMinutes = 0;
-				iHour++;
-				if (iHour > 12)
-				{
-					iHour = 1;
-					(iAmPm == 0) ? iAmPm = 1 : iAmPm = 0;
-					if (iAmPm == 0)
-					{
-						iWeek++;
-						if (iWeek > 6)
-						{
-							iWeek = 0;
-						}
 
-						iDay++;
-						if (iDay > getDaysInMonth(iYear, iMonth))
+	if (current_time_milis - prevClockTime > UPDATE_TIME_INTERVAL_SEC) // check if one second has elapsed
+	{
+		iSecond++;
+		if (iSecond >= 60)
+		{
+			iSecond = 0;
+		}
+
+		prevClockTime = current_time_milis;
+	}
+
+	if (current_time_milis - prevClockTime > UPDATE_TIME_INTERVAL) // check if one second has elapsed
+	{
+		// Increase time by incrementing minutes
+		iMinutes++;
+		if (iMinutes >= 60)
+		{
+			iMinutes = 0;
+			iHour++;
+			if (iHour > 12)
+			{
+				iHour = 1;
+				(iAmPm == 0) ? iAmPm = 1 : iAmPm = 0;
+				if (iAmPm == 0)
+				{
+					iWeek++;
+					if (iWeek > 6)
+					{
+						iWeek = 0;
+					}
+
+					iDay++;
+					if (iDay > getDaysInMonth(iYear, iMonth))
+					{
+						iDay = 1;
+						iMonth++;
+						if (iMonth > 12)
 						{
-							iDay = 1;
-							iMonth++;
-							if (iMonth > 12)
-							{
-								iYear++;
-							}
+							iYear++;
 						}
 					}
 				}
 			}
-
-			prevClockTime = current_time_milis;
 		}
-	}
-	else
-	{
-		displayMode = DISPLAY_MODE_START_UP;
+
+		prevClockTime = current_time_milis;
 	}
 }
 
@@ -336,20 +339,19 @@ void onDraw(unsigned long currentTime) {
 		break;
 
 	case DISPLAY_MODE_CLOCK:
-		if (false && isClicked == LOW) {    // User input received
-			startEmergencyMode();
+		if (isClicked == LOW) {    // User input received
+			//startEmergencyMode();
 			//setPageChangeTime(0);    // Change mode with no page-delay
-			setNextDisplayTime(currentTime, 0);    // Do not wait next re-draw time
+			//setNextDisplayTime(currentTime, 0);    // Do not wait next re-draw time
 		}
-		else
-		{
-			drawClock();
-			//if (isPageChangeTime(currentTime)) {  // It's time to go into idle mode
-			//startIdleMode();
-			//setPageChangeTime(currentTime);  // Set a short delay
-			//}
-			setNextDisplayTime(currentTime, CLOCK_DISP_INTERVAL);
-		}
+
+		drawClock();
+		//if (isPageChangeTime(currentTime)) {  // It's time to go into idle mode
+		//startIdleMode();
+		//setPageChangeTime(currentTime);  // Set a short delay
+		//}
+		//setNextDisplayTime(currentTime, CLOCK_DISP_INTERVAL);
+
 		break;
 
 	case DISPLAY_MODE_EMERGENCY_MSG:
@@ -362,14 +364,14 @@ void onDraw(unsigned long currentTime) {
 				emgCurDisp = 0;
 				startMessageMode();
 			}
-			setNextDisplayTime(currentTime, EMERGENCY_DISP_INTERVAL);
+			//setNextDisplayTime(currentTime, EMERGENCY_DISP_INTERVAL);
 		}
 		// There's no message left to display. Go to normal message mode.
 		else
 		{
 			startMessageMode();
 			//setPageChangeTime(0);
-			setNextDisplayTime(currentTime, 0);  // with no re-draw interval
+			//setNextDisplayTime(currentTime, 0);  // with no re-draw interval
 		}
 		break;
 
@@ -383,14 +385,14 @@ void onDraw(unsigned long currentTime) {
 				msgCurDisp = 0;
 				startClockMode();
 			}
-			setNextDisplayTime(currentTime, MESSAGE_DISP_INTERVAL);
+			//setNextDisplayTime(currentTime, MESSAGE_DISP_INTERVAL);
 		}
 		// There's no message left to display. Go to clock mode.
 		else
 		{
 			startClockMode();
 			//setPageChangeTime(currentTime);
-			setNextDisplayTime(currentTime, 0);  // with no re-draw interval
+			//setNextDisplayTime(currentTime, 0);  // with no re-draw interval
 		}
 		break;
 
@@ -398,12 +400,12 @@ void onDraw(unsigned long currentTime) {
 		if (isClicked == LOW) {    // Wake up watch if there's an user input
 			startClockMode();
 			//setPageChangeTime(currentTime);
-			setNextDisplayTime(currentTime, 0);
+			//setNextDisplayTime(currentTime, 0);
 		}
 		else
 		{
 			drawIdleClock();
-			setNextDisplayTime(currentTime, IDLE_DISP_INTERVAL);
+			//setNextDisplayTime(currentTime, IDLE_DISP_INTERVAL);
 		}
 		break;
 
@@ -421,25 +423,25 @@ void onDraw(unsigned long currentTime) {
 // To avoid re-draw on every drawing time
 // wait for time interval according to current mode 
 // But user input(button) breaks this sleep
-boolean isDisplayTime(unsigned long currentTime) {
-	if (currentTime - prevDisplayTime > next_display_interval)
-	{
-		return true;
-	}
-
-	if (isClicked == LOW)
-	{
-		return true;
-	}
-
-	return false;
-}
+//boolean isDisplayTime(unsigned long currentTime) {
+//	if (currentTime - prevDisplayTime > next_display_interval)
+//	{
+//		return true;
+//	}
+//
+//	if (isClicked == LOW)
+//	{
+//		return true;
+//	}
+//
+//	return false;
+//}
 
 // Set next re-draw time 
-void setNextDisplayTime(unsigned long currentTime, unsigned long nextUpdateTime) {
-	next_display_interval = nextUpdateTime;
-	prevDisplayTime = currentTime;
-}
+//void setNextDisplayTime(unsigned long currentTime, unsigned long nextUpdateTime) {
+//	next_display_interval = nextUpdateTime;
+//	prevDisplayTime = currentTime;
+//}
 
 // Decide if it's the time to change page(mode)
 //boolean isPageChangeTime(unsigned long currentTime) {
@@ -552,14 +554,14 @@ void drawIndicator() {
 
 		if (msgCount > 0)
 		{
-			display.drawBitmap(127 - 8, 1, 8, 8, IMG_indicator_msg);
+			display.drawBitmap(127 - 8, 1, 1, 8, IMG_indicator_msg);
 			display.drawStr(127 - 15, 1, itoa(msgCount, s, 10));
 			drawCount++;
 		}
 
 		if (emgCount > 0)
 		{
-			display.drawBitmap(127 - 8 * drawCount - 7 * (drawCount - 1), 1, 8, 8, IMG_indicator_emg);
+			display.drawBitmap(127 - 8 * drawCount - 7 * (drawCount - 1), 1, 1, 8, IMG_indicator_emg);
 
 			display.drawStr(127 - 8 * drawCount - 7 * drawCount, 1, itoa(emgCount, s, 10));
 		}
@@ -651,9 +653,10 @@ void drawClock() {
 
 	case CLOCK_STYLE_SIMPLE_DIGIT:
 		//Serial.println("drawClock1");
-		display.drawStr(centerX - 34, centerY - 17, (const char*)pgm_read_word(&(weekString[iWeek])));
-		display.drawStr(centerX + 11, centerY - 17, (const char*)pgm_read_word(&(ampmString[iAmPm])));
+		display.setFont(u8g_font_helvB14r);
+		drawDayAmPm(centerX - 34, centerY - 17);
 
+		display.setFont(u8g_font_helvB18r);
 		drawClockDigital(centerX - 29, centerY + 6);
 
 		break;
@@ -662,8 +665,9 @@ void drawClock() {
 		//Serial.println("drawClock2");
 		drawClockAnalog(0, -30, iRadius - 6);
 
-		display.drawStr(centerY * 2 + 3, 23, (const char*)pgm_read_word(&(weekString[iWeek])));
-		display.drawStr(centerY * 2 + 28, 23, (const char*)pgm_read_word(&(ampmString[iAmPm])));
+		display.setFont(u8g_font_helvB12r);
+		drawDayAmPm(centerY * 2 + 3, 23);
+
 
 		display.setFont(u8g_font_helvB18r);
 		drawClockDigital(centerY * 2 - 3, 45);
@@ -672,12 +676,6 @@ void drawClock() {
 	case CLOCK_STYLE_SIMPLE_ANALOG:
 		//Serial.println("drawClock3");
 		drawClockAnalog(0, 0, iRadius);
-
-		iSecond++;
-		if (iSecond > 60)
-		{
-			iSecond = 0;
-		}
 
 		break;
 	}
@@ -693,9 +691,14 @@ void drawIdleClock() {
 	drawClockDigital(centerX - 29, centerY - 4);
 }
 
+void drawDayAmPm(byte xPos, byte yPos) {
+	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(weekString[iWeek])));
+	display.drawStr(xPos + display.getStrPixelWidth((const char*)pgm_read_word(&(weekString[iWeek]))) + 2, yPos, (const char*)pgm_read_word(&(ampmString[iAmPm])));
+}
+
 void drawClockDigital(byte xPos, byte yPos) {
 	//Serial.println("drawClockDigital");
-	char s[6] = {0};
+	char s[6] = { 0 };
 
 	if (iHour < 10)
 	{
