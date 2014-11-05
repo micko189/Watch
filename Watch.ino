@@ -24,7 +24,7 @@ Watch Arduino v1.0
 #include <DallasTemperature.h>
 #include <BH1750FVI.h>
 #include <math.h>
-#include "bitmap.h"
+//#include "bitmap.h"
 
 ///////////////////////////////////////////////////////////////////
 //----- OLED instance
@@ -104,7 +104,7 @@ byte displayMode = DISPLAY_MODE_START_UP;
 #define CLOCK_STYLE_SIMPLE_DIGIT  0x02
 #define CLOCK_STYLE_SIMPLE_MIX  0x03
 #define CLOCK_STYLE_SIMPLE_DIGIT_SEC  0x04
-byte clockStyle = CLOCK_STYLE_SIMPLE_MIX;
+byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
 
 #define INDICATOR_ENABLE 0x01
 boolean updateIndicator = true;
@@ -189,7 +189,7 @@ void loop() {
 	// Get button input
 	if (digitalRead(buttonPin) == LOW)
 	{
-		isClicked = LOW;
+		//isClicked = LOW;
 	}
 
 	// Update clock time
@@ -318,14 +318,7 @@ void updateTime(unsigned long current_time_milis) {
 		if (iSecond >= 60)
 		{
 			iSecond = 0;
-		}
-
-		prevClockTime = current_time_milis;
-	}
-
-	if (current_time_milis - prevClockTime > UPDATE_TIME_INTERVAL) // check if one second has elapsed
-	{
-		// Increase time by incrementing minutes
+// Increase time by incrementing minutes
 		iMinutes++;
 		if (iMinutes >= 60)
 		{
@@ -355,6 +348,7 @@ void updateTime(unsigned long current_time_milis) {
 					}
 				}
 			}
+		}
 		}
 
 		prevClockTime = current_time_milis;
@@ -393,7 +387,7 @@ void onDraw(unsigned long currentTime) {
 			//setPageChangeTime(0);    // Change mode with no page-delay
 			//setNextDisplayTime(currentTime, 0);    // Do not wait next re-draw time
 
-			toggleClockStyle();
+			//toggleClockStyle();
 		}
 
 		drawClock();
@@ -408,7 +402,7 @@ void onDraw(unsigned long currentTime) {
 	case DISPLAY_MODE_EMERGENCY_MSG:
 		if (findNextEmerMessage())
 		{
-			drawEmergency();
+			//drawEmergency();
 			emgCurDisp++;
 			if (emgCurDisp >= EMG_COUNT_MAX)
 			{
@@ -429,7 +423,7 @@ void onDraw(unsigned long currentTime) {
 	case DISPLAY_MODE_NORMAL_MSG:
 		if (findNextNormalMessage())
 		{
-			drawMessage();
+			//drawMessage();
 			msgCurDisp++;
 			if (msgCurDisp >= MSG_COUNT_MAX)
 			{
@@ -593,7 +587,7 @@ void startMessageMode() {
 void startIdleMode() {
 	displayMode = DISPLAY_MODE_IDLE;
 }
-
+/*
 // Draw indicator. Indicator shows count of emergency and normal message
 void drawIndicator() {
 	if (updateIndicator) {
@@ -619,7 +613,7 @@ void drawIndicator() {
 
 	}
 }
-
+*/
 // RetroWatch splash screen
 void drawStartUp() {
 	//Arguments:
@@ -628,13 +622,13 @@ void drawStartUp() {
 	// y : Y - position(upper position of the bitmap).
 	// cnt : Number of bytes of the bitmap in horizontal direction.The width of the bitmap is cnt*8.
 	// h : Height of the bitmap. 
-	display.drawBitmap(10, 15, 3, 24, IMG_logo_24x24);
+	//display.drawBitmap(10, 15, 3, 24, IMG_logo_24x24);
 
 	display.drawStr(45, 12, "Retro");
 
-	display.drawStr(45, 28, "Watch");
+	display.drawStr(35, 28, "Watch");
 
-	display.drawStr(45, 45, "Arduino v1.0");
+	display.drawStr(25, 45, "Arduino v1.0");
 
 	if (startUp++ > 20) // 2s start up screen
 	{
@@ -643,7 +637,7 @@ void drawStartUp() {
 		startClockMode();
 	}
 }
-
+/*
 // Draw emergency message page
 void drawEmergency() {
 	int icon_num = 60;
@@ -666,7 +660,8 @@ void drawEmergency() {
 		display.drawStr(10, centerY + 10 + i * 5, s);
 	}
 }
-
+*/
+/*
 // Draw normal message page
 void drawMessage() {
 	int icon_num = 0;
@@ -690,7 +685,7 @@ void drawMessage() {
 		display.drawStr(20, centerY + 10 + i * 5, s);
 	}
 }
-
+*/
 // Draw main clock screen
 // Clock style changes according to user selection
 void drawClock() {
@@ -729,14 +724,14 @@ void drawClock() {
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
 		display.setFont(u8g_font_helvB10r);
-		drawDateDigital(centerX - 29, centerY - 20);
+		drawDateDigital(centerX - 33, centerY - 20);
 
 		display.setFont(u8g_font_helvB18r);
-		byte offset = drawClockDigital(centerX - 29, centerY - 4);
+		byte offset = drawClockDigital(centerX - 45, centerY + 6);
 
 		display.setFont(u8g_font_helvB12r);
 
-		drawSecondsDigital(centerX - 29 + offset + 2, centerY - 4);
+		drawSecondsDigital(centerX - 45 + offset + 2, centerY + 6);
 
 		break;
 	}
@@ -746,8 +741,8 @@ void drawClock() {
 // Draw idle page
 void drawIdleClock() {
 
-	if (updateIndicator)
-		drawIndicator();
+	//if (updateIndicator)
+		//drawIndicator();
 }
 
 void drawDayAmPm(byte xPos, byte yPos) {
@@ -886,7 +881,7 @@ void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3)
 
 	display.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
 }
-
+/*
 // Icon drawing tool
 void drawIcon(int posx, int posy, int icon_num) {
 	if (icon_num < 0 || icon_num >= ICON_ARRAY_SIZE)
@@ -894,5 +889,5 @@ void drawIcon(int posx, int posy, int icon_num) {
 
 	//display.drawBitmap(posx, posy, 16, 16, (const unsigned char*)pgm_read_word(&(bitmap_array[icon_num])));
 }
-
+*/
 

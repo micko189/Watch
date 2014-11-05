@@ -90,7 +90,7 @@ const unsigned char PROGMEM IMG_indicator_msg[] = {
 
 //----- Change below count if you added new icon
 #define ICON_ARRAY_SIZE 65
-
+/*
 const unsigned char PROGMEM ICON_BITMAP_1[] = {
 0x00,0x00,
 0x00,0x00,
@@ -1264,7 +1264,8 @@ const unsigned char PROGMEM ICON_BITMAP_65[] = {
 0x00,0x00
 };
 
-
+*/
+/*
 //----- Add new icon to below array
 //----- You can access icon by index
 const unsigned char PROGMEM * const bitmap_array[] PROGMEM = {
@@ -1288,7 +1289,7 @@ ICON_BITMAP_56, ICON_BITMAP_57, ICON_BITMAP_58, ICON_BITMAP_59, ICON_BITMAP_60, 
 
 ICON_BITMAP_61, ICON_BITMAP_62, ICON_BITMAP_63, ICON_BITMAP_64, ICON_BITMAP_65  // ~65
 };
-
+*/
 /*
  * Check icon name. It's arranged by the sequence of icon array.
  
