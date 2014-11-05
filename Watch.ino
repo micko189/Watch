@@ -20,12 +20,35 @@ Watch Arduino v1.0
 #include <Wire.h>
 #include <SoftwareSerial.h>
 #include <U8glib.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <BH1750FVI.h>
 #include <math.h>
 #include "bitmap.h"
 
 ///////////////////////////////////////////////////////////////////
 //----- OLED instance
 U8GLIB_SSD1306_128X64 display(U8G_I2C_OPT_NONE);	// I2C / TWI 
+
+///////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+//----- Temp Sensor instance
+// Data wire is plugged into port 2 on the Arduino
+#define ONE_WIRE_BUS 2
+
+// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(ONE_WIRE_BUS);
+
+// Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature sensors(&oneWire);
+
+///////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////
+//----- LightSensor instance
+BH1750FVI LightSensor;
 
 ///////////////////////////////////////////////////////////////////
 
@@ -136,6 +159,26 @@ void setup()   {
 	iRadius = centerY - 2;
 
 	iWeek = calcDayOfWeekIndex();
+
+	// Start up the temperature sensor library
+	sensors.begin();
+
+	LightSensor.begin();
+	/*
+	Set the address for this sensor you can use 2 different address: Device_Address_H "0x5C", Device_Address_L "0x23"
+	you must connect Addr pin to A3 .
+	*/
+	LightSensor.SetAddress(Device_Address_H);//Address 0x5C
+	// To adjust the slave on other address , uncomment this line
+	// lightMeter.SetAddress(Device_Address_L); //Address 0x5C
+	//-----------------------------------------------
+	/*
+	set the Working Mode for this sensor
+	Select the following Mode: Continuous_H_resolution_Mode, Continuous_H_resolution_Mode2 ,Continuous_L_resolution_Mode ,OneTime_H_resolution_Mode, OneTime_H_resolution_Mode2, OneTime_L_resolution_Mode
+	The data sheet recommanded To use Continuous_H_resolution_Mode
+	*/
+
+	LightSensor.SetMode(Continuous_H_resolution_Mode);
 }
 
 
@@ -152,6 +195,18 @@ void loop() {
 	// Update clock time
 	current_time_milis = millis();
 	updateTime(current_time_milis);
+
+	sensors.requestTemperatures(); // Send the command to get temperatures
+
+	Serial.println(sensors.getTempCByIndex(0));
+
+	uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
+	Serial.print("Light: ");
+	Serial.print(lux);
+	Serial.println(" lux");
+
+	//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
+	//display.setContrast(0); 
 
 	// picture loop
 	display.firstPage();
