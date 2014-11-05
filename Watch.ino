@@ -81,6 +81,7 @@ byte displayMode = DISPLAY_MODE_START_UP;
 #define CLOCK_STYLE_SIMPLE_ANALOG  0x01
 #define CLOCK_STYLE_SIMPLE_DIGIT  0x02
 #define CLOCK_STYLE_SIMPLE_MIX  0x03
+#define CLOCK_STYLE_SIMPLE_DIGIT_SEC  0x04
 byte clockStyle = CLOCK_STYLE_SIMPLE_MIX;
 
 #define INDICATOR_ENABLE 0x01
@@ -325,6 +326,15 @@ void updateTime(unsigned long current_time_milis) {
 //----- Drawing methods
 ///////////////////////////////////
 
+void toggleClockStyle()
+{
+	clockStyle++;
+	if (clockStyle > 4)
+	{
+		clockStyle = 1;
+	}
+}
+
 // Main drawing routine.
 // Every drawing starts here.
 void onDraw(unsigned long currentTime) {
@@ -343,6 +353,8 @@ void onDraw(unsigned long currentTime) {
 			//startEmergencyMode();
 			//setPageChangeTime(0);    // Change mode with no page-delay
 			//setNextDisplayTime(currentTime, 0);    // Do not wait next re-draw time
+
+			toggleClockStyle();
 		}
 
 		drawClock();
@@ -678,6 +690,19 @@ void drawClock() {
 		drawClockAnalog(0, 0, iRadius);
 
 		break;
+
+	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
+		display.setFont(u8g_font_helvB10r);
+		drawDateDigital(centerX - 29, centerY - 20);
+
+		display.setFont(u8g_font_helvB18r);
+		byte offset = drawClockDigital(centerX - 29, centerY - 4);
+
+		display.setFont(u8g_font_helvB12r);
+
+		drawSecondsDigital(centerX - 29 + offset + 2, centerY - 4);
+
+		break;
 	}
 	//Serial.println("drawClockEnd");
 }
@@ -688,7 +713,7 @@ void drawIdleClock() {
 	if (updateIndicator)
 		drawIndicator();
 
-	drawClockDigital(centerX - 29, centerY - 4);
+	
 }
 
 void drawDayAmPm(byte xPos, byte yPos) {
@@ -696,7 +721,7 @@ void drawDayAmPm(byte xPos, byte yPos) {
 	display.drawStr(xPos + display.getStrPixelWidth((const char*)pgm_read_word(&(weekString[iWeek]))) + 2, yPos, (const char*)pgm_read_word(&(ampmString[iAmPm])));
 }
 
-void drawClockDigital(byte xPos, byte yPos) {
+byte drawClockDigital(byte xPos, byte yPos) {
 	//Serial.println("drawClockDigital");
 	char s[6] = { 0 };
 
@@ -724,7 +749,60 @@ void drawClockDigital(byte xPos, byte yPos) {
 
 	display.drawStr(xPos, yPos, s);
 
+	return display.getStrPixelWidth(s);
+
 	//Serial.println("drawClockDigital2");
+}
+
+void drawSecondsDigital(byte xPos, byte yPos) {
+	//Serial.println("drawSecondsDigital");
+	char s[3] = { 0 };
+
+	if (iSecond < 10)
+	{
+		s[0] = '0';
+		itoa(iSecond, s + 1, 10);
+	}
+	else
+	{
+		itoa(iSecond, s, 10);
+	}
+
+	display.drawStr(xPos, yPos, s);
+	//Serial.println("drawSecondsDigital2");
+}
+
+void drawDateDigital(byte xPos, byte yPos)
+{
+	char s[11] = { 0 };
+
+	if (iDay < 10)
+	{
+		s[0] = '0';
+		itoa(iDay, s + 1, 10);
+	}
+	else
+	{
+		itoa(iDay, s, 10);
+	}
+
+	s[2] = '/';
+
+	if (iMonth < 10)
+	{
+		s[3] = '0';
+		itoa(iMonth, s + 4, 10);
+	}
+	else
+	{
+		itoa(iMonth, s + 3, 10);
+	}
+
+	s[5] = '/';
+
+	itoa(iYear, s + 6, 10);
+
+	display.drawStr(xPos, yPos, s);
 }
 
 void drawClockAnalog(short offsetY, short offsetX, byte radius) {
