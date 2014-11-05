@@ -59,7 +59,6 @@ byte iSecond = 0;
 
 #define TIME_BUFFER_MAX 6
 char timeParsingIndex = 0;
-char timeBuffer[6] = { -1, -1, -1, -1, -1, -1 };
 PGM_P const weekString[] PROGMEM = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
 PROGMEM const byte daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; //standard year
@@ -145,10 +144,10 @@ void loop() {
 	unsigned long current_time_milis = 0;
 
 	// Get button input
-	//if(digitalRead(buttonPin) == LOW) isClicked = LOW;
-
-	// Receive data from remote and parse
-	//isReceived = receiveBluetoothData();
+	if (digitalRead(buttonPin) == LOW)
+	{
+		isClicked = LOW;
+	}
 
 	// Update clock time
 	current_time_milis = millis();
@@ -163,10 +162,6 @@ void loop() {
 
 	// rebuild the picture after some delay (100ms)
 	delay(100);
-
-	// If data doesn't arrive, wait for a while to save battery
-	//if (!isReceived)
-	//delay(300);
 }
 
 
@@ -201,17 +196,6 @@ void init_emg_array() {
 	emgCurDisp = 0;
 }
 
-///////////////////////////////////
-//----- Time functions
-///////////////////////////////////
-void setTimeValue() {
-	iMonth = timeBuffer[0];
-	iDay = timeBuffer[1];
-	iWeek = timeBuffer[2];    // 1: SUN, MON, TUE, WED, THU, FRI,SAT
-	iAmPm = timeBuffer[3];    // 0:AM, 1:PM
-	iHour = timeBuffer[4];
-	iMinutes = timeBuffer[5];
-}
 
 //This function checks whether a particular year is a leap year
 bool isLeapYear(short year)
@@ -322,10 +306,6 @@ void updateTime(unsigned long current_time_milis) {
 	}
 }
 
-///////////////////////////////////
-//----- Drawing methods
-///////////////////////////////////
-
 void toggleClockStyle()
 {
 	clockStyle++;
@@ -335,12 +315,16 @@ void toggleClockStyle()
 	}
 }
 
+///////////////////////////////////
+//----- Drawing methods
+///////////////////////////////////
+
+
 // Main drawing routine.
 // Every drawing starts here.
 void onDraw(unsigned long currentTime) {
 
-	display.setFont(u8g_font_unifont);
-	//display.setFont(u8g_font_gdb12r);
+	display.setFont(u8g_font_helvB10r);
 
 	switch (displayMode)
 	{
@@ -597,13 +581,11 @@ void drawStartUp() {
 
 	display.drawStr(45, 45, "Arduino v1.0");
 
-	if (startUp++ > 20)
+	if (startUp++ > 20) // 2s start up screen
 	{
 		startUp = 0;
 		//Serial.println("startClockMode");
 		startClockMode();
-		//Serial.print();
-
 	}
 }
 
@@ -657,8 +639,7 @@ void drawMessage() {
 // Draw main clock screen
 // Clock style changes according to user selection
 void drawClock() {
-	//if (updateIndicator)
-	//drawIndicator();
+
 	//Serial.println("drawClock");
 	switch (clockStyle)
 	{
@@ -712,8 +693,6 @@ void drawIdleClock() {
 
 	if (updateIndicator)
 		drawIndicator();
-
-	
 }
 
 void drawDayAmPm(byte xPos, byte yPos) {

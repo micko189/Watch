@@ -43,7 +43,6 @@ extern "C" void __cxa_pure_virtual() {;}
 //
 void init_msg_array();
 void init_emg_array();
-void setTimeValue();
 bool isLeapYear(short year);
 byte getDaysInMonth(short year, byte month);
 short daysPassedInYear(short year, byte month, byte day);
