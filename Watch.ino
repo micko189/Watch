@@ -220,9 +220,10 @@ bool isLeapYear(short year)
 	return ((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0));
 }
 
-byte getDaysInMonth(byte month, short year)
+byte getDaysInMonth(short year, byte month)
 {
 	byte days = 0;
+	month--; // adjust for indexing in daysInMonth
 	if (month != 1)
 	{
 		return daysInMonth[month];
@@ -233,12 +234,13 @@ byte getDaysInMonth(byte month, short year)
 	}
 }
 
-short daysPassedInCurrentYear(short year, byte month, byte day)
+short daysPassedInYear(short year, byte month, byte day)
 {
 	int passed = 0;
-	for (size_t i = 0; i < month; i++)
+	day--; // adjust days passed in current month
+	for (size_t i = 1; i <= month; i++)
 	{
-		passed += getDaysInMonth(i, year);
+		passed += getDaysInMonth(year, i);
 	}
 
 	return passed + day;
@@ -251,12 +253,12 @@ int calcDaysSoFar(short year, byte month, byte day)
 
 	//calculates basic number of days passed 
 	days += (year - firstYear) * 365;
-	days += daysPassedInCurrentYear(year, month - 1, day - 1);
+	days += daysPassedInYear(year, month, day);
 
 	//add on the extra leapdays for past years
-	for (int count = firstYear; count < year; count += 4)
+	for (int i = firstYear; i < year; i += 4)
 	{
-		if (isLeapYear(count))
+		if (isLeapYear(i))
 		{
 			days++;
 		}
@@ -288,10 +290,13 @@ void updateTime(unsigned long current_time_milis) {
 					if (iAmPm == 0)
 					{
 						iWeek++;
-						if (iWeek > 7)
-							iWeek = 1;
+						if (iWeek > 6)
+						{
+							iWeek = 0;
+						}
+
 						iDay++;
-						if (iDay > getDaysInMonth(iMonth, iYear))
+						if (iDay > getDaysInMonth(iYear, iMonth))
 						{
 							iDay = 1;
 							iMonth++;
