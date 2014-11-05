@@ -59,7 +59,7 @@ byte iSecond = 0;
 #define TIME_BUFFER_MAX 6
 char timeParsingIndex = 0;
 char timeBuffer[6] = { -1, -1, -1, -1, -1, -1 };
-PGM_P const weekString[] PROGMEM = { "", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+PGM_P const weekString[] PROGMEM = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
 PROGMEM const byte daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; //standard year
 
@@ -217,28 +217,28 @@ void setTimeValue() {
 //This function checks whether a particular year is a leap year
 bool isLeapYear(short year)
 {
-	return (!(year % 4) && (year % 100)) || !(year % 400);
+	return ((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0));
 }
 
-byte getDaysInMonth(byte month)
+byte getDaysInMonth(byte month, short year)
 {
 	byte days = 0;
-	if (month != 2)
+	if (month != 1)
 	{
 		return daysInMonth[month];
 	}
-	else
+	else // feb
 	{
-		return (isLeapYear(iYear)) ? 29 : daysInMonth[month];
+		return (isLeapYear(year)) ? 29 : daysInMonth[month];
 	}
 }
 
-short daysPassedInCurrentYear(byte month, byte day)
+short daysPassedInCurrentYear(short year, byte month, byte day)
 {
 	int passed = 0;
 	for (size_t i = 0; i < month; i++)
 	{
-		passed += getDaysInMonth(i);
+		passed += getDaysInMonth(i, year);
 	}
 
 	return passed + day;
@@ -247,12 +247,11 @@ short daysPassedInCurrentYear(byte month, byte day)
 //This function calculates the number of days passed from some start point year
 int calcDaysSoFar(short year, byte month, byte day)
 {
-	int days;
+	int days = dayOffset;
 
 	//calculates basic number of days passed 
-	days = (year - firstYear) * 365;
-	days += dayOffset;
-	days += daysPassedInCurrentYear(month - 1, day);
+	days += (year - firstYear) * 365;
+	days += daysPassedInCurrentYear(year, month - 1, day - 1);
 
 	//add on the extra leapdays for past years
 	for (int count = firstYear; count < year; count += 4)
@@ -268,7 +267,7 @@ int calcDaysSoFar(short year, byte month, byte day)
 
 byte calcDayOfWeekIndex()
 {
-	return (byte)calcDaysSoFar(iYear, iMonth, iDay) % 7;
+	return (byte)(calcDaysSoFar(iYear, iMonth, iDay) % 7);
 }
 
 void updateTime(unsigned long current_time_milis) {
@@ -292,7 +291,7 @@ void updateTime(unsigned long current_time_milis) {
 						if (iWeek > 7)
 							iWeek = 1;
 						iDay++;
-						if (iDay > getDaysInMonth(iMonth))
+						if (iDay > getDaysInMonth(iMonth, iYear))
 						{
 							iDay = 1;
 							iMonth++;
@@ -570,7 +569,7 @@ void drawStartUp() {
 	// x : X - position(left position of the bitmap).
 	// y : Y - position(upper position of the bitmap).
 	// cnt : Number of bytes of the bitmap in horizontal direction.The width of the bitmap is cnt*8.
-	// h : Height of the bitmap.
+	// h : Height of the bitmap. 
 	display.drawBitmap(10, 15, 3, 24, IMG_logo_24x24);
 
 	display.drawStr(45, 12, "Retro");
@@ -691,38 +690,32 @@ void drawIdleClock() {
 
 void drawClockDigital(byte xPos, byte yPos) {
 	//Serial.println("drawClockDigital");
-	char s[3] = " ";
-	int8_t zeroDigitWidth = display.getStrPixelWidth("0");
-	int8_t doubleDotWidth = display.getStrPixelWidth(":");
-	int8_t spacing = 1;
-        int8_t xOffset = 0;
+	char s[6] = {0};
 
 	if (iHour < 10)
 	{
-		display.drawStr(xPos, yPos, "0");
-                xOffset += zeroDigitWidth + spacing;
-		display.drawStr(xPos + xOffset, yPos, itoa(iHour, s, 10));
+		s[0] = '0';
+		itoa(iHour, s + 1, 10);
 	}
 	else
 	{
-		display.drawStr(xPos, yPos, itoa(iHour, s, 10));
+		itoa(iHour, s, 10);
 	}
 
-        xOffset += display.getStrPixelWidth(s) + spacing;
-	display.drawStr(xPos + xOffset, yPos, ":");
+	s[2] = ':';
 
 	if (iMinutes < 10)
 	{
-                xOffset += doubleDotWidth + spacing;
-		display.drawStr(xPos + xOffset, yPos, "0");
-                xOffset += zeroDigitWidth + spacing;
-		display.drawStr(xPos + xOffset, yPos, itoa(iMinutes, s, 10));
+		s[3] = '0';
+		itoa(iMinutes, s + 4, 10);
 	}
 	else
 	{
-                xOffset += doubleDotWidth + spacing;
-		display.drawStr(xPos + xOffset, yPos, itoa(iMinutes, s, 10));
+		itoa(iMinutes, s + 3, 10);
 	}
+
+	display.drawStr(xPos, yPos, s);
+
 	//Serial.println("drawClockDigital2");
 }
 
