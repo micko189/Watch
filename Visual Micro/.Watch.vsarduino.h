@@ -59,6 +59,7 @@ void drawSecondsDigital(byte xPos, byte yPos);
 void drawDateDigital(byte xPos, byte yPos);
 void drawClockAnalog(short offsetY, short offsetX, byte radius);
 void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius);
+void showHourPin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius);
 
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\cores\arduino\arduino.h"
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\variants\standard\pins_arduino.h" 

@@ -531,6 +531,13 @@ void drawDateDigital(byte xPos, byte yPos)
 
 void drawClockAnalog(short offsetY, short offsetX, byte radius) {
 	display.drawCircle(centerX + offsetX, centerY + offsetY, radius);
+
+	// print hour pin lines
+	for (size_t i = 0; i < 12; i++)
+	{
+		showHourPin(centerX + offsetX, centerY + offsetY, 0.9, 1, i * 5, radius);
+	}
+
 	double hourAngleOffset = iMinutes / 12.0;
 	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.5, iHour * 5 + hourAngleOffset, radius);
 	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.78, iMinutes, radius);
@@ -546,6 +553,16 @@ void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3,
 	y1 = center_y + (radius * pl1) * sin((6 * pl3 + LR) * RAD);
 	x2 = center_x + (radius * pl2) * cos((6 * pl3 - LR) * RAD);
 	y2 = center_y + (radius * pl2) * sin((6 * pl3 - LR) * RAD);
+
+	display.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
+}
+
+void showHourPin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius) {
+	double x1, x2, y1, y2;
+	x1 = center_x + (radius * pl1) * cos((6 * pl3 + LR) * RAD);
+	y1 = center_y + (radius * pl1) * sin((6 * pl3 + LR) * RAD);
+	x2 = center_x + (radius * pl2) * cos((6 * pl3 + LR) * RAD);
+	y2 = center_y + (radius * pl2) * sin((6 * pl3 + LR) * RAD);
 
 	display.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
 }
