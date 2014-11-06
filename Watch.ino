@@ -78,7 +78,7 @@ byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
 
 byte centerX = 64;
 byte centerY = 32;
-byte iRadius = 28;
+byte iRadius = 30;
 
 #define IDLE_DISP_INTERVAL 60000
 #define CLOCK_DISP_INTERVAL 60000
@@ -98,12 +98,8 @@ void setup()   {
 	//----- by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
 	// assign default color value
 	display.setColorIndex(1);         // pixel on
-	
-	centerX = 128 / 2;
-	centerY = 64 / 2;
-	iRadius = centerY - 2;
 
-	iWeek = calcDayOfWeekIndex();
+	iWeek = (byte)(calcDaysSoFar(iYear, iMonth, iDay) % 7);
 
 	// Start up the temperature sensor library
 	sensors.begin();
@@ -216,11 +212,6 @@ int calcDaysSoFar(short year, byte month, byte day)
 	}
 
 	return days;
-}
-
-byte calcDayOfWeekIndex()
-{
-	return (byte)(calcDaysSoFar(iYear, iMonth, iDay) % 7);
 }
 
 void updateTime(unsigned long current_time_milis) {
