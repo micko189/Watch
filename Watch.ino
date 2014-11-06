@@ -47,12 +47,12 @@ BH1750FVI LightSensor;
 #define UPDATE_TIME_INTERVAL 60000
 #define UPDATE_TIME_INTERVAL_SEC 1000
 short iYear = 2014;
-byte iMonth = 9;
-byte iDay = 20;
+byte iMonth = 11;
+byte iDay = 6;
 byte iWeek = 0;    // 1: SUN, MON, TUE, WED, THU, FRI,SAT // need to calculate this
 byte iAmPm = 1;    // 0:AM, 1:PM
-byte iHour = 7;
-byte iMinutes = 22;
+byte iHour = 9;
+byte iMinutes = 0;
 byte iSecond = 0;
 
 PGM_P const weekString[] PROGMEM = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
@@ -94,7 +94,7 @@ byte tempLo = 0;
 byte tempHi = 0;
 
 void setup()   {
-	//Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
+	Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
 	pinMode(buttonPin, INPUT);  // Defines button pin
 
 	// By default, we'll generate the high voltage from the 3.3v line internally! (neat!)
@@ -129,8 +129,9 @@ void loop() {
 
 	TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
 	float temp = TempSensor.getTempCByIndex(0);
-	byte tempLo = ((short)(temp * 100)) % 100;
-	byte tempHi = (short)temp;
+
+	tempLo = ((short)(temp * 100)) % 100;
+	tempHi = (short)temp;
 
 	uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
 
@@ -361,16 +362,16 @@ void drawClock() {
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
 		display.setFont(u8g_font_helvB10r);
-		drawDateDigital(centerX - 33, centerY - 20);
+		drawDateDigital(centerX - 35, centerY - 20);
 
 		display.setFont(u8g_font_helvB12);
-		drawTemp(70, 16);
+		drawTemp(70, centerY + 31);
 
 		display.setFont(u8g_font_helvB24n);
-		byte offset = drawClockDigital(centerX - 45, centerY + 6);
+		byte offset = drawClockDigital(centerX - 50, centerY + 13);
 
 		display.setFont(u8g_font_helvB14r);
-		drawSecondsDigital(centerX - 45 + offset + 2, centerY + 6);
+		drawSecondsDigital(centerX - 50 + offset + 2, centerY + 13);
 
 		break;
 	}
@@ -382,15 +383,25 @@ void drawDayAmPm(byte xPos, byte yPos) {
 }
 
 void drawTemp(byte xPos, byte yPos) {
-	char s[8] = { 0 };
-
+	char s[4] = { 0 };
+        byte offset = 0;
 	itoa(tempHi, s, 10);
-	s[3] = '.';
-	itoa(tempLo, s + 4, 10);
-	s[6] = 'ฐ';
-	s[7] = 'C';
-
-	display.drawStr(xPos, yPos, s);
+        display.drawStr(xPos, yPos, s);
+        offset +=display.getStrPixelWidth(s) + 1;
+        
+	s[0] = '.';
+        s[1] = 0;
+        display.drawStr(xPos + offset, yPos, s);
+        offset +=display.getStrPixelWidth(s) + 1;
+        
+	itoa(tempLo, s, 10);
+        display.drawStr(xPos + offset, yPos, s);
+        offset +=display.getStrPixelWidth(s) + 1;
+ 
+	s[0] = 'ยบ';
+	s[1] = 'C';
+        s[2] = 0;
+	display.drawStr(xPos + offset, yPos, s);
 }
 
 byte drawClockDigital(byte xPos, byte yPos) {
