@@ -52,6 +52,7 @@ void startClockMode();
 void drawStartUp();
 void drawClock();
 void drawDayAmPm(byte xPos, byte yPos);
+void drawTemp(byte xPos, byte yPos);
 byte drawClockDigital(byte xPos, byte yPos);
 void drawSecondsDigital(byte xPos, byte yPos);
 void drawDateDigital(byte xPos, byte yPos);

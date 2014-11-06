@@ -35,7 +35,7 @@ U8GLIB_SSD1306_128X64 display(U8G_I2C_OPT_NONE);	// I2C / TWI
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 OneWire oneWire(ONE_WIRE_BUS);
 // Pass our oneWire reference to Dallas Temperature. 
-DallasTemperature sensors(&oneWire);
+DallasTemperature TempSensor(&oneWire);
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -90,35 +90,25 @@ unsigned long prevClockTime = 0;
 int buttonPin = 5;
 boolean isClicked = false;
 byte startUpCount = 0;
+byte tempLo = 0;
+byte tempHi = 0;
 
 void setup()   {
 	//Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
 	pinMode(buttonPin, INPUT);  // Defines button pin
 
-	//----- by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
-	// assign default color value
-	display.setColorIndex(1);         // pixel on
+	// By default, we'll generate the high voltage from the 3.3v line internally! (neat!)
+	// Assign default color value
+	display.setColorIndex(1);         // pixel on BW
 
 	iWeek = (byte)(calcDaysSoFar(iYear, iMonth, iDay) % 7);
 
 	// Start up the temperature sensor library
-	sensors.begin();
+	TempSensor.begin();
 
+	// Start up the light sensor library
 	LightSensor.begin();
-	/*
-	Set the address for this sensor you can use 2 different address: Device_Address_H "0x5C", Device_Address_L "0x23"
-	you must connect Addr pin to A3 .
-	*/
 	LightSensor.SetAddress(Device_Address_H);//Address 0x5C
-	// To adjust the slave on other address , uncomment this line
-	// lightMeter.SetAddress(Device_Address_L); //Address 0x5C
-	//-----------------------------------------------
-	/*
-	set the Working Mode for this sensor
-	Select the following Mode: Continuous_H_resolution_Mode, Continuous_H_resolution_Mode2 ,Continuous_L_resolution_Mode ,OneTime_H_resolution_Mode, OneTime_H_resolution_Mode2, OneTime_L_resolution_Mode
-	The data sheet recommanded To use Continuous_H_resolution_Mode
-	*/
-
 	LightSensor.SetMode(Continuous_H_resolution_Mode);
 }
 
@@ -137,9 +127,10 @@ void loop() {
 	current_time_milis = millis();
 	updateTime(current_time_milis);
 
-	sensors.requestTemperatures(); // Send the command to get temperatures
-
-	float temp = sensors.getTempCByIndex(0);
+	TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
+	float temp = TempSensor.getTempCByIndex(0);
+	byte tempLo = ((short)(temp * 100)) % 100;
+	byte tempHi = (short)temp;
 
 	uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
 
@@ -161,7 +152,7 @@ void loop() {
 //----- Utils
 ///////////////////////////////////
 
-//This function checks whether a particular year is a leap year
+// This function checks whether a particular year is a leap year
 bool isLeapYear(short year)
 {
 	return ((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0));
@@ -336,6 +327,9 @@ void drawClock() {
 	switch (clockStyle)
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
+		display.setFont(u8g_font_helvB12);
+		drawTemp(70, 16);
+
 		display.setFont(u8g_font_helvB14r);
 		drawDayAmPm(centerX - 34, centerY - 17);
 
@@ -347,7 +341,10 @@ void drawClock() {
 	case CLOCK_STYLE_SIMPLE_MIX:
 		drawClockAnalog(0, -30, iRadius - 4);
 
-		display.setFont(u8g_font_helvB12r);
+		display.setFont(u8g_font_helvB12);
+		drawTemp(70, 16);
+
+		display.setFont(u8g_font_helvB12);
 		drawDayAmPm(centerY * 2 + 3, 23);
 
 		display.setFont(u8g_font_helvB18r);
@@ -355,6 +352,9 @@ void drawClock() {
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
+		display.setFont(u8g_font_helvB12);
+		drawTemp(70, 16);
+
 		drawClockAnalog(0, 0, iRadius);
 
 		break;
@@ -363,7 +363,10 @@ void drawClock() {
 		display.setFont(u8g_font_helvB10r);
 		drawDateDigital(centerX - 33, centerY - 20);
 
-		display.setFont(u8g_font_helvB24r);
+		display.setFont(u8g_font_helvB12);
+		drawTemp(70, 16);
+
+		display.setFont(u8g_font_helvB24n);
 		byte offset = drawClockDigital(centerX - 45, centerY + 6);
 
 		display.setFont(u8g_font_helvB14r);
@@ -376,6 +379,18 @@ void drawClock() {
 void drawDayAmPm(byte xPos, byte yPos) {
 	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(weekString[iWeek])));
 	display.drawStr(xPos + display.getStrPixelWidth((const char*)pgm_read_word(&(weekString[iWeek]))) + 2, yPos, (const char*)pgm_read_word(&(ampmString[iAmPm])));
+}
+
+void drawTemp(byte xPos, byte yPos) {
+	char s[8] = { 0 };
+
+	itoa(tempHi, s, 10);
+	s[3] = '.';
+	itoa(tempLo, s + 4, 10);
+	s[6] = '°';
+	s[7] = 'C';
+
+	display.drawStr(xPos, yPos, s);
 }
 
 byte drawClockDigital(byte xPos, byte yPos) {
