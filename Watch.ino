@@ -345,7 +345,7 @@ void drawClock() {
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
-		drawClockAnalog(0, -30, iRadius - 6);
+		drawClockAnalog(0, -30, iRadius - 4);
 
 		display.setFont(u8g_font_helvB12r);
 		drawDayAmPm(centerY * 2 + 3, 23);
