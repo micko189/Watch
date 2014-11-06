@@ -41,8 +41,6 @@ extern "C" void __cxa_pure_virtual() {;}
 
 //
 //
-void init_msg_array();
-void init_emg_array();
 bool isLeapYear(short year);
 byte getDaysInMonth(short year, byte month);
 short daysPassedInYear(short year, byte month, byte day);
@@ -51,18 +49,8 @@ byte calcDayOfWeekIndex();
 void updateTime(unsigned long current_time_milis);
 void toggleClockStyle();
 void onDraw(unsigned long currentTime);
-boolean findNextEmerMessage();
-boolean findNextNormalMessage();
-int countEmergency();
-int countMessage();
 void startClockMode();
-void startEmergencyMode();
-void startMessageMode();
-void startIdleMode();
-void drawIndicator();
 void drawStartUp();
-void drawEmergency();
-void drawMessage();
 void drawClock();
 void drawIdleClock();
 void drawDayAmPm(byte xPos, byte yPos);
@@ -70,10 +58,7 @@ byte drawClockDigital(byte xPos, byte yPos);
 void drawSecondsDigital(byte xPos, byte yPos);
 void drawDateDigital(byte xPos, byte yPos);
 void drawClockAnalog(short offsetY, short offsetX, byte radius);
-int getCenterAlignedXOfMsg(int msgIndex);
-int getCenterAlignedXOfEmg(int emgIndex);
-void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3);
-void drawIcon(int posx, int posy, int icon_num);
+void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius);
 
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\cores\arduino\arduino.h"
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\variants\standard\pins_arduino.h" 
