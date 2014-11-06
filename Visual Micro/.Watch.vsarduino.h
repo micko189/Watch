@@ -52,7 +52,6 @@ void onDraw(unsigned long currentTime);
 void startClockMode();
 void drawStartUp();
 void drawClock();
-void drawIdleClock();
 void drawDayAmPm(byte xPos, byte yPos);
 byte drawClockDigital(byte xPos, byte yPos);
 void drawSecondsDigital(byte xPos, byte yPos);

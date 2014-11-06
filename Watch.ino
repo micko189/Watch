@@ -14,7 +14,6 @@ along with this program.  If not, see [http://www.gnu.org/licenses/].
 */
 /*
 Watch Arduino v1.0
-
 */
 
 #include <Wire.h>
@@ -27,27 +26,21 @@ Watch Arduino v1.0
 ///////////////////////////////////////////////////////////////////
 //----- OLED instance
 U8GLIB_SSD1306_128X64 display(U8G_I2C_OPT_NONE);	// I2C / TWI 
-
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 //----- Temp Sensor instance
 // Data wire is plugged into port 2 on the Arduino
 #define ONE_WIRE_BUS 2
-
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 OneWire oneWire(ONE_WIRE_BUS);
-
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperature sensors(&oneWire);
-
 ///////////////////////////////////////////////////////////////////
-
 
 ///////////////////////////////////////////////////////////////////
 //----- LightSensor instance
 BH1750FVI LightSensor;
-
 ///////////////////////////////////////////////////////////////////
 
 //----- Time
@@ -62,7 +55,6 @@ byte iHour = 7;
 byte iMinutes = 22;
 byte iSecond = 0;
 
-
 PGM_P const weekString[] PROGMEM = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
 PROGMEM const byte daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; //standard year
@@ -76,9 +68,6 @@ PROGMEM const byte dayOffset = 6; //The first day of our start year may not be a
 //----- Display features
 #define DISPLAY_MODE_START_UP 0
 #define DISPLAY_MODE_CLOCK 1
-#define DISPLAY_MODE_EMERGENCY_MSG 2
-#define DISPLAY_MODE_NORMAL_MSG 3
-#define DISPLAY_MODE_IDLE 11
 byte displayMode = DISPLAY_MODE_START_UP;
 
 #define CLOCK_STYLE_SIMPLE_ANALOG  0x01
@@ -108,19 +97,8 @@ void setup()   {
 
 	//----- by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
 	// assign default color value
-	if (display.getMode() == U8G_MODE_R3G3B2) {
-		display.setColorIndex(255);     // white
-	}
-	else if (display.getMode() == U8G_MODE_GRAY2BIT) {
-		display.setColorIndex(3);         // max intensity
-	}
-	else if (display.getMode() == U8G_MODE_BW) {
-		display.setColorIndex(1);         // pixel on
-	}
-	else if (display.getMode() == U8G_MODE_HICOLOR) {
-		display.setHiColorByRGB(255, 255, 255);
-	}
-
+	display.setColorIndex(1);         // pixel on
+	
 	centerX = 128 / 2;
 	centerY = 64 / 2;
 	iRadius = centerY - 2;
@@ -169,7 +147,6 @@ void loop() {
 
 	uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
 
-
 	//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
 	//display.setContrast(0); 
 
@@ -183,7 +160,6 @@ void loop() {
 	// rebuild the picture after some delay (100ms)
 	delay(100);
 }
-
 
 ///////////////////////////////////
 //----- Utils
@@ -305,7 +281,6 @@ void toggleClockStyle()
 //----- Drawing methods
 ///////////////////////////////////
 
-
 // Main drawing routine.
 // Every drawing starts here.
 void onDraw(unsigned long currentTime) {
@@ -327,28 +302,12 @@ void onDraw(unsigned long currentTime) {
 		drawClock();
 
 		break;
-
-	case DISPLAY_MODE_IDLE:
-		if (isClicked == LOW) {    // Wake up watch if there's an user input
-			startClockMode();
-			//setPageChangeTime(currentTime);
-			//setNextDisplayTime(currentTime, 0);
-		}
-		else
-		{
-			drawIdleClock();
-			//setNextDisplayTime(currentTime, IDLE_DISP_INTERVAL);
-		}
-		break;
-
 	default:
 		startClockMode();    // This means there's an error
 		break;
 	}
 
 	isClicked = HIGH;
-
-	//Serial.println("onDrawE");
 }  // End of onDraw()
 
 
@@ -376,7 +335,6 @@ void drawStartUp() {
 	if (startUpCount++ > 20) // 20 * 100ms = 2s start up screen
 	{
 		startUpCount = 0;
-		//Serial.println("startClockMode");
 		startClockMode();
 	}
 }
@@ -384,13 +342,9 @@ void drawStartUp() {
 // Draw main clock screen
 // Clock style changes according to user selection
 void drawClock() {
-
-	//Serial.println("drawClock");
 	switch (clockStyle)
 	{
-
 	case CLOCK_STYLE_SIMPLE_DIGIT:
-		//Serial.println("drawClock1");
 		display.setFont(u8g_font_helvB14r);
 		drawDayAmPm(centerX - 34, centerY - 17);
 
@@ -400,19 +354,16 @@ void drawClock() {
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
-		//Serial.println("drawClock2");
 		drawClockAnalog(0, -30, iRadius - 6);
 
 		display.setFont(u8g_font_helvB12r);
 		drawDayAmPm(centerY * 2 + 3, 23);
-
 
 		display.setFont(u8g_font_helvB18r);
 		drawClockDigital(centerY * 2 - 3, 45);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
-		//Serial.println("drawClock3");
 		drawClockAnalog(0, 0, iRadius);
 
 		break;
@@ -425,19 +376,10 @@ void drawClock() {
 		byte offset = drawClockDigital(centerX - 45, centerY + 6);
 
 		display.setFont(u8g_font_helvB14r);
-
 		drawSecondsDigital(centerX - 45 + offset + 2, centerY + 6);
 
 		break;
 	}
-	//Serial.println("drawClockEnd");
-}
-
-// Draw idle page
-void drawIdleClock() {
-
-	//if (updateIndicator)
-	//drawIndicator();
 }
 
 void drawDayAmPm(byte xPos, byte yPos) {
@@ -446,7 +388,6 @@ void drawDayAmPm(byte xPos, byte yPos) {
 }
 
 byte drawClockDigital(byte xPos, byte yPos) {
-	//Serial.println("drawClockDigital");
 	char s[6] = { 0 };
 
 	if (iHour < 10)
@@ -474,12 +415,9 @@ byte drawClockDigital(byte xPos, byte yPos) {
 	display.drawStr(xPos, yPos, s);
 
 	return display.getStrPixelWidth(s);
-
-	//Serial.println("drawClockDigital2");
 }
 
 void drawSecondsDigital(byte xPos, byte yPos) {
-	//Serial.println("drawSecondsDigital");
 	char s[3] = { 0 };
 
 	if (iSecond < 10)
@@ -493,7 +431,6 @@ void drawSecondsDigital(byte xPos, byte yPos) {
 	}
 
 	display.drawStr(xPos, yPos, s);
-	//Serial.println("drawSecondsDigital2");
 }
 
 void drawDateDigital(byte xPos, byte yPos)
