@@ -113,7 +113,6 @@ void setup()   {
 	LightSensor.SetMode(Continuous_H_resolution_Mode);
 }
 
-
 void loop() {
 	boolean isReceived = false;
 	unsigned long current_time_milis = 0;
@@ -158,12 +157,22 @@ void loop() {
 //----- Utils
 ///////////////////////////////////
 
-// This function checks whether a particular year is a leap year
+/// <summary>
+/// Determines whether [is leap year] [the specified year].
+/// </summary>
+/// <param name="year">The year.</param>
+/// <returns></returns>
 bool isLeapYear(short year)
 {
 	return ((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0));
 }
 
+/// <summary>
+/// Gets the days in month.
+/// </summary>
+/// <param name="year">The year.</param>
+/// <param name="month">The month.</param>
+/// <returns></returns>
 byte getDaysInMonth(short year, byte month)
 {
 	byte days = 0;
@@ -178,6 +187,13 @@ byte getDaysInMonth(short year, byte month)
 	}
 }
 
+/// <summary>
+/// Gets the days passed in year.
+/// </summary>
+/// <param name="year">The year.</param>
+/// <param name="month">The month.</param>
+/// <param name="day">The day.</param>
+/// <returns></returns>
 short daysPassedInYear(short year, byte month, byte day)
 {
 	int passed = 0;
@@ -190,7 +206,13 @@ short daysPassedInYear(short year, byte month, byte day)
 	return passed + day;
 }
 
-//This function calculates the number of days passed from some start point year
+/// <summary>
+/// Calculates the number of days passed from some start point year.
+/// </summary>
+/// <param name="year">The year.</param>
+/// <param name="month">The month.</param>
+/// <param name="day">The day.</param>
+/// <returns></returns>
 int calcDaysSoFar(short year, byte month, byte day)
 {
 	int days = dayOffset;
@@ -211,6 +233,11 @@ int calcDaysSoFar(short year, byte month, byte day)
 	return days;
 }
 
+/// <summary>
+/// Updates the time.
+/// </summary>
+/// <param name="current_time_milis">The current_time_milis.</param>
+/// <returns> whether time is updated - one seccond is ellapsed </returns>
 bool updateTime(unsigned long current_time_milis) {
 	short timeElapse = current_time_milis - prevClockTime;
 	if (timeElapse >= adjustedUpdateTimeInterval) // check if one second has elapsed
@@ -258,6 +285,9 @@ bool updateTime(unsigned long current_time_milis) {
 	return false;
 }
 
+/// <summary>
+/// Toggles the clock style.
+/// </summary>
 void toggleClockStyle()
 {
 	clockStyle++;
@@ -271,8 +301,11 @@ void toggleClockStyle()
 //----- Drawing methods
 ///////////////////////////////////
 
-// Main drawing routine.
-// Every drawing starts here.
+/// <summary>
+/// Main drawing routine.
+/// Every drawing starts here.
+/// </summary>
+/// <param name="currentTime">The current time.</param>
 void onDraw(unsigned long currentTime) {
 
 	display.setFont(u8g_font_helvB10r);
@@ -301,12 +334,16 @@ void onDraw(unsigned long currentTime) {
 }  // End of onDraw()
 
 
-
+/// <summary>
+/// Starts the clock mode (changes displayMode).
+/// </summary>
 void startClockMode() {
 	displayMode = DISPLAY_MODE_CLOCK;
 }
 
-// RetroWatch splash screen
+/// <summary>
+/// Draws the start up splash screen.
+/// </summary>
 void drawStartUp() {
 	//Arguments:
 	// u8g : Pointer to the u8g structure(C interface only).
@@ -329,8 +366,10 @@ void drawStartUp() {
 	}
 }
 
-// Draw main clock screen
-// Clock style changes according to user selection
+/// <summary>
+/// Draw the main clock screen.
+/// Clock style changes according to user selection.
+/// </summary>
 void drawClock() {
 	switch (clockStyle)
 	{
@@ -384,11 +423,21 @@ void drawClock() {
 	}
 }
 
+/// <summary>
+/// Draws the day in week and am/pm.
+/// </summary>
+/// <param name="xPos">The x position.</param>
+/// <param name="yPos">The y position.</param>
 void drawDayAmPm(byte xPos, byte yPos) {
 	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(weekString[iWeek])));
 	display.drawStr(xPos + display.getStrPixelWidth((const char*)pgm_read_word(&(weekString[iWeek]))) + 2, yPos, (const char*)pgm_read_word(&(ampmString[iAmPm])));
 }
 
+/// <summary>
+/// Draws the temperature (x,y is the possition of '.').
+/// </summary>
+/// <param name="xPos">The x position.</param>
+/// <param name="yPos">The y position.</param>
 void drawTemp(byte xPos, byte yPos) {
 	char s[4] = { 0 };
 	byte offset = 0;
@@ -416,6 +465,12 @@ void drawTemp(byte xPos, byte yPos) {
 	display.drawStr(xPos + offset, yPos, s);
 }
 
+/// <summary>
+/// Draws the clock digital.
+/// </summary>
+/// <param name="xPos">The x position.</param>
+/// <param name="yPos">The y position.</param>
+/// <returns>Length in pixels of the clock</returns>
 byte drawClockDigital(byte xPos, byte yPos) {
 	char s[6] = { 0 };
 
@@ -446,6 +501,11 @@ byte drawClockDigital(byte xPos, byte yPos) {
 	return display.getStrPixelWidth(s);
 }
 
+/// <summary>
+/// Draws the seconds digital.
+/// </summary>
+/// <param name="xPos">The x position.</param>
+/// <param name="yPos">The y position.</param>
 void drawSecondsDigital(byte xPos, byte yPos) {
 	char s[3] = { 0 };
 
@@ -462,6 +522,11 @@ void drawSecondsDigital(byte xPos, byte yPos) {
 	display.drawStr(xPos, yPos, s);
 }
 
+/// <summary>
+/// Draws the date digital.
+/// </summary>
+/// <param name="xPos">The x position.</param>
+/// <param name="yPos">The y position.</param>
 void drawDateDigital(byte xPos, byte yPos)
 {
 	char s[11] = { 0 };
@@ -495,6 +560,12 @@ void drawDateDigital(byte xPos, byte yPos)
 	display.drawStr(xPos, yPos, s);
 }
 
+/// <summary>
+/// Draws the clock analog.
+/// </summary>
+/// <param name="offsetY">The offset y.</param>
+/// <param name="offsetX">The offset x.</param>
+/// <param name="radius">The radius.</param>
 void drawClockAnalog(short offsetY, short offsetX, byte radius) {
 	display.drawCircle(centerX + offsetX, centerY + offsetY, radius);
 
