@@ -45,7 +45,7 @@ bool isLeapYear(short year);
 byte getDaysInMonth(short year, byte month);
 short daysPassedInYear(short year, byte month, byte day);
 int calcDaysSoFar(short year, byte month, byte day);
-void updateTime(unsigned long current_time_milis);
+bool updateTime(unsigned long current_time_milis);
 void toggleClockStyle();
 void onDraw(unsigned long currentTime);
 void startClockMode();

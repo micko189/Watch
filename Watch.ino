@@ -46,6 +46,7 @@ BH1750FVI LightSensor;
 //----- Time
 #define UPDATE_TIME_INTERVAL 60000
 #define UPDATE_TIME_INTERVAL_SEC 1000
+short adjustedUpdateTimeInterval = UPDATE_TIME_INTERVAL_SEC;
 short iYear = 2014;
 byte iMonth = 11;
 byte iDay = 6;
@@ -125,28 +126,32 @@ void loop() {
 
 	// Update clock time
 	current_time_milis = millis();
-	updateTime(current_time_milis);
 
-	TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
-	float temp = TempSensor.getTempCByIndex(0);
+	if (updateTime(current_time_milis))
+	{ 
+		// one second has elapsed
 
-	tempLo = ((short)(temp * 100)) % 100;
-	tempHi = (short)temp;
+		TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
+		float temp = TempSensor.getTempCByIndex(0);
 
-	uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
+		tempLo = ((short)(temp * 100)) % 100;
+		tempHi = (short)temp;
 
-	//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
-	//display.setContrast(0); 
+		uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
 
-	// picture loop
-	display.firstPage();
-	do {
-		// Display routine
-		onDraw(current_time_milis);
-	} while (display.nextPage());
+		//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
+		//display.setContrast(0); 
 
-	// rebuild the picture after some delay (100ms)
-	delay(100);
+		// picture loop
+		display.firstPage();
+		do {
+			// Display routine
+			onDraw(current_time_milis);
+		} while (display.nextPage());
+	}
+
+	// delay to get next current time (10ms), this is essentially time deviation in one second cycle (~ +-10ms)
+	delay(10);
 }
 
 ///////////////////////////////////
@@ -206,28 +211,27 @@ int calcDaysSoFar(short year, byte month, byte day)
 	return days;
 }
 
-void updateTime(unsigned long current_time_milis) {
-
-	if (current_time_milis - prevClockTime > UPDATE_TIME_INTERVAL_SEC) // check if one second has elapsed
+bool updateTime(unsigned long current_time_milis) {
+	short timeElapse = current_time_milis - prevClockTime;
+	if (timeElapse >= adjustedUpdateTimeInterval) // check if one second has elapsed
 	{
-		iSecond++;
-		if (iSecond >= 60)
+		// adjust next update time interval in order to reduce acummulated error
+		adjustedUpdateTimeInterval = UPDATE_TIME_INTERVAL_SEC - (timeElapse - adjustedUpdateTimeInterval);
+
+		if (++iSecond >= 60)
 		{
 			iSecond = 0;
 			// Increase time by incrementing minutes
-			iMinutes++;
-			if (iMinutes >= 60)
+			if (++iMinutes >= 60)
 			{
 				iMinutes = 0;
-				iHour++;
-				if (iHour > 12)
+				if (++iHour > 12)
 				{
 					iHour = 1;
 					(iAmPm == 0) ? iAmPm = 1 : iAmPm = 0;
 					if (iAmPm == 0)
 					{
-						iWeek++;
-						if (iWeek > 6)
+						if (++iWeek > 6)
 						{
 							iWeek = 0;
 						}
@@ -236,8 +240,7 @@ void updateTime(unsigned long current_time_milis) {
 						if (iDay > getDaysInMonth(iYear, iMonth))
 						{
 							iDay = 1;
-							iMonth++;
-							if (iMonth > 12)
+							if (++iMonth > 12)
 							{
 								iYear++;
 							}
@@ -248,7 +251,11 @@ void updateTime(unsigned long current_time_milis) {
 		}
 
 		prevClockTime = current_time_milis;
+
+		return true;
 	}
+
+	return false;
 }
 
 void toggleClockStyle()
@@ -329,7 +336,7 @@ void drawClock() {
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
 		display.setFont(u8g_font_helvB12);
-		drawTemp(70, 16);
+		drawTemp(80, centerY + 31);
 
 		display.setFont(u8g_font_helvB14r);
 		drawDayAmPm(centerX - 34, centerY - 17);
@@ -343,7 +350,7 @@ void drawClock() {
 		drawClockAnalog(0, -30, iRadius - 4);
 
 		display.setFont(u8g_font_helvB12);
-		drawTemp(70, 16);
+		drawTemp(80, centerY + 31);
 
 		display.setFont(u8g_font_helvB12);
 		drawDayAmPm(centerY * 2 + 3, 23);
@@ -354,7 +361,7 @@ void drawClock() {
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
 		display.setFont(u8g_font_helvB12);
-		drawTemp(70, 16);
+		drawTemp(80, centerY + 31);
 
 		drawClockAnalog(0, 0, iRadius);
 
@@ -365,7 +372,7 @@ void drawClock() {
 		drawDateDigital(centerX - 35, centerY - 20);
 
 		display.setFont(u8g_font_helvB12);
-		drawTemp(70, centerY + 31);
+		drawTemp(80, centerY + 31);
 
 		display.setFont(u8g_font_helvB24n);
 		byte offset = drawClockDigital(centerX - 50, centerY + 13);
@@ -384,23 +391,28 @@ void drawDayAmPm(byte xPos, byte yPos) {
 
 void drawTemp(byte xPos, byte yPos) {
 	char s[4] = { 0 };
-        byte offset = 0;
+	byte offset = 0;
+
 	itoa(tempHi, s, 10);
-        display.drawStr(xPos, yPos, s);
-        offset +=display.getStrPixelWidth(s) + 1;
-        
-	s[0] = '.';
-        s[1] = 0;
-        display.drawStr(xPos + offset, yPos, s);
-        offset +=display.getStrPixelWidth(s) + 1;
-        
-	itoa(tempLo, s, 10);
-        display.drawStr(xPos + offset, yPos, s);
-        offset +=display.getStrPixelWidth(s) + 1;
- 
-	s[0] = 'º';
-	s[1] = 'C';
-        s[2] = 0;
+	display.drawStr(xPos - display.getStrPixelWidth(s) + 1, yPos, s);
+
+	s[0] = '.', s[1] = 0;
+	display.drawStr(xPos, yPos, s);
+	offset += display.getStrPixelWidth(s) + 1;
+
+	if (tempLo < 10)
+	{
+		s[0] = '0';
+		itoa(tempLo, s + 1, 10);
+	}
+	else
+	{
+		itoa(tempLo, s, 10);
+	}
+	display.drawStr(xPos + offset, yPos, s);
+	offset += display.getStrPixelWidth(s) + 1;
+
+	s[0] = '°', s[1] = 'C', s[2] = 0;
 	display.drawStr(xPos + offset, yPos, s);
 }
 
@@ -495,12 +507,13 @@ void drawClockAnalog(short offsetY, short offsetX, byte radius) {
 	double hourAngleOffset = iMinutes / 12.0;
 	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.5, iHour * 5 + hourAngleOffset, radius);
 	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.78, iMinutes, radius);
-	// showTimePin(centerX, centerY, 0.1, 0.9, iSecond);
+	// showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.9, iSecond, radius);
 }
 
 // Calculate clock pin position
-double RAD = 0.01745329251994329576923690768489; // Pi / 180;
+double RAD = 0.01745329251994329576923690768489; // = Pi / 180;
 double LR = 89.99;
+
 void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius) {
 	double x1, x2, y1, y2;
 	x1 = center_x + (radius * pl1) * cos((6 * pl3 + LR) * RAD);
@@ -520,5 +533,6 @@ void showHourPin(int center_x, int center_y, double pl1, double pl2, double pl3,
 
 	display.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
 }
+
 
 
