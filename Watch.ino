@@ -44,17 +44,17 @@ BH1750FVI LightSensor;
 ///////////////////////////////////////////////////////////////////
 
 //----- Time
-#define UPDATE_TIME_INTERVAL 60000
-#define UPDATE_TIME_INTERVAL_SEC 1000
-short adjustedUpdateTimeInterval = UPDATE_TIME_INTERVAL_SEC;
+#define UPDATE_TIME_INTERVAL 1000 // 1s
+short adjustedUpdateTimeInterval = UPDATE_TIME_INTERVAL;
 short iYear = 2014;
 byte iMonth = 11;
 byte iDay = 6;
-byte iWeek = 0;    // 1: SUN, MON, TUE, WED, THU, FRI,SAT // need to calculate this
+byte iWeek = 0;    // need to calculate this during setup and on date change
 byte iAmPm = 1;    // 0:AM, 1:PM
 byte iHour = 9;
 byte iMinutes = 0;
 byte iSecond = 0;
+unsigned long prevClockTime = 0;
 
 PGM_P const weekString[] PROGMEM = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
@@ -81,18 +81,18 @@ byte centerX = 64;
 byte centerY = 32;
 byte iRadius = 30;
 
-#define IDLE_DISP_INTERVAL 60000
-#define CLOCK_DISP_INTERVAL 60000
-#define EMERGENCY_DISP_INTERVAL 5000
-#define MESSAGE_DISP_INTERVAL 3000
-unsigned long prevClockTime = 0;
-
 //----- Button control
 int buttonPin = 5;
 boolean isClicked = false;
+
+//----- Global
 byte startUpCount = 0;
 byte tempLo = 0;
 byte tempHi = 0;
+
+///////////////////////////////////
+//----- Arduino setup and loop methods
+///////////////////////////////////
 
 void setup()   {
 	Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
@@ -145,7 +145,7 @@ void loop() {
 		display.firstPage();
 		do {
 			// Display routine
-			onDraw(current_time_milis);
+			onDraw();
 		} while (display.nextPage());
 	}
 
@@ -243,7 +243,7 @@ bool updateTime(unsigned long current_time_milis) {
 	if (timeElapse >= adjustedUpdateTimeInterval) // check if one second has elapsed
 	{
 		// Adjust next update time interval in order to reduce accumulated error
-		adjustedUpdateTimeInterval = UPDATE_TIME_INTERVAL_SEC - (timeElapse - adjustedUpdateTimeInterval);
+		adjustedUpdateTimeInterval = UPDATE_TIME_INTERVAL - (timeElapse - adjustedUpdateTimeInterval);
 
 		if (++iSecond >= 60)
 		{
@@ -305,8 +305,7 @@ void toggleClockStyle()
 /// Main drawing routine.
 /// Every drawing starts here.
 /// </summary>
-/// <param name="currentTime">The current time.</param>
-void onDraw(unsigned long currentTime) {
+void onDraw() {
 
 	display.setFont(u8g_font_helvB10r);
 
@@ -353,13 +352,13 @@ void drawStartUp() {
 	// h : Height of the bitmap. 
 	//display.drawBitmap(10, 15, 3, 24, IMG_logo_24x24);
 
-	display.drawStr(45, 12, "Retro");
+	display.drawStr(45, 12, "Temperature");
 
 	display.drawStr(35, 28, "Watch");
 
 	display.drawStr(25, 45, "Arduino v1.0");
 
-	if (startUpCount++ > 20) // 20 * 100ms = 2s start up screen
+	if (startUpCount++ > 2) // 2s start up screen
 	{
 		startUpCount = 0;
 		startClockMode();

@@ -47,7 +47,7 @@ short daysPassedInYear(short year, byte month, byte day);
 int calcDaysSoFar(short year, byte month, byte day);
 bool updateTime(unsigned long current_time_milis);
 void toggleClockStyle();
-void onDraw(unsigned long currentTime);
+void onDraw();
 void startClockMode();
 void drawStartUp();
 void drawClock();
