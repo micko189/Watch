@@ -128,7 +128,7 @@ void loop() {
 
 	if (updateTime(current_time_milis))
 	{ 
-		// one second has elapsed
+		// One second has elapsed
 
 		TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
 		float temp = TempSensor.getTempCByIndex(0);
@@ -149,7 +149,7 @@ void loop() {
 		} while (display.nextPage());
 	}
 
-	// delay to get next current time (10ms), this is essentially time deviation in one second cycle (~ +-10ms)
+	// Delay to get next current time (10ms), this is essentially time deviation in one second cycle (~ +-10ms)
 	delay(10);
 }
 
@@ -176,7 +176,7 @@ bool isLeapYear(short year)
 byte getDaysInMonth(short year, byte month)
 {
 	byte days = 0;
-	month--; // adjust for indexing in daysInMonth
+	month--; // Adjust for indexing in daysInMonth
 	if (month != 1)
 	{
 		return daysInMonth[month];
@@ -197,7 +197,7 @@ byte getDaysInMonth(short year, byte month)
 short daysPassedInYear(short year, byte month, byte day)
 {
 	int passed = 0;
-	day--; // adjust days passed in current month
+	day--; // Adjust days passed in current month
 	for (size_t i = 1; i <= month; i++)
 	{
 		passed += getDaysInMonth(year, i);
@@ -217,11 +217,11 @@ int calcDaysSoFar(short year, byte month, byte day)
 {
 	int days = dayOffset;
 
-	//calculates basic number of days passed 
+	// Calculates basic number of days passed 
 	days += (year - firstYear) * 365;
 	days += daysPassedInYear(year, month, day);
 
-	//add on the extra leapdays for past years
+	// Add on the extra leapdays for past years
 	for (int i = firstYear; i < year; i += 4)
 	{
 		if (isLeapYear(i))
@@ -242,7 +242,7 @@ bool updateTime(unsigned long current_time_milis) {
 	short timeElapse = current_time_milis - prevClockTime;
 	if (timeElapse >= adjustedUpdateTimeInterval) // check if one second has elapsed
 	{
-		// adjust next update time interval in order to reduce acummulated error
+		// Adjust next update time interval in order to reduce accumulated error
 		adjustedUpdateTimeInterval = UPDATE_TIME_INTERVAL_SEC - (timeElapse - adjustedUpdateTimeInterval);
 
 		if (++iSecond >= 60)
