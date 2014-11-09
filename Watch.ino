@@ -114,7 +114,7 @@ void setup()   {
 }
 
 void loop() {
-	boolean isReceived = false;
+	//boolean isReceived = false;
 	unsigned long current_time_milis = 0;
 
 	// Get button input
@@ -126,7 +126,7 @@ void loop() {
 	// Update clock time
 	current_time_milis = millis();
 
-	if (updateTime(current_time_milis))
+	if (updateTime(current_time_milis) || displayMode == DISPLAY_MODE_START_UP)
 	{ 
 		// One second has elapsed
 
@@ -318,7 +318,7 @@ void onDraw() {
 	case DISPLAY_MODE_CLOCK:
 		if (isClicked == LOW) {    // User input received
 
-			//toggleClockStyle();
+			toggleClockStyle();
 		}
 
 		drawClock();
@@ -340,6 +340,36 @@ void startClockMode() {
 	displayMode = DISPLAY_MODE_CLOCK;
 }
 
+////////////////////////////////////////////////////
+// 16x24 Logo
+////////////////////////////////////////////////////
+const unsigned char PROGMEM IMG_logo_24x24[] = {
+0x07,0xff,0xe0,
+0x07,0xff,0xe0,
+0x07,0xff,0xe0,
+0x08,0x10,0x10,
+0x10,0x10,0x08,
+0x10,0x00,0x08,
+0x10,0x00,0x08,
+0x10,0x00,0x08,
+0x10,0x00,0x08,
+0x10,0x02,0x08,
+0x10,0x04,0x08,
+0x10,0x08,0x0c,
+0x1c,0x10,0x3c,
+0x10,0x08,0x0c,
+0x10,0x08,0x08,
+0x10,0x04,0x08,
+0x10,0x04,0x08,
+0x10,0x02,0x08,
+0x10,0x02,0x08,
+0x10,0x10,0x08,
+0x08,0x10,0x10,
+0x07,0xff,0xe0,
+0x07,0xff,0xe0,
+0x07,0xff,0xe0
+}; 
+
 /// <summary>
 /// Draws the start up splash screen.
 /// </summary>
@@ -350,15 +380,15 @@ void drawStartUp() {
 	// y : Y - position(upper position of the bitmap).
 	// cnt : Number of bytes of the bitmap in horizontal direction.The width of the bitmap is cnt*8.
 	// h : Height of the bitmap. 
-	//display.drawBitmap(10, 15, 3, 24, IMG_logo_24x24);
+	display.drawBitmapP(10, 10, 3, 24, IMG_logo_24x24);
 
-	display.drawStr(45, 12, "Temperature");
+	//display.drawStr(25, 12, "Temperature");
 
 	display.drawStr(35, 28, "Watch");
 
 	display.drawStr(25, 45, "Arduino v1.0");
 
-	if (startUpCount++ > 2) // 2s start up screen
+	if (startUpCount++ > 200) // 2s start up screen
 	{
 		startUpCount = 0;
 		startClockMode();
