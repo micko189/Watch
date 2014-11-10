@@ -84,6 +84,15 @@ byte iRadius = 30;
 //----- Button control
 int buttonPin = 5;
 boolean isClicked = LOW; // LOW = false = 0x0
+boolean isChanged = false;
+
+int buttonPinUp = 6;
+boolean isClickedUp = LOW; // LOW = false = 0x0
+boolean isChangedUp = false;
+
+int buttonPinDown = 7;
+boolean isClickedDown = LOW; // LOW = false = 0x0
+boolean isChangedDown = false;
 
 //----- Global
 byte startUpCount = 0;
@@ -97,6 +106,8 @@ byte tempHi = 0;
 void setup()   {
 	Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
 	pinMode(buttonPin, INPUT);  // Defines button pin
+	pinMode(buttonPinUp, INPUT);  // Defines button pin
+	pinMode(buttonPinDown, INPUT);  // Defines button pin
 
 	// By default, we'll generate the high voltage from the 3.3v line internally! (neat!)
 	// Assign default color value
@@ -113,22 +124,36 @@ void setup()   {
 	LightSensor.SetMode(Continuous_H_resolution_Mode);
 }
 
+// Get button input
+void GetButtonInput(int pin, boolean clicked, boolean changed)
+{
+	if (digitalRead(pin) == HIGH)
+	{
+		if (clicked = LOW)
+		{
+			changed = true;
+			clicked = HIGH;
+		}
+	}
+}
+
 void loop() {
-	//boolean isReceived = false;
+	isChanged = false;
+	isChangedUp = false;
+	isChangedDown = false;
 	unsigned long current_time_milis = 0;
 
 	// Get button input
-	if (digitalRead(buttonPin) == HIGH)
-	{
-		//isClicked = HIGH;
-	}
+	GetButtonInput(buttonPin, isClicked, isChanged);
+	GetButtonInput(buttonPinUp, isClickedUp, isChangedUp);
+	GetButtonInput(buttonPinDown, isClickedDown, isChangedDown);
 
 	// Update clock time
 	current_time_milis = millis();
 
-	if (updateTime(current_time_milis) || displayMode == DISPLAY_MODE_START_UP)
+	if (updateTime(current_time_milis) || displayMode == DISPLAY_MODE_START_UP || isChanged || isChangedUp || isChangedDown)
 	{ 
-		// One second has elapsed
+		// One second has elapsed or we have input (button clicked)
 
 		TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
 		float temp = TempSensor.getTempCByIndex(0);
@@ -290,10 +315,22 @@ bool updateTime(unsigned long current_time_milis) {
 /// </summary>
 void toggleClockStyle()
 {
-	clockStyle++;
-	if (clockStyle > 4)
+	if (isClickedUp == HIGH)
 	{
-		clockStyle = 1;
+		clockStyle++;
+		if (clockStyle > 4)
+		{
+			clockStyle = 1;
+		}
+	}
+
+	if (isClickedDown == HIGH)
+	{
+		clockStyle--;
+		if (clockStyle < 1)
+		{
+			clockStyle = 4;
+		}
 	}
 }
 
@@ -316,7 +353,7 @@ void onDraw() {
 		break;
 
 	case DISPLAY_MODE_CLOCK:
-		if (isClicked == HIGH) 
+		if (isClickedUp == HIGH || isClickedDown == HIGH)
 		{    
 			// User input received
 			toggleClockStyle();

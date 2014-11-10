@@ -40,6 +40,7 @@ typedef unsigned char byte;
 extern "C" void __cxa_pure_virtual() {;}
 
 //
+void GetButtonInput(int pin, boolean clicked, boolean changed);
 //
 bool isLeapYear(short year);
 byte getDaysInMonth(short year, byte month);
