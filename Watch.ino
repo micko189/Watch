@@ -110,6 +110,7 @@ boolean isChangedDown = false;
 byte startUpCount = 0;
 byte tempLo = 0;
 byte tempHi = 0;
+byte setPosition = 0; // position of value currently being set
 
 ///////////////////////////////////
 //----- Arduino setup and loop methods
@@ -164,7 +165,7 @@ void loop() {
 	current_time_milis = millis();
 
 	if (updateTime(current_time_milis) || displayMode == DISPLAY_MODE_START_UP || isChanged || isChangedUp || isChangedDown)
-	{ 
+	{
 		// One second has elapsed or we have input (button clicked)
 
 		TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
@@ -325,21 +326,21 @@ bool updateTime(unsigned long current_time_milis) {
 /// <summary>
 /// Toggles the option.
 /// </summary>
-void toggleOption(byte option, byte maxVal)
+void toggleOption(short option, short minVal, short maxVal)
 {
 	if (isClickedUp == HIGH)
 	{
 		option++;
 		if (option > maxVal)
 		{
-			option = 1;
+			option = minVal;
 		}
 	}
 
 	if (isClickedDown == HIGH)
 	{
 		option--;
-		if (option < 1)
+		if (option < minVal)
 		{
 			option = maxVal;
 		}
@@ -372,9 +373,9 @@ void onDraw() {
 		}
 
 		if (isClickedUp == HIGH || isClickedDown == HIGH)
-		{    
+		{
 			// User input received
-			toggleOption(clockStyle, 4);
+			toggleOption(clockStyle, 0, 4);
 		}
 
 		drawClock();
@@ -392,13 +393,14 @@ void onDraw() {
 		{
 			// Go back
 			displayMode = DISPLAY_MODE_CLOCK;
+			menuMode = 0;
 			break;
 		}
 
 		if (isClickedUp == HIGH || isClickedDown == HIGH)
 		{
 			// User input received
-			toggleOption(menuMode, 3);
+			toggleOption(menuMode, 0, 3);
 		}
 
 		drawMenu();
@@ -409,12 +411,14 @@ void onDraw() {
 		{
 			// Go back
 			displayMode = DISPLAY_MODE_MENU;
+			setPosition = 0;
 			break;
 		}
 
 		if (isClicked == HIGH)
 		{
 			// Go to next value
+			setPosition++;
 		}
 
 		drawSetMenu();
@@ -438,12 +442,68 @@ void drawSetMenu()
 	switch (menuMode)
 	{
 	case MENU_SET_DATE:
+		if (setPosition > 2) // DD MM YY
+		{
+			setPosition = 0;
+		}
+
+		if (isClickedUp == HIGH || isClickedDown == HIGH)
+		{
+			switch (setPosition)
+			{
+			case 0:
+				toggleOption(iDay, 1, 12);
+				break;
+			case 1:
+				toggleOption(iMonth, 1, 60);
+				break;
+			case 2:
+				toggleOption(iYear, 2000, 32767);
+				break;
+			}
+		}
+
 		drawDateDigital(centerX - 35, centerY - 20);
+
+		display.drawLine(centerX - 35, centerY - 20, centerX - 25, centerY - 20);
+
 		break;
 	case MENU_SET_TIME:
+		if (setPosition > 1) // HH MM
+		{
+			setPosition = 0;
+		}
+
+		if (isClickedUp == HIGH || isClickedDown == HIGH)
+		{
+			switch (setPosition)
+			{
+			case 0:
+				toggleOption(iHour, 1, 12);
+				break;
+			case 1:
+				toggleOption(iMinutes, 1, 60);
+				break;
+			}
+		}
+
+		display.drawLine(centerX - 35, centerY - 20, centerX - 25, centerY - 20);
+
 		drawClockDigital(centerX - 50, centerY + 13);
 		break;
 	case MENU_SET_TIME_FORMAT:
+		if (setPosition > 0) // TF
+		{
+			setPosition = 0;
+		}
+
+		if (isClickedUp == HIGH || isClickedDown == HIGH)
+		{
+			toggleOption(iTimeFormat, 0, 1);
+		}
+
+		display.drawLine(centerX - 35, centerY - 20, centerX - 25, centerY - 20);
+
 		drawTimeFormat(centerX - 50, centerY + 13);
 		break;
 	}
@@ -460,31 +520,31 @@ void startClockMode() {
 // 16x24 Logo
 ////////////////////////////////////////////////////
 const unsigned char PROGMEM IMG_logo_24x24[] = {
-0x07,0xff,0xe0,
-0x07,0xff,0xe0,
-0x07,0xff,0xe0,
-0x08,0x10,0x10,
-0x10,0x10,0x08,
-0x10,0x00,0x08,
-0x10,0x00,0x08,
-0x10,0x00,0x08,
-0x10,0x00,0x08,
-0x10,0x02,0x08,
-0x10,0x04,0x08,
-0x10,0x08,0x0c,
-0x1c,0x10,0x3c,
-0x10,0x08,0x0c,
-0x10,0x08,0x08,
-0x10,0x04,0x08,
-0x10,0x04,0x08,
-0x10,0x02,0x08,
-0x10,0x02,0x08,
-0x10,0x10,0x08,
-0x08,0x10,0x10,
-0x07,0xff,0xe0,
-0x07,0xff,0xe0,
-0x07,0xff,0xe0
-}; 
+	0x07, 0xff, 0xe0,
+	0x07, 0xff, 0xe0,
+	0x07, 0xff, 0xe0,
+	0x08, 0x10, 0x10,
+	0x10, 0x10, 0x08,
+	0x10, 0x00, 0x08,
+	0x10, 0x00, 0x08,
+	0x10, 0x00, 0x08,
+	0x10, 0x00, 0x08,
+	0x10, 0x02, 0x08,
+	0x10, 0x04, 0x08,
+	0x10, 0x08, 0x0c,
+	0x1c, 0x10, 0x3c,
+	0x10, 0x08, 0x0c,
+	0x10, 0x08, 0x08,
+	0x10, 0x04, 0x08,
+	0x10, 0x04, 0x08,
+	0x10, 0x02, 0x08,
+	0x10, 0x02, 0x08,
+	0x10, 0x10, 0x08,
+	0x08, 0x10, 0x10,
+	0x07, 0xff, 0xe0,
+	0x07, 0xff, 0xe0,
+	0x07, 0xff, 0xe0
+};
 
 /// <summary>
 /// Draws the start up splash screen.
