@@ -54,11 +54,16 @@ byte iAmPm = 1;    // 0:AM, 1:PM
 byte iHour = 9;
 byte iMinutes = 0;
 byte iSecond = 0;
+byte iTimeFormat = 0;
 unsigned long prevClockTime = 0;
 
 PGM_P const weekString[] PROGMEM = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
 PROGMEM const byte daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; //standard year
+
+PGM_P const menuItems[] PROGMEM = { "Set date", "Set time", "Set time format" };
+
+PGM_P const timeFormat[] PROGMEM = { "12h", "24h" };
 
 //PGM_P const dayNames[] PROGMEM = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 //PGM_P const months[] PROGMEM = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
@@ -67,14 +72,21 @@ PROGMEM const short firstYear = 2000; //This is our start point
 PROGMEM const byte dayOffset = 6; //The first day of our start year may not be a Sunday ( in 1800 it was Wednesday)
 
 //----- Display features
-#define DISPLAY_MODE_START_UP 0
-#define DISPLAY_MODE_CLOCK 1
+#define DISPLAY_MODE_START_UP 0x0
+#define DISPLAY_MODE_CLOCK 0x1
+#define DISPLAY_MODE_MENU 0x2
+#define DISPLAY_MODE_SET_MENU 0x3
 byte displayMode = DISPLAY_MODE_START_UP;
 
-#define CLOCK_STYLE_SIMPLE_ANALOG  0x01
-#define CLOCK_STYLE_SIMPLE_DIGIT  0x02
-#define CLOCK_STYLE_SIMPLE_MIX  0x03
-#define CLOCK_STYLE_SIMPLE_DIGIT_SEC  0x04
+#define MENU_SET_DATE  0x0
+#define MENU_SET_TIME  0x1
+#define MENU_SET_TIME_FORMAT 0x2
+byte menuMode = MENU_SET_DATE;
+
+#define CLOCK_STYLE_SIMPLE_ANALOG  0x1
+#define CLOCK_STYLE_SIMPLE_DIGIT  0x2
+#define CLOCK_STYLE_SIMPLE_MIX  0x3
+#define CLOCK_STYLE_SIMPLE_DIGIT_SEC  0x4
 byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
 
 byte centerX = 64;
@@ -104,7 +116,7 @@ byte tempHi = 0;
 ///////////////////////////////////
 
 void setup()   {
-	Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
+	//Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
 	pinMode(buttonPin, INPUT);  // Defines button pin
 	pinMode(buttonPinUp, INPUT);  // Defines button pin
 	pinMode(buttonPinDown, INPUT);  // Defines button pin
@@ -311,25 +323,25 @@ bool updateTime(unsigned long current_time_milis) {
 }
 
 /// <summary>
-/// Toggles the clock style.
+/// Toggles the option.
 /// </summary>
-void toggleClockStyle()
+void toggleOption(byte option, byte maxVal)
 {
 	if (isClickedUp == HIGH)
 	{
-		clockStyle++;
-		if (clockStyle > 4)
+		option++;
+		if (option > maxVal)
 		{
-			clockStyle = 1;
+			option = 1;
 		}
 	}
 
 	if (isClickedDown == HIGH)
 	{
-		clockStyle--;
-		if (clockStyle < 1)
+		option--;
+		if (option < 1)
 		{
-			clockStyle = 4;
+			option = maxVal;
 		}
 	}
 }
@@ -353,13 +365,59 @@ void onDraw() {
 		break;
 
 	case DISPLAY_MODE_CLOCK:
+		if (isClicked == HIGH)
+		{
+			displayMode = DISPLAY_MODE_MENU;
+			break;
+		}
+
 		if (isClickedUp == HIGH || isClickedDown == HIGH)
 		{    
 			// User input received
-			toggleClockStyle();
+			toggleOption(clockStyle, 4);
 		}
 
 		drawClock();
+
+		break;
+
+	case DISPLAY_MODE_MENU:
+		if (isClicked == HIGH)
+		{
+			displayMode = DISPLAY_MODE_SET_MENU;
+			break;
+		}
+
+		if (isClickedUp == HIGH && isClickedDown == HIGH)
+		{
+			// Go back
+			displayMode = DISPLAY_MODE_CLOCK;
+			break;
+		}
+
+		if (isClickedUp == HIGH || isClickedDown == HIGH)
+		{
+			// User input received
+			toggleOption(menuMode, 3);
+		}
+
+		drawMenu();
+		break;
+
+	case DISPLAY_MODE_SET_MENU:
+		if (isClickedUp == HIGH && isClickedDown == HIGH)
+		{
+			// Go back
+			displayMode = DISPLAY_MODE_MENU;
+			break;
+		}
+
+		if (isClicked == HIGH)
+		{
+			// Go to next value
+		}
+
+		drawSetMenu();
 
 		break;
 	default:
@@ -368,8 +426,28 @@ void onDraw() {
 	}
 
 	isClicked = LOW;
+	isClickedUp = LOW;
+	isClickedDown = LOW;
 }  // End of onDraw()
 
+/// <summary>
+/// Draws the set menu.
+/// </summary>
+void drawSetMenu()
+{
+	switch (menuMode)
+	{
+	case MENU_SET_DATE:
+		drawDateDigital(centerX - 35, centerY - 20);
+		break;
+	case MENU_SET_TIME:
+		drawClockDigital(centerX - 50, centerY + 13);
+		break;
+	case MENU_SET_TIME_FORMAT:
+		drawTimeFormat(centerX - 50, centerY + 13);
+		break;
+	}
+}
 
 /// <summary>
 /// Starts the clock mode (changes displayMode).
@@ -434,6 +512,25 @@ void drawStartUp() {
 }
 
 /// <summary>
+/// Draw the main manu screen.
+/// Menu changes according to user selection.
+/// </summary>
+void drawMenu() {
+	display.setFont(u8g_font_helvB10r);
+	display.drawStr(10, 10, (const char*)pgm_read_word(&(menuItems[MENU_SET_DATE])));
+	display.drawStr(10, 30, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME])));
+	display.drawStr(10, 50, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME_FORMAT])));
+
+	display.setFontRefHeightExtendedText();
+	display.setFontPosTop();
+
+	byte h = display.getFontAscent() - display.getFontDescent();
+	byte w = display.getStrWidth((const char*)pgm_read_word(&(menuItems[menuMode])));;
+
+	display.drawFrame(10 - 1, 10 + menuMode * 20, w + 2, h + 2);
+}
+
+/// <summary>
 /// Draw the main clock screen.
 /// Clock style changes according to user selection.
 /// </summary>
@@ -488,6 +585,15 @@ void drawClock() {
 
 		break;
 	}
+}
+
+/// <summary>
+/// Draws the time format (12/24).
+/// </summary>
+/// <param name="xPos">The x position.</param>
+/// <param name="yPos">The y position.</param>
+void drawTimeFormat(byte xPos, byte yPos) {
+	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(timeFormat[iTimeFormat])));
 }
 
 /// <summary>
