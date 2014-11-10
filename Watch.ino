@@ -83,7 +83,7 @@ byte iRadius = 30;
 
 //----- Button control
 int buttonPin = 5;
-boolean isClicked = false;
+boolean isClicked = LOW; // LOW = false = 0x0
 
 //----- Global
 byte startUpCount = 0;
@@ -118,9 +118,9 @@ void loop() {
 	unsigned long current_time_milis = 0;
 
 	// Get button input
-	if (digitalRead(buttonPin) == LOW)
+	if (digitalRead(buttonPin) == HIGH)
 	{
-		//isClicked = LOW;
+		//isClicked = HIGH;
 	}
 
 	// Update clock time
@@ -316,8 +316,9 @@ void onDraw() {
 		break;
 
 	case DISPLAY_MODE_CLOCK:
-		if (isClicked == LOW) {    // User input received
-
+		if (isClicked == HIGH) 
+		{    
+			// User input received
 			toggleClockStyle();
 		}
 
@@ -329,7 +330,7 @@ void onDraw() {
 		break;
 	}
 
-	isClicked = HIGH;
+	isClicked = LOW;
 }  // End of onDraw()
 
 
