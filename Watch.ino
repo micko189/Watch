@@ -117,7 +117,7 @@ byte setPosition = 0; // position of value currently being set
 ///////////////////////////////////
 
 void setup()   {
-	//Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
+	Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
 	pinMode(buttonPin, INPUT);  // Defines button pin
 	pinMode(buttonPinUp, INPUT);  // Defines button pin
 	pinMode(buttonPinDown, INPUT);  // Defines button pin
@@ -138,14 +138,16 @@ void setup()   {
 }
 
 // Get button input
-void GetButtonInput(int pin, boolean clicked, boolean changed)
+void GetButtonInput(int pin, boolean *clicked, boolean *changed)
 {
 	if (digitalRead(pin) == HIGH)
 	{
-		if (clicked = LOW)
+                Serial.print(pin);
+                Serial.println("HIGH");
+		if (*clicked = LOW)
 		{
-			changed = true;
-			clicked = HIGH;
+			*changed = true;
+			*clicked = HIGH;
 		}
 	}
 }
@@ -157,9 +159,9 @@ void loop() {
 	unsigned long current_time_milis = 0;
 
 	// Get button input
-	GetButtonInput(buttonPin, isClicked, isChanged);
-	GetButtonInput(buttonPinUp, isClickedUp, isChangedUp);
-	GetButtonInput(buttonPinDown, isClickedDown, isChangedDown);
+	GetButtonInput(buttonPin, &isClicked, &isChanged);
+	GetButtonInput(buttonPinUp, &isClickedUp, &isChangedUp);
+	GetButtonInput(buttonPinDown, &isClickedDown, &isChangedDown);
 
 	// Update clock time
 	current_time_milis = millis();
@@ -326,23 +328,23 @@ bool updateTime(unsigned long current_time_milis) {
 /// <summary>
 /// Toggles the option.
 /// </summary>
-void toggleOption(short option, short minVal, short maxVal)
+void toggleOption(byte *option, short minVal, short maxVal)
 {
 	if (isClickedUp == HIGH)
 	{
-		option++;
-		if (option > maxVal)
+		*option++;
+		if (*option > maxVal)
 		{
-			option = minVal;
+			*option = minVal;
 		}
 	}
 
 	if (isClickedDown == HIGH)
 	{
-		option--;
-		if (option < minVal)
+		*option--;
+		if (*option < minVal)
 		{
-			option = maxVal;
+			*option = maxVal;
 		}
 	}
 }
@@ -375,7 +377,7 @@ void onDraw() {
 		if (isClickedUp == HIGH || isClickedDown == HIGH)
 		{
 			// User input received
-			toggleOption(clockStyle, 0, 4);
+			toggleOption(&clockStyle, 0, 4);
 		}
 
 		drawClock();
@@ -400,7 +402,7 @@ void onDraw() {
 		if (isClickedUp == HIGH || isClickedDown == HIGH)
 		{
 			// User input received
-			toggleOption(menuMode, 0, 3);
+			toggleOption(&menuMode, 0, 3);
 		}
 
 		drawMenu();
@@ -452,13 +454,13 @@ void drawSetMenu()
 			switch (setPosition)
 			{
 			case 0:
-				toggleOption(iDay, 1, 12);
+				toggleOption(&iDay, 1, 12);
 				break;
 			case 1:
-				toggleOption(iMonth, 1, 60);
+				toggleOption(&iMonth, 1, 60);
 				break;
 			case 2:
-				toggleOption(iYear, 2000, 32767);
+				//toggleOption(&iYear, 2000, 32767);
 				break;
 			}
 		}
@@ -479,10 +481,10 @@ void drawSetMenu()
 			switch (setPosition)
 			{
 			case 0:
-				toggleOption(iHour, 1, 12);
+				toggleOption(&iHour, 1, 12);
 				break;
 			case 1:
-				toggleOption(iMinutes, 1, 60);
+				toggleOption(&iMinutes, 1, 60);
 				break;
 			}
 		}
@@ -499,7 +501,7 @@ void drawSetMenu()
 
 		if (isClickedUp == HIGH || isClickedDown == HIGH)
 		{
-			toggleOption(iTimeFormat, 0, 1);
+			toggleOption(&iTimeFormat, 0, 1);
 		}
 
 		display.drawLine(centerX - 35, centerY - 20, centerX - 25, centerY - 20);
