@@ -628,7 +628,7 @@ void drawClock() {
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
-		drawClockAnalog(0, -30, iRadius - 4);
+		drawClockAnalog(centerX, centerY - 30, iRadius - 4);
 
 		display.setFont(u8g_font_helvB12);
 		drawTemp(80, 63);
@@ -644,7 +644,7 @@ void drawClock() {
 		display.setFont(u8g_font_helvB12);
 		drawTemp(80, 63);
 
-		drawClockAnalog(0, 0, iRadius);
+		drawClockAnalog(centerX, centerY, iRadius);
 
 		break;
 
@@ -785,22 +785,22 @@ void drawDateDigital(byte xPos, byte yPos)
 /// <summary>
 /// Draws the clock analog.
 /// </summary>
-/// <param name="offsetY">The offset y.</param>
-/// <param name="offsetX">The offset x.</param>
+/// <param name="xPos">The x position.</param>
+/// <param name="yPos">The y position.</param>
 /// <param name="radius">The radius.</param>
-void drawClockAnalog(short offsetY, short offsetX, byte radius) {
-	display.drawCircle(centerX + offsetX, centerY + offsetY, radius);
+void drawClockAnalog(byte xPos, byte yPos, byte radius) {
+	display.drawCircle(xPos, yPos, radius);
 
 	// print hour pin lines
 	for (size_t i = 0; i < 60; i++)
 	{
-		showTimePin(centerX + offsetX, centerY + offsetY, 0.9, 1, i * 5, radius, 1);
+		showTimePin(xPos, yPos, 0.9, 1, i * 5, radius, 1);
 	}
 
 	double hourAngleOffset = iMinutes / 12.0;
-	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.5, iHour * 5 + hourAngleOffset, radius, -1);
-	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.78, iMinutes, radius, 1);
-	// showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.9, iSecond, radius);
+	showTimePin(xPos, yPos, 0.1, 0.5, iHour * 5 + hourAngleOffset, radius, -1);
+	showTimePin(xPos, yPos, 0.1, 0.78, iMinutes, radius, 1);
+	// showTimePin(xPos, yPos, 0.1, 0.9, iSecond, radius);
 }
 
 // Calculate clock pin position
