@@ -173,9 +173,9 @@ void loop() {
 	unsigned long current_time_milis = 0;
 
 	// Get button input
-	GetButtonInput(buttonPin, &isClicked, &isChanged);
-	GetButtonInput(buttonPinUp, &isClickedUp, &isChangedUp);
-	GetButtonInput(buttonPinDown, &isClickedDown, &isChangedDown);
+	getButtonInput(buttonPin, &isClicked, &isChanged);
+	getButtonInput(buttonPinUp, &isClickedUp, &isChangedUp);
+	getButtonInput(buttonPinDown, &isClickedDown, &isChangedDown);
 
 	// Update clock time
 	current_time_milis = millis();
@@ -217,7 +217,7 @@ void loop() {
 /// <param name="pin">The pin.</param>
 /// <param name="clicked">The clicked.</param>
 /// <param name="changed">The changed.</param>
-void GetButtonInput(byte pin, boolean *clicked, boolean *changed)
+void getButtonInput(byte pin, boolean *clicked, boolean *changed)
 {
 	if (digitalRead(pin) == HIGH)
 	{
@@ -471,6 +471,19 @@ void onDraw() {
 }  // End of onDraw()
 
 /// <summary>
+/// Rolls the value over to 0.
+/// </summary>
+/// <param name="value">The value.</param>
+/// <param name="rollOverVal">The roll over value.</param>
+void rollOver(byte *value, byte rollOverVal)
+{
+	if (*value > rollOverVal)
+	{
+		*value = 0;
+	}
+}
+
+/// <summary>
 /// Draws the set menu.
 /// </summary>
 void drawSetMenu()
@@ -478,10 +491,7 @@ void drawSetMenu()
 	switch (menuMode)
 	{
 	case MENU_SET_DATE:
-		if (setPosition > 2) // DD MM YY
-		{
-			setPosition = 0;
-		}
+		rollOver(&setPosition, 2); // DD MM YY
 
 		if (isClickedUp == HIGH || isClickedDown == HIGH)
 		{
@@ -494,7 +504,20 @@ void drawSetMenu()
 				toggleOption(&iMonth, 1, 60);
 				break;
 			case 2:
-				//toggleOption(&iYear, 2000, 32767);
+				if (isClickedUp == HIGH)
+				{
+					iYear++;
+					if (iYear > 32767)
+						iYear = 2000;
+				}
+
+				if (isClickedDown == HIGH)
+				{
+					iYear--;
+					if (iYear < 2000)
+						iYear = 32767;
+				}
+
 				break;
 			}
 
@@ -503,15 +526,11 @@ void drawSetMenu()
 		}
 
 		drawDateDigital(29, 12);
-
 		display.drawLine(29, 12, 39, 12);
 
 		break;
 	case MENU_SET_TIME:
-		if (setPosition > 1) // HH MM
-		{
-			setPosition = 0;
-		}
+		rollOver(&setPosition, 1); // HH MM
 
 		if (isClickedUp == HIGH || isClickedDown == HIGH)
 		{
@@ -527,14 +546,11 @@ void drawSetMenu()
 		}
 
 		display.drawLine(29, 12, 39, 12);
-
 		drawClockDigital(14, 45);
+
 		break;
 	case MENU_SET_TIME_FORMAT:
-		if (setPosition > 0) // TF
-		{
-			setPosition = 0;
-		}
+		rollOver(&setPosition, 0); // TF
 
 		if (isClickedUp == HIGH || isClickedDown == HIGH)
 		{
@@ -542,8 +558,8 @@ void drawSetMenu()
 		}
 
 		display.drawLine(29, 12, 39, 12);
-
 		drawTimeFormat(14, 45);
+
 		break;
 	}
 }
@@ -617,7 +633,7 @@ void drawClock() {
 		display.setFont(u8g_font_helvB12);
 		drawTemp(80, 63);
 
-		display.setFont(u8g_font_helvB12);
+		//display.setFont(u8g_font_helvB12);
 		drawDayAmPm(67, 23);
 
 		display.setFont(u8g_font_helvB18r);
@@ -776,13 +792,13 @@ void drawClockAnalog(short offsetY, short offsetX, byte radius) {
 	display.drawCircle(centerX + offsetX, centerY + offsetY, radius);
 
 	// print hour pin lines
-	for (size_t i = 0; i < 12; i++)
+	for (size_t i = 0; i < 60; i++)
 	{
-		showTimePin(centerX + offsetX, centerY + offsetY, 0.9, 1, i * 5, radius, -1);
+		showTimePin(centerX + offsetX, centerY + offsetY, 0.9, 1, i * 5, radius, 1);
 	}
 
 	double hourAngleOffset = iMinutes / 12.0;
-	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.5, iHour * 5 + hourAngleOffset, radius, 1);
+	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.5, iHour * 5 + hourAngleOffset, radius, -1);
 	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.78, iMinutes, radius, 1);
 	// showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.9, iSecond, radius);
 }
@@ -791,12 +807,25 @@ void drawClockAnalog(short offsetY, short offsetX, byte radius) {
 #define RAD 0.01745329251994329576923690768489 // = Pi / 180;
 #define LR 89.99
 
-void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius, byte sign) {
-	double x1, x2, y1, y2;
-	x1 = center_x + (radius * pl1) * cos((6 * pl3 + LR) * RAD);
-	y1 = center_y + (radius * pl1) * sin((6 * pl3 + LR) * RAD);
-	x2 = center_x + (radius * pl2) * cos((6 * pl3 - LR * sign) * RAD);
-	y2 = center_y + (radius * pl2) * sin((6 * pl3 - LR * sign) * RAD);
+int getPointCoordinate(byte center, byte radius, double pl, double angle, byte sign, double(*trigFn)(double))
+{
+	return center + (radius * pl) * (*trigFn)((6 * angle + LR * sign) * RAD);
+}
 
-	display.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
+void showTimePin(byte center_x, byte center_y, double pl1, double pl2, double angle, byte radius, byte sign) {
+	int x1, x2, y1, y2;
+
+	//x1 = center_x + (radius * pl1) * cos((6 * angle + LR) * RAD);
+	x1 = getPointCoordinate(center_x, radius, pl1, angle, 1, &cos);
+
+	//y1 = center_y + (radius * pl1) * sin((6 * angle + LR) * RAD);
+	y1 = getPointCoordinate(center_y, radius, pl1, angle, 1, &sin);
+
+	//x2 = center_x + (radius * pl2) * cos((6 * angle + LR * sign) * RAD);
+	x2 = getPointCoordinate(center_x, radius, pl2, angle, sign, &cos);
+
+	//y2 = center_y + (radius * pl2) * sin((6 * angle + LR * sign) * RAD);
+	y2 = getPointCoordinate(center_y, radius, pl2, angle, sign, &sin);
+
+	display.drawLine(x1, y1, x2, y2);
 }

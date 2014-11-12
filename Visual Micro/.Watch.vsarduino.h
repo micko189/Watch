@@ -41,7 +41,7 @@ extern "C" void __cxa_pure_virtual() {;}
 
 //
 //
-void GetButtonInput(byte pin, boolean *clicked, boolean *changed);
+void getButtonInput(byte pin, boolean *clicked, boolean *changed);
 bool isLeapYear(short year);
 byte getDaysInMonth(short year, byte month);
 short daysPassedInYear(short year, byte month, byte day);
@@ -49,6 +49,7 @@ int calcDaysSoFar(short year, byte month, byte day);
 bool updateTime(unsigned long current_time_milis);
 void toggleOption(byte *option, byte minVal, byte maxVal);
 void onDraw();
+void rollOver(byte *value, byte rollOverVal);
 void drawSetMenu();
 void drawStartUp();
 void drawMenu();
@@ -61,7 +62,7 @@ byte drawClockDigital(byte xPos, byte yPos);
 void drawSecondsDigital(byte xPos, byte yPos);
 void drawDateDigital(byte xPos, byte yPos);
 void drawClockAnalog(short offsetY, short offsetX, byte radius);
-void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius, byte sign);
+void showTimePin(byte center_x, byte center_y, double pl1, double pl2, double angle, byte radius, byte sign);
 
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\cores\arduino\arduino.h"
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\variants\standard\pins_arduino.h" 
