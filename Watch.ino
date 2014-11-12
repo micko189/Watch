@@ -179,21 +179,24 @@ void loop() {
 
 	// Update clock time
 	current_time_milis = millis();
-
-	if (updateTime(current_time_milis) || displayMode == DISPLAY_MODE_START_UP || isChanged || isChangedUp || isChangedDown)
+	boolean timeUpdated;
+	if ((timeUpdated = updateTime(current_time_milis)) || displayMode != DISPLAY_MODE_CLOCK || isChanged || isChangedUp || isChangedDown)
 	{
 		// One second has elapsed or we have input (button clicked)
 
-		TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
-		float temp = TempSensor.getTempCByIndex(0);
+		if (timeUpdated)
+		{
+			TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
+			float temp = TempSensor.getTempCByIndex(0);
 
-		tempLo = ((short)(temp * 100)) % 100;
-		tempHi = (byte)temp;
+			tempLo = ((short)(temp * 100)) % 100;
+			tempHi = (byte)temp;
 
-		uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
+			uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
 
-		//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
-		//display.setContrast(0); 
+			//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
+			//display.setContrast(0);  
+		}
 
 		// picture loop
 		display.firstPage();
