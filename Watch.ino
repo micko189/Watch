@@ -221,7 +221,7 @@ void GetButtonInput(byte pin, boolean *clicked, boolean *changed)
 {
 	if (digitalRead(pin) == HIGH)
 	{
-		if (*clicked = LOW)
+		if (*clicked == LOW)
 		{
 			*changed = true;
 			*clicked = HIGH;
@@ -247,7 +247,6 @@ bool isLeapYear(short year)
 /// <returns></returns>
 byte getDaysInMonth(short year, byte month)
 {
-	byte days = 0;
 	month--; // Adjust for indexing in daysInMonth
 	if (month != 1)
 	{
