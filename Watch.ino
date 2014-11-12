@@ -234,7 +234,7 @@ void getButtonInput(byte pin, boolean *clicked, boolean *changed)
 /// </summary>
 /// <param name="year">The year.</param>
 /// <returns></returns>
-bool isLeapYear(short year)
+boolean isLeapYear(short year)
 {
 	return ((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0));
 }
@@ -309,7 +309,7 @@ byte calcDayOfWeek(short year, byte month, byte day)
 /// </summary>
 /// <param name="current_time_milis">The current_time_milis.</param>
 /// <returns> whether time is updated - one seccond is ellapsed </returns>
-bool updateTime(unsigned long current_time_milis) {
+boolean updateTime(unsigned long current_time_milis) {
 	short timeElapse = current_time_milis - prevClockTime;
 	if (timeElapse >= adjustedUpdateTimeInterval) // check if one second has elapsed
 	{

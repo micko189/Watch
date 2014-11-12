@@ -42,11 +42,11 @@ extern "C" void __cxa_pure_virtual() {;}
 //
 //
 void getButtonInput(byte pin, boolean *clicked, boolean *changed);
-bool isLeapYear(short year);
+boolean isLeapYear(short year);
 byte getDaysInMonth(short year, byte month);
 short daysPassedInYear(short year, byte month, byte day);
 byte calcDayOfWeek(short year, byte month, byte day);
-bool updateTime(unsigned long current_time_milis);
+boolean updateTime(unsigned long current_time_milis);
 void toggleOption(byte *option, byte minVal, byte maxVal);
 void onDraw();
 void rollOver(byte *value, byte rollOverVal);
