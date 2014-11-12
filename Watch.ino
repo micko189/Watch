@@ -188,7 +188,7 @@ void loop() {
 		float temp = TempSensor.getTempCByIndex(0);
 
 		tempLo = ((short)(temp * 100)) % 100;
-		tempHi = (short)temp;
+		tempHi = (byte)temp;
 
 		uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
 
@@ -498,6 +498,9 @@ void drawSetMenu()
 				//toggleOption(&iYear, 2000, 32767);
 				break;
 			}
+
+			// Calculate week index
+			iWeek = (byte)(calcDaysSoFar(iYear, iMonth, iDay) % 7);
 		}
 
 		drawDateDigital(29, 12);
