@@ -53,6 +53,7 @@ void drawSetMenu();
 void drawStartUp();
 void drawMenu();
 void drawClock();
+void byteToStr(byte value, char* s);
 void drawTimeFormat(byte xPos, byte yPos);
 void drawDayAmPm(byte xPos, byte yPos);
 void drawTemp(byte xPos, byte yPos);
@@ -60,8 +61,7 @@ byte drawClockDigital(byte xPos, byte yPos);
 void drawSecondsDigital(byte xPos, byte yPos);
 void drawDateDigital(byte xPos, byte yPos);
 void drawClockAnalog(short offsetY, short offsetX, byte radius);
-void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius);
-void showHourPin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius);
+void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius, byte sign);
 
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\cores\arduino\arduino.h"
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\variants\standard\pins_arduino.h" 

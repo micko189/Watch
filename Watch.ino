@@ -651,6 +651,24 @@ void drawClock() {
 }
 
 /// <summary>
+/// Converts byte value to two character string.
+/// </summary>
+/// <param name="value">The value.</param>
+/// <param name="s">The string.</param>
+void byteToStr(byte value, char* s)
+{
+	if (value < 10)
+	{
+		s[0] = '0';
+		itoa(value, s + 1, 10);
+	}
+	else
+	{
+		itoa(value, s, 10);
+	}
+}
+
+/// <summary>
 /// Draws the time format (12/24).
 /// </summary>
 /// <param name="xPos">The x position.</param>
@@ -685,15 +703,8 @@ void drawTemp(byte xPos, byte yPos) {
 	display.drawStr(xPos, yPos, s);
 	offset += display.getStrPixelWidth(s) + 1;
 
-	if (tempLo < 10)
-	{
-		s[0] = '0';
-		itoa(tempLo, s + 1, 10);
-	}
-	else
-	{
-		itoa(tempLo, s, 10);
-	}
+	byteToStr(tempLo, s);
+
 	display.drawStr(xPos + offset, yPos, s);
 	offset += display.getStrPixelWidth(s) + 1;
 
@@ -710,27 +721,11 @@ void drawTemp(byte xPos, byte yPos) {
 byte drawClockDigital(byte xPos, byte yPos) {
 	char s[6] = { 0 };
 
-	if (iHour < 10)
-	{
-		s[0] = '0';
-		itoa(iHour, s + 1, 10);
-	}
-	else
-	{
-		itoa(iHour, s, 10);
-	}
+	byteToStr(iHour, s);
 
 	s[2] = ':';
 
-	if (iMinutes < 10)
-	{
-		s[3] = '0';
-		itoa(iMinutes, s + 4, 10);
-	}
-	else
-	{
-		itoa(iMinutes, s + 3, 10);
-	}
+	byteToStr(iMinutes, s + 3);
 
 	display.drawStr(xPos, yPos, s);
 
@@ -745,15 +740,7 @@ byte drawClockDigital(byte xPos, byte yPos) {
 void drawSecondsDigital(byte xPos, byte yPos) {
 	char s[3] = { 0 };
 
-	if (iSecond < 10)
-	{
-		s[0] = '0';
-		itoa(iSecond, s + 1, 10);
-	}
-	else
-	{
-		itoa(iSecond, s, 10);
-	}
+	byteToStr(iSecond, s);
 
 	display.drawStr(xPos, yPos, s);
 }
@@ -767,27 +754,11 @@ void drawDateDigital(byte xPos, byte yPos)
 {
 	char s[11] = { 0 };
 
-	if (iDay < 10)
-	{
-		s[0] = '0';
-		itoa(iDay, s + 1, 10);
-	}
-	else
-	{
-		itoa(iDay, s, 10);
-	}
+	byteToStr(iDay, s);
 
 	s[2] = '/';
 
-	if (iMonth < 10)
-	{
-		s[3] = '0';
-		itoa(iMonth, s + 4, 10);
-	}
-	else
-	{
-		itoa(iMonth, s + 3, 10);
-	}
+	byteToStr(iMonth, s + 3);
 
 	s[5] = '/';
 
@@ -808,35 +779,25 @@ void drawClockAnalog(short offsetY, short offsetX, byte radius) {
 	// print hour pin lines
 	for (size_t i = 0; i < 12; i++)
 	{
-		showHourPin(centerX + offsetX, centerY + offsetY, 0.9, 1, i * 5, radius);
+		showTimePin(centerX + offsetX, centerY + offsetY, 0.9, 1, i * 5, radius, -1);
 	}
 
 	double hourAngleOffset = iMinutes / 12.0;
-	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.5, iHour * 5 + hourAngleOffset, radius);
-	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.78, iMinutes, radius);
+	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.5, iHour * 5 + hourAngleOffset, radius, 1);
+	showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.78, iMinutes, radius, 1);
 	// showTimePin(centerX + offsetX, centerY + offsetY, 0.1, 0.9, iSecond, radius);
 }
 
 // Calculate clock pin position
-double RAD = 0.01745329251994329576923690768489; // = Pi / 180;
-double LR = 89.99;
+#define RAD 0.01745329251994329576923690768489 // = Pi / 180;
+#define LR 89.99
 
-void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius) {
+void showTimePin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius, byte sign) {
 	double x1, x2, y1, y2;
 	x1 = center_x + (radius * pl1) * cos((6 * pl3 + LR) * RAD);
 	y1 = center_y + (radius * pl1) * sin((6 * pl3 + LR) * RAD);
-	x2 = center_x + (radius * pl2) * cos((6 * pl3 - LR) * RAD);
-	y2 = center_y + (radius * pl2) * sin((6 * pl3 - LR) * RAD);
-
-	display.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
-}
-
-void showHourPin(int center_x, int center_y, double pl1, double pl2, double pl3, byte radius) {
-	double x1, x2, y1, y2;
-	x1 = center_x + (radius * pl1) * cos((6 * pl3 + LR) * RAD);
-	y1 = center_y + (radius * pl1) * sin((6 * pl3 + LR) * RAD);
-	x2 = center_x + (radius * pl2) * cos((6 * pl3 + LR) * RAD);
-	y2 = center_y + (radius * pl2) * sin((6 * pl3 + LR) * RAD);
+	x2 = center_x + (radius * pl2) * cos((6 * pl3 - LR * sign) * RAD);
+	y2 = center_y + (radius * pl2) * sin((6 * pl3 - LR * sign) * RAD);
 
 	display.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
 }
