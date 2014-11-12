@@ -23,6 +23,36 @@ Watch Arduino v1.0
 #include <BH1750FVI.h>
 #include <math.h>
 
+////////////////////////////////////////////////////
+// 16x24 Logo
+////////////////////////////////////////////////////
+const unsigned char PROGMEM IMG_logo_24x24[] = {
+	0x07, 0xff, 0xe0,
+	0x07, 0xff, 0xe0,
+	0x07, 0xff, 0xe0,
+	0x08, 0x10, 0x10,
+	0x10, 0x10, 0x08,
+	0x10, 0x00, 0x08,
+	0x10, 0x00, 0x08,
+	0x10, 0x00, 0x08,
+	0x10, 0x00, 0x08,
+	0x10, 0x02, 0x08,
+	0x10, 0x04, 0x08,
+	0x10, 0x08, 0x0c,
+	0x1c, 0x10, 0x3c,
+	0x10, 0x08, 0x0c,
+	0x10, 0x08, 0x08,
+	0x10, 0x04, 0x08,
+	0x10, 0x04, 0x08,
+	0x10, 0x02, 0x08,
+	0x10, 0x02, 0x08,
+	0x10, 0x10, 0x08,
+	0x08, 0x10, 0x10,
+	0x07, 0xff, 0xe0,
+	0x07, 0xff, 0xe0,
+	0x07, 0xff, 0xe0
+};
+
 ///////////////////////////////////////////////////////////////////
 //----- OLED instance
 U8GLIB_SSD1306_128X64 display(U8G_I2C_OPT_NONE);	// I2C / TWI 
@@ -59,17 +89,16 @@ unsigned long prevClockTime = 0;
 
 PGM_P const weekString[] PROGMEM = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
-PROGMEM const byte daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; //standard year
+PROGMEM const byte daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // standard year days
 
 PGM_P const menuItems[] PROGMEM = { "Set date", "Set time", "Set time format" };
-
 PGM_P const timeFormat[] PROGMEM = { "12h", "24h" };
 
 //PGM_P const dayNames[] PROGMEM = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 //PGM_P const months[] PROGMEM = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
-PROGMEM const short firstYear = 2000; //This is our start point
-PROGMEM const byte dayOffset = 6; //The first day of our start year may not be a Sunday ( in 1800 it was Wednesday)
+#define firstYear 2000 //This is our start point
+#define dayOffset 6 //The first day of our start year may not be a Sunday ( in 1800 it was Wednesday)
 
 //----- Display features
 #define DISPLAY_MODE_START_UP 0x0
@@ -89,20 +118,20 @@ byte menuMode = MENU_SET_DATE;
 #define CLOCK_STYLE_SIMPLE_DIGIT_SEC  0x4
 byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
 
-byte centerX = 64;
-byte centerY = 32;
-byte iRadius = 30;
+#define centerX 64
+#define centerY 32
+#define iRadius 30
 
 //----- Button control
-int buttonPin = 5;
+#define buttonPin 5
 boolean isClicked = LOW; // LOW = false = 0x0
 boolean isChanged = false;
 
-int buttonPinUp = 6;
+#define buttonPinUp 6
 boolean isClickedUp = LOW; // LOW = false = 0x0
 boolean isChangedUp = false;
 
-int buttonPinDown = 7;
+#define buttonPinDown 7
 boolean isClickedDown = LOW; // LOW = false = 0x0
 boolean isChangedDown = false;
 
@@ -117,7 +146,7 @@ byte setPosition = 0; // position of value currently being set
 ///////////////////////////////////
 
 void setup()   {
-	Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
+	//Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
 	pinMode(buttonPin, INPUT);  // Defines button pin
 	pinMode(buttonPinUp, INPUT);  // Defines button pin
 	pinMode(buttonPinDown, INPUT);  // Defines button pin
@@ -135,21 +164,6 @@ void setup()   {
 	LightSensor.begin();
 	LightSensor.SetAddress(Device_Address_H);//Address 0x5C
 	LightSensor.SetMode(Continuous_H_resolution_Mode);
-}
-
-// Get button input
-void GetButtonInput(int pin, boolean *clicked, boolean *changed)
-{
-	if (digitalRead(pin) == HIGH)
-	{
-                Serial.print(pin);
-                Serial.println("HIGH");
-		if (*clicked = LOW)
-		{
-			*changed = true;
-			*clicked = HIGH;
-		}
-	}
 }
 
 void loop() {
@@ -196,6 +210,24 @@ void loop() {
 ///////////////////////////////////
 //----- Utils
 ///////////////////////////////////
+
+/// <summary>
+/// Gets the button input.
+/// </summary>
+/// <param name="pin">The pin.</param>
+/// <param name="clicked">The clicked.</param>
+/// <param name="changed">The changed.</param>
+void GetButtonInput(byte pin, boolean *clicked, boolean *changed)
+{
+	if (digitalRead(pin) == HIGH)
+	{
+		if (*clicked = LOW)
+		{
+			*changed = true;
+			*clicked = HIGH;
+		}
+	}
+}
 
 /// <summary>
 /// Determines whether [is leap year] [the specified year].
@@ -328,11 +360,14 @@ bool updateTime(unsigned long current_time_milis) {
 /// <summary>
 /// Toggles the option.
 /// </summary>
-void toggleOption(byte *option, short minVal, short maxVal)
+/// <param name="option">The option.</param>
+/// <param name="minVal">The minimum value.</param>
+/// <param name="maxVal">The maximum value.</param>
+void toggleOption(byte *option, byte minVal, byte maxVal)
 {
 	if (isClickedUp == HIGH)
 	{
-		*option++;
+		(*option)++;
 		if (*option > maxVal)
 		{
 			*option = minVal;
@@ -341,7 +376,7 @@ void toggleOption(byte *option, short minVal, short maxVal)
 
 	if (isClickedDown == HIGH)
 	{
-		*option--;
+		(*option)--;
 		if (*option < minVal)
 		{
 			*option = maxVal;
@@ -427,7 +462,7 @@ void onDraw() {
 
 		break;
 	default:
-		startClockMode();    // This means there's an error
+		displayMode = DISPLAY_MODE_CLOCK;    // This means there's an error
 		break;
 	}
 
@@ -465,9 +500,9 @@ void drawSetMenu()
 			}
 		}
 
-		drawDateDigital(centerX - 35, centerY - 20);
+		drawDateDigital(29, 12);
 
-		display.drawLine(centerX - 35, centerY - 20, centerX - 25, centerY - 20);
+		display.drawLine(29, 12, 39, 12);
 
 		break;
 	case MENU_SET_TIME:
@@ -489,9 +524,9 @@ void drawSetMenu()
 			}
 		}
 
-		display.drawLine(centerX - 35, centerY - 20, centerX - 25, centerY - 20);
+		display.drawLine(29, 12, 39, 12);
 
-		drawClockDigital(centerX - 50, centerY + 13);
+		drawClockDigital(14, 45);
 		break;
 	case MENU_SET_TIME_FORMAT:
 		if (setPosition > 0) // TF
@@ -504,49 +539,12 @@ void drawSetMenu()
 			toggleOption(&iTimeFormat, 0, 1);
 		}
 
-		display.drawLine(centerX - 35, centerY - 20, centerX - 25, centerY - 20);
+		display.drawLine(29, 12, 39, 12);
 
-		drawTimeFormat(centerX - 50, centerY + 13);
+		drawTimeFormat(14, 45);
 		break;
 	}
 }
-
-/// <summary>
-/// Starts the clock mode (changes displayMode).
-/// </summary>
-void startClockMode() {
-	displayMode = DISPLAY_MODE_CLOCK;
-}
-
-////////////////////////////////////////////////////
-// 16x24 Logo
-////////////////////////////////////////////////////
-const unsigned char PROGMEM IMG_logo_24x24[] = {
-	0x07, 0xff, 0xe0,
-	0x07, 0xff, 0xe0,
-	0x07, 0xff, 0xe0,
-	0x08, 0x10, 0x10,
-	0x10, 0x10, 0x08,
-	0x10, 0x00, 0x08,
-	0x10, 0x00, 0x08,
-	0x10, 0x00, 0x08,
-	0x10, 0x00, 0x08,
-	0x10, 0x02, 0x08,
-	0x10, 0x04, 0x08,
-	0x10, 0x08, 0x0c,
-	0x1c, 0x10, 0x3c,
-	0x10, 0x08, 0x0c,
-	0x10, 0x08, 0x08,
-	0x10, 0x04, 0x08,
-	0x10, 0x04, 0x08,
-	0x10, 0x02, 0x08,
-	0x10, 0x02, 0x08,
-	0x10, 0x10, 0x08,
-	0x08, 0x10, 0x10,
-	0x07, 0xff, 0xe0,
-	0x07, 0xff, 0xe0,
-	0x07, 0xff, 0xe0
-};
 
 /// <summary>
 /// Draws the start up splash screen.
@@ -558,18 +556,18 @@ void drawStartUp() {
 	// y : Y - position(upper position of the bitmap).
 	// cnt : Number of bytes of the bitmap in horizontal direction.The width of the bitmap is cnt*8.
 	// h : Height of the bitmap. 
-	display.drawBitmapP(10, 10, 3, 24, IMG_logo_24x24);
+	//display.drawBitmapP(10, 10, 3, 24, IMG_logo_24x24);
 
 	//display.drawStr(25, 12, "Temperature");
 
 	display.drawStr(35, 28, "Watch");
 
-	display.drawStr(25, 45, "Arduino v1.0");
+	//display.drawStr(25, 45, "Arduino v1.0");
 
 	if (startUpCount++ > 200) // 2s start up screen
 	{
 		startUpCount = 0;
-		startClockMode();
+		displayMode = DISPLAY_MODE_CLOCK;
 	}
 }
 
@@ -601,13 +599,13 @@ void drawClock() {
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
 		display.setFont(u8g_font_helvB12);
-		drawTemp(80, centerY + 31);
+		drawTemp(80, 63);
 
 		display.setFont(u8g_font_helvB14r);
-		drawDayAmPm(centerX - 34, centerY - 17);
+		drawDayAmPm(30, 15);
 
 		display.setFont(u8g_font_helvB18r);
-		drawClockDigital(centerX - 29, centerY + 6);
+		drawClockDigital(35, 38);
 
 		break;
 
@@ -615,18 +613,18 @@ void drawClock() {
 		drawClockAnalog(0, -30, iRadius - 4);
 
 		display.setFont(u8g_font_helvB12);
-		drawTemp(80, centerY + 31);
+		drawTemp(80, 63);
 
 		display.setFont(u8g_font_helvB12);
-		drawDayAmPm(centerY * 2 + 3, 23);
+		drawDayAmPm(67, 23);
 
 		display.setFont(u8g_font_helvB18r);
-		drawClockDigital(centerY * 2 - 3, 45);
+		drawClockDigital(61, 45);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
 		display.setFont(u8g_font_helvB12);
-		drawTemp(80, centerY + 31);
+		drawTemp(80, 63);
 
 		drawClockAnalog(0, 0, iRadius);
 
@@ -634,16 +632,16 @@ void drawClock() {
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
 		display.setFont(u8g_font_helvB10r);
-		drawDateDigital(centerX - 35, centerY - 20);
+		drawDateDigital(29, 12);
 
 		display.setFont(u8g_font_helvB12);
-		drawTemp(80, centerY + 31);
+		drawTemp(80, 63);
 
 		display.setFont(u8g_font_helvB24n);
-		byte offset = drawClockDigital(centerX - 50, centerY + 13);
+		byte offset = drawClockDigital(14, 45);
 
 		display.setFont(u8g_font_helvB14r);
-		drawSecondsDigital(centerX - 50 + offset + 2, centerY + 13);
+		drawSecondsDigital(14 + offset + 2, 45);
 
 		break;
 	}
@@ -839,6 +837,3 @@ void showHourPin(int center_x, int center_y, double pl1, double pl2, double pl3,
 
 	display.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
 }
-
-
-

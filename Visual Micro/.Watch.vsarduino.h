@@ -40,17 +40,16 @@ typedef unsigned char byte;
 extern "C" void __cxa_pure_virtual() {;}
 
 //
-void GetButtonInput(int pin, boolean clicked, boolean changed);
 //
+void GetButtonInput(byte pin, boolean *clicked, boolean *changed);
 bool isLeapYear(short year);
 byte getDaysInMonth(short year, byte month);
 short daysPassedInYear(short year, byte month, byte day);
 int calcDaysSoFar(short year, byte month, byte day);
 bool updateTime(unsigned long current_time_milis);
-void toggleOption(short option, short minVal, short maxVal);
+void toggleOption(byte *option, byte minVal, byte maxVal);
 void onDraw();
 void drawSetMenu();
-void startClockMode();
 void drawStartUp();
 void drawMenu();
 void drawClock();
