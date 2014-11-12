@@ -45,7 +45,7 @@ void getButtonInput(byte pin, boolean *clicked, boolean *changed);
 bool isLeapYear(short year);
 byte getDaysInMonth(short year, byte month);
 short daysPassedInYear(short year, byte month, byte day);
-int calcDaysSoFar(short year, byte month, byte day);
+byte calcDayOfWeek(short year, byte month, byte day);
 bool updateTime(unsigned long current_time_milis);
 void toggleOption(byte *option, byte minVal, byte maxVal);
 void onDraw();

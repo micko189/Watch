@@ -155,7 +155,7 @@ void setup()   {
 	// Assign default color value
 	display.setColorIndex(1);         // pixel on BW
 
-	iWeek = (byte)(calcDaysSoFar(iYear, iMonth, iDay) % 7);
+	iWeek = calcDayOfWeek(iYear, iMonth, iDay);
 
 	// Start up the temperature sensor library
 	TempSensor.begin();
@@ -278,13 +278,13 @@ short daysPassedInYear(short year, byte month, byte day)
 }
 
 /// <summary>
-/// Calculates the number of days passed from some start point year.
+/// Calculates the day of week index.
 /// </summary>
 /// <param name="year">The year.</param>
 /// <param name="month">The month.</param>
 /// <param name="day">The day.</param>
-/// <returns></returns>
-int calcDaysSoFar(short year, byte month, byte day)
+/// <returns>The day of week index.</returns>
+byte calcDayOfWeek(short year, byte month, byte day)
 {
 	int days = dayOffset;
 
@@ -301,7 +301,7 @@ int calcDaysSoFar(short year, byte month, byte day)
 		}
 	}
 
-	return days;
+	return days % 7;
 }
 
 /// <summary>
@@ -522,7 +522,7 @@ void drawSetMenu()
 			}
 
 			// Calculate week index
-			iWeek = (byte)(calcDaysSoFar(iYear, iMonth, iDay) % 7);
+			iWeek = calcDayOfWeek(iYear, iMonth, iDay);
 		}
 
 		drawDateDigital(29, 12);
