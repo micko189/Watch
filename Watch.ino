@@ -823,14 +823,13 @@ void drawDayAmPm(byte xPos, byte yPos) {
 /// <param name="xPos">The x position.</param>
 /// <param name="yPos">The y position.</param>
 void drawTemp(byte xPos, byte yPos) {
-	char s[4] = { 0 };
+	char s[4];
 	byte offset = 0;
 
 	itoa(tempHi, s, 10);
 	display.drawStr(xPos - display.getStrPixelWidth(s) + 1, yPos, s);
 
-	s[0] = '.', s[1] = 0;
-	display.drawStr(xPos, yPos, s);
+	display.drawStr(xPos, yPos, ".");
 	offset += display.getStrPixelWidth(s) + 1;
 
 	byteToStr(tempLo, s);
@@ -838,8 +837,7 @@ void drawTemp(byte xPos, byte yPos) {
 	display.drawStr(xPos + offset, yPos, s);
 	offset += display.getStrPixelWidth(s) + 1;
 
-	s[0] = '°', s[1] = 'C', s[2] = 0;
-	display.drawStr(xPos + offset, yPos, s);
+	display.drawStr(xPos + offset, yPos, "°C");
 }
 
 /// <summary>
@@ -849,7 +847,7 @@ void drawTemp(byte xPos, byte yPos) {
 /// <param name="yPos">The y position.</param>
 /// <returns>Length in pixels of the clock</returns>
 byte drawClockDigital(byte xPos, byte yPos) {
-	char s[6] = { 0 };
+	char s[6];
 
 	byteToStr(iHour, s);
 
@@ -868,7 +866,7 @@ byte drawClockDigital(byte xPos, byte yPos) {
 /// <param name="xPos">The x position.</param>
 /// <param name="yPos">The y position.</param>
 void drawSecondsDigital(byte xPos, byte yPos) {
-	char s[3] = { 0 };
+	char s[3];
 
 	byteToStr(iSecond, s);
 
@@ -882,7 +880,7 @@ void drawSecondsDigital(byte xPos, byte yPos) {
 /// <param name="yPos">The y position.</param>
 void drawDateDigital(byte xPos, byte yPos)
 {
-	char s[11] = { 0 };
+	char s[11];
 
 	byteToStr(iDay, s);
 
