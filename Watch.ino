@@ -86,6 +86,12 @@ byte iMinutes = 0;
 byte iSecond = 0;
 byte iTimeFormat = 0;
 unsigned long prevClockTime = 0;
+#define TEMP_GRAPH_LEN 128
+byte tempGraph[TEMP_GRAPH_LEN] = { 0 };
+byte tempGraphLo[TEMP_GRAPH_LEN] = { 0 };
+byte startTempGraphIndex = 0;
+short hourCount = 0;
+float tempAccum = 0;
 
 PGM_P const weekString[] PROGMEM = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
@@ -101,21 +107,22 @@ PGM_P const timeFormat[] PROGMEM = { "12h", "24h" };
 #define dayOffset 6 //The first day of our start year may not be a Sunday ( in 1800 it was Wednesday)
 
 //----- Display features
-#define DISPLAY_MODE_START_UP 0x0
-#define DISPLAY_MODE_CLOCK 0x1
-#define DISPLAY_MODE_MENU 0x2
-#define DISPLAY_MODE_SET_MENU 0x3
+#define DISPLAY_MODE_START_UP	0x0
+#define DISPLAY_MODE_CLOCK		0x1
+#define DISPLAY_MODE_MENU		0x2
+#define DISPLAY_MODE_SET_MENU	0x3
 byte displayMode = DISPLAY_MODE_START_UP;
 
-#define MENU_SET_DATE  0x0
-#define MENU_SET_TIME  0x1
-#define MENU_SET_TIME_FORMAT 0x2
+#define MENU_SET_DATE			0x0
+#define MENU_SET_TIME			0x1
+#define MENU_SET_TIME_FORMAT	0x2
 byte menuMode = MENU_SET_DATE;
 
-#define CLOCK_STYLE_SIMPLE_ANALOG  0x1
-#define CLOCK_STYLE_SIMPLE_DIGIT  0x2
-#define CLOCK_STYLE_SIMPLE_MIX  0x3
-#define CLOCK_STYLE_SIMPLE_DIGIT_SEC  0x4
+#define CLOCK_STYLE_SIMPLE_ANALOG		0x0
+#define CLOCK_STYLE_SIMPLE_DIGIT		0x1
+#define CLOCK_STYLE_SIMPLE_MIX			0x2
+#define CLOCK_STYLE_SIMPLE_DIGIT_SEC	0x3
+#define CLOCK_STYLE_SIMPLE_GRAPH		0x4
 byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
 
 #define centerX 64
@@ -188,9 +195,24 @@ void loop() {
 		{
 			TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
 			float temp = TempSensor.getTempCByIndex(0);
+			tempAccum += temp;
 
 			tempLo = ((short)(temp * 100)) % 100;
 			tempHi = (byte)temp;
+
+			hourCount++;
+			if (hourCount > 3600)
+			{
+				// One hour has elapsed
+				float tempAvg = tempAccum / 3600;
+				tempGraph[startTempGraphIndex] = (byte)tempAvg;
+				tempGraphLo[startTempGraphIndex] = ((short)(tempAvg * 100)) % 100;
+
+				startTempGraphIndex++;
+				rollOver(&startTempGraphIndex, TEMP_GRAPH_LEN);
+
+				tempAccum = 0;
+			}
 
 			uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
 
@@ -583,13 +605,62 @@ void drawStartUp() {
 
 	display.drawStr(35, 28, "Watch");
 
-	//display.drawStr(25, 45, "Arduino v1.0");
+	display.drawStr(25, 45, "Arduino v1.0");
 
 	if (startUpCount++ > 200) // 2s start up screen
 	{
 		startUpCount = 0;
 		displayMode = DISPLAY_MODE_CLOCK;
 	}
+}
+
+float max = 0;
+float min = 0;
+
+float hiLoToFloat(byte hiVal, byte loVal)
+{
+	return hiVal + loVal / 100.0;
+}
+
+/// <summary>
+/// Finds the maximum and minimum.
+/// </summary>
+void findMaxMin()
+{
+	max = hiLoToFloat(tempGraph[0], tempGraphLo[0]);
+	min = hiLoToFloat(tempGraph[0], tempGraphLo[0]);
+	for (size_t i = 0; i < TEMP_GRAPH_LEN; i++)
+	{
+		if (max > hiLoToFloat(tempGraph[i], tempGraphLo[i]))
+		{
+			max = hiLoToFloat(tempGraph[i], tempGraphLo[i]);
+		}
+
+		if (min < hiLoToFloat(tempGraph[i], tempGraphLo[i]))
+		{
+			min = hiLoToFloat(tempGraph[i], tempGraphLo[i]);
+		}
+	}
+}
+/// <summary>
+/// Draws the start up splash screen.
+/// </summary>
+void drawGraph() {
+
+	byte xPos = 0;
+
+	float rescale = 64.0 / (max - min);
+
+	for (size_t i = startTempGraphIndex; i < TEMP_GRAPH_LEN; i++)
+	{
+		display.drawPixel(xPos++, hiLoToFloat(tempGraph[i], tempGraphLo[i]) * rescale);
+	}
+
+	for (size_t i = 0; i < startTempGraphIndex; i++)
+	{
+		display.drawPixel(xPos++, hiLoToFloat(tempGraph[i], tempGraphLo[i]) * rescale);
+	}
+
 }
 
 /// <summary>
@@ -616,6 +687,8 @@ void drawMenu() {
 /// Clock style changes according to user selection.
 /// </summary>
 void drawClock() {
+	byte offset = 0;
+
 	switch (clockStyle)
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
@@ -659,10 +732,15 @@ void drawClock() {
 		drawTemp(80, 63);
 
 		display.setFont(u8g_font_helvB24n);
-		byte offset = drawClockDigital(14, 45);
+		offset = drawClockDigital(14, 45);
 
 		display.setFont(u8g_font_helvB14r);
 		drawSecondsDigital(14 + offset + 2, 45);
+
+		break;
+
+	case CLOCK_STYLE_SIMPLE_GRAPH:
+		drawGraph();
 
 		break;
 	}
