@@ -55,6 +55,7 @@ void drawSetMenu();
 void drawStartUp();
 float hiLoToFloat(byte hiVal, byte loVal);
 byte findMaxMin();
+void drawGraphLine(byte start, byte end, byte* x, float rescale);
 void drawGraph();
 void drawMenu();
 void drawClock();

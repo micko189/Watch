@@ -136,14 +136,12 @@ boolean isChanged = false;
 
 #define buttonPinUp 6
 boolean isClickedUp = LOW; // LOW = false = 0x0
-boolean isChangedUp = false;
 
 #define buttonPinDown 7
 boolean isClickedDown = LOW; // LOW = false = 0x0
-boolean isChangedDown = false;
 
 //----- Global
-byte startUpCount = 0;
+//byte startUpCount = 0;
 byte tempLo = 0;
 byte tempHi = 0;
 byte setPosition = 0; // position of value currently being set
@@ -187,19 +185,18 @@ inline void getHiLo(byte* hiVal, byte* loVal, float val)
 
 void loop() {
 	isChanged = false;
-	isChangedUp = false;
-	isChangedDown = false;
+
 	unsigned long current_time_milis = 0;
 
 	// Get button input
 	getButtonInput(buttonPin, &isClicked, &isChanged);
-	getButtonInput(buttonPinUp, &isClickedUp, &isChangedUp);
-	getButtonInput(buttonPinDown, &isClickedDown, &isChangedDown);
+	getButtonInput(buttonPinUp, &isClickedUp, &isChanged);
+	getButtonInput(buttonPinDown, &isClickedDown, &isChanged);
 
 	// Update clock time
 	current_time_milis = millis();
 	boolean timeUpdated;
-	if ((timeUpdated = updateTime(current_time_milis)) || displayMode != DISPLAY_MODE_CLOCK || isChanged || isChangedUp || isChangedDown)
+	if ((timeUpdated = updateTime(current_time_milis)) || displayMode != DISPLAY_MODE_CLOCK || isChanged)
 	{
 		// One second has elapsed or we have input (button clicked)
 
@@ -289,7 +286,7 @@ byte getDaysInMonth(short year, byte month)
 	}
 	else // feb
 	{
-		return (isLeapYear(year)) ? 29 : daysInMonth[month];
+		return (isLeapYear(year)) ? 29 : 28;
 	}
 }
 
@@ -302,9 +299,9 @@ byte getDaysInMonth(short year, byte month)
 /// <returns></returns>
 short daysPassedInYear(short year, byte month, byte day)
 {
-	int passed = 0;
+	short passed = 0;
 	day--; // Adjust days passed in current month
-	for (size_t i = 1; i <= month; i++)
+	for (byte i = 1; i <= month; i++)
 	{
 		passed += getDaysInMonth(year, i);
 	}
@@ -321,14 +318,14 @@ short daysPassedInYear(short year, byte month, byte day)
 /// <returns>The day of week index.</returns>
 byte calcDayOfWeek(short year, byte month, byte day)
 {
-	int days = dayOffset;
+	short days = dayOffset;
 
 	// Calculates basic number of days passed 
 	days += (year - firstYear) * 365;
 	days += daysPassedInYear(year, month, day);
 
 	// Add on the extra leapdays for past years
-	for (int i = firstYear; i < year; i += 4)
+	for (short i = firstYear; i < year; i += 4)
 	{
 		if (isLeapYear(i))
 		{
@@ -443,11 +440,7 @@ void onDraw() {
 			break;
 		}
 
-		if (isClickedUp == HIGH || isClickedDown == HIGH)
-		{
-			// User input received
-			toggleOption(&clockStyle, 0, 4);
-		}
+		toggleOption(&clockStyle, 0, 4);
 
 		drawClock();
 
@@ -468,11 +461,7 @@ void onDraw() {
 			break;
 		}
 
-		if (isClickedUp == HIGH || isClickedDown == HIGH)
-		{
-			// User input received
-			toggleOption(&menuMode, 0, 3);
-		}
+		toggleOption(&menuMode, 0, 3);
 
 		drawMenu();
 		break;
@@ -488,7 +477,7 @@ void onDraw() {
 
 		if (isClicked == HIGH)
 		{
-			// Go to next value
+			// Go to next set value
 			setPosition++;
 		}
 
@@ -527,73 +516,61 @@ void drawSetMenu()
 	{
 	case MENU_SET_DATE:
 		rollOver(&setPosition, 2); // DD MM YY
-
-		if (isClickedUp == HIGH || isClickedDown == HIGH)
+		switch (setPosition)
 		{
-			switch (setPosition)
+		case 0:
+			toggleOption(&iDay, 1, 12);
+			break;
+		case 1:
+			toggleOption(&iMonth, 1, 60);
+			break;
+		case 2:
+			if (isClickedUp == HIGH)
 			{
-			case 0:
-				toggleOption(&iDay, 1, 12);
-				break;
-			case 1:
-				toggleOption(&iMonth, 1, 60);
-				break;
-			case 2:
-				if (isClickedUp == HIGH)
-				{
-					iYear++;
-					if (iYear > 32767)
-						iYear = 2000;
-				}
-
-				if (isClickedDown == HIGH)
-				{
-					iYear--;
-					if (iYear < 2000)
-						iYear = 32767;
-				}
-
-				break;
+				iYear++;
+				if (iYear > 32767)
+					iYear = 2000;
 			}
 
-			// Calculate week index
-			iWeek = calcDayOfWeek(iYear, iMonth, iDay);
+			if (isClickedDown == HIGH)
+			{
+				iYear--;
+				if (iYear < 2000)
+					iYear = 32767;
+			}
+
+			break;
 		}
 
+		// Calculate week index
+		iWeek = calcDayOfWeek(iYear, iMonth, iDay);
+
 		drawDateDigital(29, 12);
-		display.drawLine(29, 12, 39, 12);
+		display.drawHLine(29, 12, 5);
 
 		break;
 	case MENU_SET_TIME:
 		rollOver(&setPosition, 1); // HH MM
-
-		if (isClickedUp == HIGH || isClickedDown == HIGH)
+		switch (setPosition)
 		{
-			switch (setPosition)
-			{
-			case 0:
-				toggleOption(&iHour, 1, 12);
-				break;
-			case 1:
-				toggleOption(&iMinutes, 1, 60);
-				break;
-			}
+		case 0:
+			toggleOption(&iHour, 1, 12);
+			break;
+		case 1:
+			toggleOption(&iMinutes, 1, 60);
+			break;
 		}
 
-		display.drawLine(29, 12, 39, 12);
 		drawClockDigital(14, 45);
+		display.drawHLine(29, 12, 5);
 
 		break;
 	case MENU_SET_TIME_FORMAT:
 		rollOver(&setPosition, 0); // TF
+		toggleOption(&iTimeFormat, 0, 1);
 
-		if (isClickedUp == HIGH || isClickedDown == HIGH)
-		{
-			toggleOption(&iTimeFormat, 0, 1);
-		}
-
-		display.drawLine(29, 12, 39, 12);
 		drawTimeFormat(14, 45);
+		display.drawHLine(29, 12, 5);
 
 		break;
 	}
@@ -617,11 +594,7 @@ void drawStartUp() {
 
 	display.drawStr(25, 45, "Arduino v1.0");
 
-	if (startUpCount++ > 200) // 2s start up screen
-	{
-		startUpCount = 0;
-		displayMode = DISPLAY_MODE_CLOCK;
-	}
+	displayMode = DISPLAY_MODE_CLOCK;
 }
 
 float max = 0;
@@ -647,7 +620,7 @@ byte findMaxMin()
 	byte minIndex = 0;
 	max = hiLoToFloat(tempGraphHi[0], tempGraphLo[0]);
 	min = hiLoToFloat(tempGraphHi[0], tempGraphLo[0]);
-	for (size_t i = 0; i < TEMP_GRAPH_LEN; i++)
+	for (byte i = 0; i < TEMP_GRAPH_LEN; i++)
 	{
 		if (max > hiLoToFloat(tempGraphHi[i], tempGraphLo[i]))
 		{
@@ -663,10 +636,20 @@ byte findMaxMin()
 
 	return minIndex;
 }
+
+void drawGraphLine(byte start, byte end, byte* x, float rescale) {
+	for (byte i = start; i < end; i++)
+	{
+		display.drawPixel((*x)++, (hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - min) * rescale);
+	}
+}
+
 /// <summary>
 /// Draws the start up splash screen.
 /// </summary>
 void drawGraph() {
+
+	byte i = 0;
 
 	byte xPos = 0;
 
@@ -679,32 +662,36 @@ void drawGraph() {
 	// draw scale
 
 	// calculate first y coord
+	byte hiVal, loVal;
+	if ((loVal = tempGraphLo[minIndex] > 50))
+	{
+		hiVal = tempGraphHi[minIndex] + 1;
+		loVal = 0;
+	}
+	else
+	{
+		hiVal = tempGraphHi[minIndex];
+		loVal = 50;
+	}
 
-	float yCoord = hiLoToFloat((tempGraphLo[minIndex] > 50) ? tempGraphHi[minIndex] + 1 : tempGraphHi[minIndex], (tempGraphLo[minIndex] > 50) ? 0 : 50);
-	for (size_t i = 0; i < yScale; i++)
-	{ 
+	float yCoord = hiLoToFloat(hiVal, loVal);
+
+	for (i = 0; i < yScale; i++)
+	{
 		// calculate y coord
 		display.drawHLine(0, (yCoord - min) * rescale, 2);
 		yCoord += 0.5;
 	}
 
-	for (size_t i = TEMP_GRAPH_LEN; i > 0; i -= 12)
+	for (i = TEMP_GRAPH_LEN; i > 0; i -= 12)
 	{
 		display.drawVLine(i, 62, 2);
 	}
 
-	
 
-	for (size_t i = startTempGraphIndex; i < TEMP_GRAPH_LEN; i++)
-	{
-		display.drawPixel(xPos++, (hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - min) * rescale);
-	}
+	drawGraphLine(startTempGraphIndex, TEMP_GRAPH_LEN, &xPos, rescale);
 
-	for (size_t i = 0; i < startTempGraphIndex; i++)
-	{
-		display.drawPixel(xPos++, (hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - min) * rescale);
-	}
-
+	drawGraphLine(0, startTempGraphIndex, &xPos, rescale);
 }
 
 /// <summary>
@@ -917,7 +904,7 @@ void drawClockAnalog(byte xPos, byte yPos, byte radius) {
 	display.drawCircle(xPos, yPos, radius);
 
 	// print hour pin lines
-	for (size_t i = 0; i < 60; i++)
+	for (byte i = 0; i < 12; i++)
 	{
 		showTimePin(xPos, yPos, 0.9, 1, i * 5, radius, 1);
 	}
@@ -938,18 +925,11 @@ int getPointCoordinate(byte center, byte radius, double pl, double angle, byte s
 }
 
 void showTimePin(byte center_x, byte center_y, double pl1, double pl2, double angle, byte radius, byte sign) {
-	int x1, x2, y1, y2;
+	byte x1, x2, y1, y2;
 
-	//x1 = center_x + (radius * pl1) * cos((6 * angle + LR) * RAD);
 	x1 = getPointCoordinate(center_x, radius, pl1, angle, 1, &cos);
-
-	//y1 = center_y + (radius * pl1) * sin((6 * angle + LR) * RAD);
 	y1 = getPointCoordinate(center_y, radius, pl1, angle, 1, &sin);
-
-	//x2 = center_x + (radius * pl2) * cos((6 * angle + LR * sign) * RAD);
 	x2 = getPointCoordinate(center_x, radius, pl2, angle, sign, &cos);
-
-	//y2 = center_y + (radius * pl2) * sin((6 * angle + LR * sign) * RAD);
 	y2 = getPointCoordinate(center_y, radius, pl2, angle, sign, &sin);
 
 	display.drawLine(x1, y1, x2, y2);
