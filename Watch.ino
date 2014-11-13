@@ -146,6 +146,8 @@ byte tempLo = 0;
 byte tempHi = 0;
 byte setPosition = 0; // position of value currently being set
 
+#define HOUR_COUNT 1 //3600
+
 ///////////////////////////////////
 //----- Arduino setup and loop methods
 ///////////////////////////////////
@@ -209,16 +211,17 @@ void loop() {
 			getHiLo(&tempHi, &tempLo, temp);
 
 			hourCount++;
-			if (hourCount > 3600)
+			if (hourCount > HOUR_COUNT)
 			{
 				// One hour has elapsed
 
-				getHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / 3600);
+				getHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / HOUR_COUNT);
 
 				startTempGraphIndex++;
 				rollOver(&startTempGraphIndex, TEMP_GRAPH_LEN);
 
 				tempAccum = 0;
+				hourCount = 0;
 			}
 
 			uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
