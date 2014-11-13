@@ -54,7 +54,7 @@ void rollOver(byte *value, byte rollOverVal);
 void drawSetMenu();
 void drawStartUp();
 float hiLoToFloat(byte hiVal, byte loVal);
-void findMaxMin();
+byte findMaxMin();
 void drawGraph();
 void drawMenu();
 void drawClock();

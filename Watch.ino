@@ -641,8 +641,10 @@ float hiLoToFloat(byte hiVal, byte loVal)
 /// <summary>
 /// Finds the maximum and minimum.
 /// </summary>
-void findMaxMin()
+/// <returns>Min index</returns>
+byte findMaxMin()
 {
+	byte minIndex = 0;
 	max = hiLoToFloat(tempGraphHi[0], tempGraphLo[0]);
 	min = hiLoToFloat(tempGraphHi[0], tempGraphLo[0]);
 	for (size_t i = 0; i < TEMP_GRAPH_LEN; i++)
@@ -655,8 +657,11 @@ void findMaxMin()
 		if (min < hiLoToFloat(tempGraphHi[i], tempGraphLo[i]))
 		{
 			min = hiLoToFloat(tempGraphHi[i], tempGraphLo[i]);
+			minIndex = i;
 		}
 	}
+
+	return minIndex;
 }
 /// <summary>
 /// Draws the start up splash screen.
@@ -665,18 +670,39 @@ void drawGraph() {
 
 	byte xPos = 0;
 
-	findMaxMin();
+	byte minIndex = findMaxMin();
+
+	byte yScale = (max - min) / 0.5;
 
 	float rescale = 64.0 / (max - min);
 
+	// draw scale
+
+	// calculate first y coord
+
+	float yCoord = hiLoToFloat((tempGraphLo[minIndex] > 50) ? tempGraphHi[minIndex] + 1 : tempGraphHi[minIndex], (tempGraphLo[minIndex] > 50) ? 0 : 50);
+	for (size_t i = 0; i < yScale; i++)
+	{ 
+		// calculate y coord
+		display.drawHLine(0, (yCoord - min) * rescale, 2);
+		yCoord += 0.5;
+	}
+
+	for (size_t i = TEMP_GRAPH_LEN; i > 0; i -= 12)
+	{
+		display.drawVLine(i, 62, 2);
+	}
+
+	
+
 	for (size_t i = startTempGraphIndex; i < TEMP_GRAPH_LEN; i++)
 	{
-		display.drawPixel(xPos++, hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) * rescale);
+		display.drawPixel(xPos++, (hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - min) * rescale);
 	}
 
 	for (size_t i = 0; i < startTempGraphIndex; i++)
 	{
-		display.drawPixel(xPos++, hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) * rescale);
+		display.drawPixel(xPos++, (hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - min) * rescale);
 	}
 
 }
