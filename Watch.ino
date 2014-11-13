@@ -87,7 +87,7 @@ byte iSecond = 0;
 byte iTimeFormat = 0;
 unsigned long prevClockTime = 0;
 #define TEMP_GRAPH_LEN 128
-byte tempGraph[TEMP_GRAPH_LEN] = { 0 };
+byte tempGraphHi[TEMP_GRAPH_LEN] = { 0 };
 byte tempGraphLo[TEMP_GRAPH_LEN] = { 0 };
 byte startTempGraphIndex = 0;
 short hourCount = 0;
@@ -173,6 +173,18 @@ void setup()   {
 	LightSensor.SetMode(Continuous_H_resolution_Mode);
 }
 
+/// <summary>
+/// Gets the hi and lo.
+/// </summary>
+/// <param name="hiVal">The hi value.</param>
+/// <param name="loVal">The lo value.</param>
+/// <param name="val">The value.</param>
+inline void getHiLo(byte* hiVal, byte* loVal, float val)
+{
+	*hiVal = (byte)val;
+	*loVal = ((short)(val * 100)) % 100;
+}
+
 void loop() {
 	isChanged = false;
 	isChangedUp = false;
@@ -197,16 +209,14 @@ void loop() {
 			float temp = TempSensor.getTempCByIndex(0);
 			tempAccum += temp;
 
-			tempLo = ((short)(temp * 100)) % 100;
-			tempHi = (byte)temp;
+			getHiLo(&tempHi, &tempLo, temp);
 
 			hourCount++;
 			if (hourCount > 3600)
 			{
 				// One hour has elapsed
-				float tempAvg = tempAccum / 3600;
-				tempGraph[startTempGraphIndex] = (byte)tempAvg;
-				tempGraphLo[startTempGraphIndex] = ((short)(tempAvg * 100)) % 100;
+
+				getHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / 3600);
 
 				startTempGraphIndex++;
 				rollOver(&startTempGraphIndex, TEMP_GRAPH_LEN);
@@ -617,6 +627,12 @@ void drawStartUp() {
 float max = 0;
 float min = 0;
 
+/// <summary>
+/// Converts hi and lo to float.
+/// </summary>
+/// <param name="hiVal">The hi value.</param>
+/// <param name="loVal">The lo value.</param>
+/// <returns></returns>
 float hiLoToFloat(byte hiVal, byte loVal)
 {
 	return hiVal + loVal / 100.0;
@@ -627,18 +643,18 @@ float hiLoToFloat(byte hiVal, byte loVal)
 /// </summary>
 void findMaxMin()
 {
-	max = hiLoToFloat(tempGraph[0], tempGraphLo[0]);
-	min = hiLoToFloat(tempGraph[0], tempGraphLo[0]);
+	max = hiLoToFloat(tempGraphHi[0], tempGraphLo[0]);
+	min = hiLoToFloat(tempGraphHi[0], tempGraphLo[0]);
 	for (size_t i = 0; i < TEMP_GRAPH_LEN; i++)
 	{
-		if (max > hiLoToFloat(tempGraph[i], tempGraphLo[i]))
+		if (max > hiLoToFloat(tempGraphHi[i], tempGraphLo[i]))
 		{
-			max = hiLoToFloat(tempGraph[i], tempGraphLo[i]);
+			max = hiLoToFloat(tempGraphHi[i], tempGraphLo[i]);
 		}
 
-		if (min < hiLoToFloat(tempGraph[i], tempGraphLo[i]))
+		if (min < hiLoToFloat(tempGraphHi[i], tempGraphLo[i]))
 		{
-			min = hiLoToFloat(tempGraph[i], tempGraphLo[i]);
+			min = hiLoToFloat(tempGraphHi[i], tempGraphLo[i]);
 		}
 	}
 }
@@ -649,16 +665,18 @@ void drawGraph() {
 
 	byte xPos = 0;
 
+	findMaxMin();
+
 	float rescale = 64.0 / (max - min);
 
 	for (size_t i = startTempGraphIndex; i < TEMP_GRAPH_LEN; i++)
 	{
-		display.drawPixel(xPos++, hiLoToFloat(tempGraph[i], tempGraphLo[i]) * rescale);
+		display.drawPixel(xPos++, hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) * rescale);
 	}
 
 	for (size_t i = 0; i < startTempGraphIndex; i++)
 	{
-		display.drawPixel(xPos++, hiLoToFloat(tempGraph[i], tempGraphLo[i]) * rescale);
+		display.drawPixel(xPos++, hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) * rescale);
 	}
 
 }

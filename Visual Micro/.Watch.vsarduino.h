@@ -40,6 +40,7 @@ typedef unsigned char byte;
 extern "C" void __cxa_pure_virtual() {;}
 
 //
+inline void getHiLo(byte* hiVal, byte* loVal, float val);
 //
 void getButtonInput(byte pin, boolean *clicked, boolean *changed);
 boolean isLeapYear(short year);
