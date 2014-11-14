@@ -152,7 +152,8 @@ byte setPosition = 0; // position of value currently being set
 //----- Arduino setup and loop methods
 ///////////////////////////////////
 
-void setup()   {
+void setup()
+{
 	//Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
 	pinMode(buttonPin, INPUT);  // Defines button pin
 	pinMode(buttonPinUp, INPUT);  // Defines button pin
@@ -185,7 +186,8 @@ inline void getHiLo(byte* hiVal, byte* loVal, float val)
 	*loVal = ((short)(val * 100)) % 100;
 }
 
-void loop() {
+void loop()
+{
 	isChanged = false;
 
 	unsigned long current_time_milis = 0;
@@ -344,39 +346,38 @@ byte calcDayOfWeek(short year, byte month, byte day)
 /// </summary>
 /// <param name="current_time_milis">The current_time_milis.</param>
 /// <returns> whether time is updated - one seccond is ellapsed </returns>
-boolean updateTime(unsigned long current_time_milis) {
+boolean updateTime(unsigned long current_time_milis)
+{
 	short timeElapse = current_time_milis - prevClockTime;
 	if (timeElapse >= adjustedUpdateTimeInterval) // check if one second has elapsed
 	{
 		// Adjust next update time interval in order to reduce accumulated error
 		adjustedUpdateTimeInterval = UPDATE_TIME_INTERVAL - (timeElapse - adjustedUpdateTimeInterval);
 
+		// Increase time by incrementing seconds
 		if (++iSecond >= 60)
 		{
 			iSecond = 0;
-			// Increase time by incrementing minutes
 			if (++iMinutes >= 60)
 			{
 				iMinutes = 0;
-				if (++iHour > 12)
+				if (++iHour >= 24)
 				{
-					iHour = 1;
-					(iAmPm == 0) ? iAmPm = 1 : iAmPm = 0;
-					if (iAmPm == 0)
+					iHour = 0;
+					if (++iWeek > 6)
 					{
-						if (++iWeek > 6)
-						{
-							iWeek = 0;
-						}
+						iWeek = 0;
+					}
 
-						iDay++;
-						if (iDay > getDaysInMonth(iYear, iMonth))
+					(iHour > 12) ? iAmPm = 1 : iAmPm = 0;
+
+					iDay++;
+					if (iDay > getDaysInMonth(iYear, iMonth))
+					{
+						iDay = 1;
+						if (++iMonth > 12)
 						{
-							iDay = 1;
-							if (++iMonth > 12)
-							{
-								iYear++;
-							}
+							iYear++;
 						}
 					}
 				}
@@ -426,8 +427,8 @@ void toggleOption(byte *option, byte minVal, byte maxVal)
 /// Main drawing routine.
 /// Every drawing starts here.
 /// </summary>
-void onDraw() {
-
+void onDraw()
+{
 	display.setFont(u8g_font_helvB10r);
 
 	switch (displayMode)
@@ -557,7 +558,7 @@ void drawSetMenu()
 		}
 		else // 0 = HH
 		{
-			toggleOption(&iHour, 1, 12);
+			toggleOption(&iHour, 1, 24);
 		}
 
 		drawClockDigital(14, 45);
@@ -577,7 +578,8 @@ void drawSetMenu()
 /// <summary>
 /// Draws the start up splash screen.
 /// </summary>
-void drawStartUp() {
+void drawStartUp()
+{
 	//Arguments:
 	// u8g : Pointer to the u8g structure(C interface only).
 	// x : X - position(left position of the bitmap).
@@ -635,7 +637,8 @@ byte findMaxMin()
 	return minIndex;
 }
 
-void drawGraphLine(byte start, byte end, byte* x, float rescale) {
+void drawGraphLine(byte start, byte end, byte* x, float rescale)
+{
 	for (byte i = start; i < end; i++)
 	{
 		display.drawPixel((*x)++, (hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - min) * rescale);
@@ -645,7 +648,8 @@ void drawGraphLine(byte start, byte end, byte* x, float rescale) {
 /// <summary>
 /// Draws the start up splash screen.
 /// </summary>
-void drawGraph() {
+void drawGraph()
+{
 
 	byte i = 0;
 
@@ -696,7 +700,8 @@ void drawGraph() {
 /// Draw the main manu screen.
 /// Menu changes according to user selection.
 /// </summary>
-void drawMenu() {
+void drawMenu()
+{
 	display.setFont(u8g_font_helvB10r);
 	display.drawStr(10, 10, (const char*)pgm_read_word(&(menuItems[MENU_SET_DATE])));
 	display.drawStr(10, 30, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME])));
@@ -715,7 +720,8 @@ void drawMenu() {
 /// Draw the main clock screen.
 /// Clock style changes according to user selection.
 /// </summary>
-void drawClock() {
+void drawClock()
+{
 	byte offset = 0;
 
 	switch (clockStyle)
@@ -819,7 +825,8 @@ void byteToStr(byte value, char* s)
 /// </summary>
 /// <param name="xPos">The x position.</param>
 /// <param name="yPos">The y position.</param>
-void drawTimeFormat(byte xPos, byte yPos) {
+void drawTimeFormat(byte xPos, byte yPos)
+{
 	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(timeFormat[iTimeFormat])));
 }
 
@@ -828,9 +835,13 @@ void drawTimeFormat(byte xPos, byte yPos) {
 /// </summary>
 /// <param name="xPos">The x position.</param>
 /// <param name="yPos">The y position.</param>
-void drawDayAmPm(byte xPos, byte yPos) {
+void drawDayAmPm(byte xPos, byte yPos)
+{
 	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(weekString[iWeek])));
-	display.drawStr(xPos + display.getStrPixelWidth((const char*)pgm_read_word(&(weekString[iWeek]))) + 2, yPos, (const char*)pgm_read_word(&(ampmString[iAmPm])));
+	if (iTimeFormat == 0) // 0 = 12h
+	{
+		display.drawStr(xPos + display.getStrPixelWidth((const char*)pgm_read_word(&(weekString[iWeek]))) + 2, yPos, (const char*)pgm_read_word(&(ampmString[iAmPm])));
+	}
 }
 
 /// <summary>
@@ -838,7 +849,8 @@ void drawDayAmPm(byte xPos, byte yPos) {
 /// </summary>
 /// <param name="xPos">The x position.</param>
 /// <param name="yPos">The y position.</param>
-void drawTemp(byte xPos, byte yPos) {
+void drawTemp(byte xPos, byte yPos)
+{
 	char s[4];
 	byte offset = 0;
 
@@ -862,10 +874,18 @@ void drawTemp(byte xPos, byte yPos) {
 /// <param name="xPos">The x position.</param>
 /// <param name="yPos">The y position.</param>
 /// <returns>Length in pixels of the clock</returns>
-byte drawClockDigital(byte xPos, byte yPos) {
+byte drawClockDigital(byte xPos, byte yPos)
+{
 	char s[6];
 
-	byteToStr(iHour, s);
+	if (iAmPm && iTimeFormat == 0) // 1 = PM && 0 = 12h
+	{
+		byteToStr(iHour - 12, s);
+	}
+	else
+	{
+		byteToStr(iHour, s);
+	}
 
 	s[2] = ':';
 
@@ -881,7 +901,8 @@ byte drawClockDigital(byte xPos, byte yPos) {
 /// </summary>
 /// <param name="xPos">The x position.</param>
 /// <param name="yPos">The y position.</param>
-void drawSecondsDigital(byte xPos, byte yPos) {
+void drawSecondsDigital(byte xPos, byte yPos)
+{
 	char s[3];
 
 	byteToStr(iSecond, s);
@@ -917,7 +938,8 @@ void drawDateDigital(byte xPos, byte yPos)
 /// <param name="xPos">The x position.</param>
 /// <param name="yPos">The y position.</param>
 /// <param name="radius">The radius.</param>
-void drawClockAnalog(byte xPos, byte yPos, byte radius) {
+void drawClockAnalog(byte xPos, byte yPos, byte radius)
+{
 	display.drawCircle(xPos, yPos, radius);
 
 	// print hour pin lines
@@ -941,7 +963,8 @@ int getPointCoordinate(byte center, byte radius, double pl, double angle, byte s
 	return center + (radius * pl) * (*trigFn)((6 * angle + LR * sign) * RAD);
 }
 
-void showTimePin(byte center_x, byte center_y, double pl1, double pl2, double angle, byte radius, byte sign) {
+void showTimePin(byte center_x, byte center_y, double pl1, double pl2, double angle, byte radius, byte sign)
+{
 	byte x1, x2, y1, y2;
 
 	x1 = getPointCoordinate(center_x, radius, pl1, angle, 1, &cos);
