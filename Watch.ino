@@ -164,14 +164,15 @@ void setup()
 	display.setColorIndex(1);         // pixel on BW
 
 	iWeek = calcDayOfWeek();
+        (iHour > 12) ? iAmPm = 1 : iAmPm = 0;
 
 	// Start up the temperature sensor library
 	TempSensor.begin();
 
 	// Start up the light sensor library
-	LightSensor.begin();
-	LightSensor.SetAddress(Device_Address_H);//Address 0x5C
-	LightSensor.SetMode(Continuous_H_resolution_Mode);
+	//LightSensor.begin();
+	//LightSensor.SetAddress(Device_Address_H);//Address 0x5C
+	//LightSensor.SetMode(Continuous_H_resolution_Mode);
 }
 
 /// <summary>
@@ -200,7 +201,7 @@ void loop()
 	// Update clock time
 	current_time_milis = millis();
 	boolean timeUpdated;
-	if ((timeUpdated = updateTime(current_time_milis)) || displayMode != DISPLAY_MODE_CLOCK || isChanged)
+	if ((timeUpdated = updateTime(current_time_milis)) || isChanged)
 	{
 		// One second has elapsed or we have input (button clicked)
 
@@ -226,7 +227,7 @@ void loop()
 				hourCount = 0;
 			}
 
-			uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
+			//uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
 
 			//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
 			//display.setContrast(0);  
@@ -581,9 +582,9 @@ void drawStartUp()
 
 	//display.drawStr(25, 12, "Temperature");
 
-	display.drawStr(35, 28, "Watch");
+	//display.drawStr(35, 28, "Watch");
 
-	display.drawStr(25, 45, "Arduino v1.0");
+	//display.drawStr(25, 45, "Arduino v1.0");
 
 	displayMode = DISPLAY_MODE_CLOCK;
 }
@@ -641,8 +642,7 @@ void drawGraphLine(byte start, byte end, byte* x, float rescale)
 /// </summary>
 void drawGraph()
 {
-
-	byte i = 0;
+	byte i;
 
 	byte xPos = 0;
 
@@ -676,9 +676,9 @@ void drawGraph()
 		yCoord += 0.5;
 	}
 
-	for (i = TEMP_GRAPH_LEN; i > 0; i -= 12)
+	for (i = 0 ; i < TEMP_GRAPH_LEN; i += 12)
 	{
-		display.drawVLine(i, 62, 2);
+		display.drawVLine(i, 60, 2);
 	}
 
 
@@ -730,7 +730,7 @@ void drawClock()
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
-		drawClockAnalog(centerX, centerY - 30, iRadius - 4);
+		drawClockAnalog(centerX - 30, centerY, iRadius - 4);
 
 		display.setFont(u8g_font_helvB12);
 		drawTemp(80, 63);
@@ -746,7 +746,7 @@ void drawClock()
 		display.setFont(u8g_font_helvB12);
 		drawTemp(80, 63);
 
-		drawClockAnalog(centerX, centerY, iRadius);
+		drawClockAnalog(centerX-10, centerY, iRadius);
 
 		break;
 
@@ -778,6 +778,7 @@ void stoa(short v, char * dest)
 {
 	byte d;
 	short c;
+        byte firstIndex = 4;
 	for (byte i = 0; i < SHORT_CHAR_COUNT; i++)
 	{
 		c = stoa_tab[i];
@@ -787,7 +788,15 @@ void stoa(short v, char * dest)
 			d += v / c;
 			v %= c;
 			*dest++ = d;
+                        if(firstIndex == 4)
+                        {
+                            firstIndex = i;
+                        }
 		}
+                else if(i >= firstIndex)
+                {
+                  *dest++ = '0';
+                }
 	}
 
 	*dest = '\0';
@@ -849,14 +858,15 @@ void drawTemp(byte xPos, byte yPos)
 	display.drawStr(xPos - display.getStrPixelWidth(s) + 1, yPos, s);
 
 	display.drawStr(xPos, yPos, ".");
-	offset += display.getStrPixelWidth(s) + 1;
+	offset += display.getStrPixelWidth(".") + 1;
 
 	byteToStr(tempLo, s);
 
 	display.drawStr(xPos + offset, yPos, s);
 	offset += display.getStrPixelWidth(s) + 1;
 
-	display.drawStr(xPos + offset, yPos, "°C");
+        s[0] = '°', s[1] = 'C', s[3] = 0;
+	display.drawStr(xPos + offset, yPos, s);
 }
 
 /// <summary>
@@ -941,17 +951,17 @@ void drawClockAnalog(byte xPos, byte yPos, byte radius)
 
 	double hourAngleOffset = iMinutes / 12.0;
 	showTimePin(xPos, yPos, 0.1, 0.5, iHour * 5 + hourAngleOffset, radius, -1);
-	showTimePin(xPos, yPos, 0.1, 0.78, iMinutes, radius, 1);
+	showTimePin(xPos, yPos, 0.1, 0.78, iMinutes, radius, -1);
 	// showTimePin(xPos, yPos, 0.1, 0.9, iSecond, radius);
 }
 
 // Calculate clock pin position
 #define RAD 0.01745329251994329576923690768489 // = Pi / 180;
-#define LR 89.99
+#define LR 89.999
 
-int getPointCoordinate(byte center, byte radius, double pl, double angle, byte sign, double(*trigFn)(double))
+byte getPointCoordinate(byte center, byte radius, double pl, double angle, byte sign, double(*trigFn)(double))
 {
-	return center + (radius * pl) * (*trigFn)((6 * angle + LR * sign) * RAD);
+	return center + round((radius * pl) * (*trigFn)((6 * angle + LR * sign) * RAD));
 }
 
 void showTimePin(byte center_x, byte center_y, double pl1, double pl2, double angle, byte radius, byte sign)
