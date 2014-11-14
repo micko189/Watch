@@ -59,6 +59,7 @@ void drawGraphLine(byte start, byte end, byte* x, float rescale);
 void drawGraph();
 void drawMenu();
 void drawClock();
+void stoa(short v, char * dest);
 void byteToStr(byte value, char* s);
 void drawTimeFormat(byte xPos, byte yPos);
 void drawDayAmPm(byte xPos, byte yPos);

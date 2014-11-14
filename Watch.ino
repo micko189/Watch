@@ -780,6 +780,27 @@ void drawClock() {
 	}
 }
 
+#define SHORT_CHAR_COUNT 5
+static const short stoa_tab[SHORT_CHAR_COUNT] = { 10000, 1000, 100, 10, 1 };
+void stoa(short v, char * dest)
+{
+	byte d;
+	short c;
+	for (byte i = 0; i < SHORT_CHAR_COUNT; i++)
+	{
+		c = stoa_tab[i];
+		if (v >= c)
+		{
+			d = '0';
+			d += v / c;
+			v %= c;
+			*dest++ = d;
+		}
+	}
+
+	*dest = '\0';
+}
+
 /// <summary>
 /// Converts byte value to two character string.
 /// </summary>
@@ -790,11 +811,11 @@ void byteToStr(byte value, char* s)
 	if (value < 10)
 	{
 		s[0] = '0';
-		itoa(value, s + 1, 10);
+		stoa(value, s + 1);
 	}
 	else
 	{
-		itoa(value, s, 10);
+		stoa(value, s);
 	}
 }
 
@@ -826,7 +847,7 @@ void drawTemp(byte xPos, byte yPos) {
 	char s[4];
 	byte offset = 0;
 
-	itoa(tempHi, s, 10);
+	stoa(tempHi, s);
 	display.drawStr(xPos - display.getStrPixelWidth(s) + 1, yPos, s);
 
 	display.drawStr(xPos, yPos, ".");
@@ -890,7 +911,7 @@ void drawDateDigital(byte xPos, byte yPos)
 
 	s[5] = '/';
 
-	itoa(iYear, s + 6, 10);
+	stoa(iYear, s + 6);
 
 	display.drawStr(xPos, yPos, s);
 }
