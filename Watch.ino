@@ -163,7 +163,7 @@ void setup()
 	// Assign default color value
 	display.setColorIndex(1);         // pixel on BW
 
-	iWeek = calcDayOfWeek(iYear, iMonth, iDay);
+	iWeek = calcDayOfWeek();
 
 	// Start up the temperature sensor library
 	TempSensor.begin();
@@ -193,9 +193,9 @@ void loop()
 	unsigned long current_time_milis = 0;
 
 	// Get button input
-	getButtonInput(buttonPin, &isClicked, &isChanged);
-	getButtonInput(buttonPinUp, &isClickedUp, &isChanged);
-	getButtonInput(buttonPinDown, &isClickedDown, &isChanged);
+	getButtonInput(buttonPin, &isClicked);
+	getButtonInput(buttonPinUp, &isClickedUp);
+	getButtonInput(buttonPinDown, &isClickedDown);
 
 	// Update clock time
 	current_time_milis = millis();
@@ -253,14 +253,13 @@ void loop()
 /// </summary>
 /// <param name="pin">The pin.</param>
 /// <param name="clicked">The clicked.</param>
-/// <param name="changed">The changed.</param>
-void getButtonInput(byte pin, boolean *clicked, boolean *changed)
+void getButtonInput(byte pin, boolean *clicked)
 {
 	if (digitalRead(pin) == HIGH)
 	{
 		if (*clicked == LOW)
 		{
-			*changed = true;
+			isChanged = true;
 			*clicked = HIGH;
 		}
 	}
@@ -279,10 +278,9 @@ boolean isLeapYear(short year)
 /// <summary>
 /// Gets the days in month.
 /// </summary>
-/// <param name="year">The year.</param>
 /// <param name="month">The month.</param>
 /// <returns></returns>
-byte getDaysInMonth(short year, byte month)
+byte getDaysInMonth(byte month)
 {
 	month--; // Adjust for indexing in daysInMonth
 	if (month != 1)
@@ -291,46 +289,39 @@ byte getDaysInMonth(short year, byte month)
 	}
 	else // feb
 	{
-		return (isLeapYear(year)) ? 29 : 28;
+		return (isLeapYear(iYear)) ? 29 : 28;
 	}
 }
 
 /// <summary>
 /// Gets the days passed in year.
 /// </summary>
-/// <param name="year">The year.</param>
-/// <param name="month">The month.</param>
-/// <param name="day">The day.</param>
 /// <returns></returns>
-short daysPassedInYear(short year, byte month, byte day)
+short daysPassedInYear()
 {
 	short passed = 0;
-	day--; // Adjust days passed in current month
-	for (byte i = 1; i <= month; i++)
+	for (byte i = 1; i <= iMonth; i++)
 	{
-		passed += getDaysInMonth(year, i);
+		passed += getDaysInMonth(i);
 	}
 
-	return passed + day;
+	return passed + iDay -1;  // Adjust days passed in current month
 }
 
 /// <summary>
 /// Calculates the day of week index.
 /// </summary>
-/// <param name="year">The year.</param>
-/// <param name="month">The month.</param>
-/// <param name="day">The day.</param>
 /// <returns>The day of week index.</returns>
-byte calcDayOfWeek(short year, byte month, byte day)
+byte calcDayOfWeek()
 {
 	short days = dayOffset;
 
 	// Calculates basic number of days passed 
-	days += (year - firstYear) * 365;
-	days += daysPassedInYear(year, month, day);
+	days += (iYear - firstYear) * 365;
+	days += daysPassedInYear();
 
 	// Add on the extra leapdays for past years
-	for (short i = firstYear; i < year; i += 4)
+	for (short i = firstYear; i < iYear; i += 4)
 	{
 		if (isLeapYear(i))
 		{
@@ -372,7 +363,7 @@ boolean updateTime(unsigned long current_time_milis)
 					(iHour > 12) ? iAmPm = 1 : iAmPm = 0;
 
 					iDay++;
-					if (iDay > getDaysInMonth(iYear, iMonth))
+					if (iDay > getDaysInMonth(iMonth))
 					{
 						iDay = 1;
 						if (++iMonth > 12)
@@ -545,7 +536,7 @@ void drawSetMenu()
 		}
 
 		// Calculate week index
-		iWeek = calcDayOfWeek(iYear, iMonth, iDay);
+		iWeek = calcDayOfWeek();
 
 		drawDateDigital(29, 12);
 		display.drawHLine(29, 12, 5);
