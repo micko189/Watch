@@ -113,9 +113,9 @@ PGM_P const timeFormat[] PROGMEM = { "12h", "24h" };
 #define DISPLAY_MODE_SET_MENU	0x3
 byte displayMode = DISPLAY_MODE_START_UP;
 
-#define MENU_SET_DATE			0x0
+#define MENU_SET_DATE			0x2
 #define MENU_SET_TIME			0x1
-#define MENU_SET_TIME_FORMAT	0x2
+#define MENU_SET_TIME_FORMAT	0x0
 byte menuMode = MENU_SET_DATE;
 
 #define CLOCK_STYLE_SIMPLE_ANALOG		0x0
@@ -515,10 +515,10 @@ void rollOver(byte *value, byte rollOverVal)
 /// </summary>
 void drawSetMenu()
 {
+	rollOver(&setPosition, menuMode);
 	switch (menuMode)
 	{
 	case MENU_SET_DATE:
-		rollOver(&setPosition, 2); // DD MM YY
 		switch (setPosition)
 		{
 		case 0:
@@ -530,16 +530,14 @@ void drawSetMenu()
 		case 2:
 			if (isClickedUp == HIGH)
 			{
-				iYear++;
-				if (iYear > 32767)
+				if (++iYear > 32767)
 					iYear = 2000;
 			}
 
 			if (isClickedDown == HIGH)
 			{
-				iYear--;
-				if (iYear < 2000)
-					iYear = 32767;
+				if (--iYear < 2000)
+					iYear = 2000;
 			}
 
 			break;
@@ -553,15 +551,13 @@ void drawSetMenu()
 
 		break;
 	case MENU_SET_TIME:
-		rollOver(&setPosition, 1); // HH MM
-		switch (setPosition)
+		if (setPosition) // 1 = MM
 		{
-		case 0:
-			toggleOption(&iHour, 1, 12);
-			break;
-		case 1:
 			toggleOption(&iMinutes, 1, 60);
-			break;
+		}
+		else // 0 = HH
+		{
+			toggleOption(&iHour, 1, 12);
 		}
 
 		drawClockDigital(14, 45);
@@ -569,7 +565,6 @@ void drawSetMenu()
 
 		break;
 	case MENU_SET_TIME_FORMAT:
-		rollOver(&setPosition, 0); // TF
 		toggleOption(&iTimeFormat, 0, 1);
 
 		drawTimeFormat(14, 45);
