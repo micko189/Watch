@@ -617,13 +617,13 @@ void findMaxMin()
 
 	for (byte i = 0; i < TEMP_GRAPH_LEN; i++)
 	{
-		if (tempGraphHi[i] > maxHi || (tempGraphHi[i] == maxHi && tempGraphLo[i] > minLo))
+		if (tempGraphHi[i] > maxHi || (tempGraphHi[i] == maxHi && tempGraphLo[i] > maxLo))
 		{
 			maxHi = tempGraphHi[i];
 			maxLo = tempGraphLo[i];
 		}
 
-		if (tempGraphHi[i] < minHi || (tempGraphHi[i] == maxHi && tempGraphLo[i] < minLo))
+		if (tempGraphHi[i] < minHi || (tempGraphHi[i] == minHi && tempGraphLo[i] < minLo))
 		{
 			minHi = tempGraphHi[i];
 			minLo = tempGraphLo[i];
@@ -674,7 +674,7 @@ void drawGraph()
 	for (i = 0; i < yScaleCount; i++)
 	{
 		// calculate y coord
-		display.drawHLine(1, (yCoord - min) * rescale, 2);
+		display.drawHLine(0, (yCoord - min) * rescale, 2);
 		yCoord += 0.5;
 	}
 
@@ -683,12 +683,9 @@ void drawGraph()
 		display.drawVLine(i, 60, 2);
 	}
 
-
 	drawGraphLine(startTempGraphIndex, TEMP_GRAPH_LEN, &xPos, rescale);
-
 	drawGraphLine(0, startTempGraphIndex, &xPos, rescale);
 }
-
 
 /// <summary>
 /// Draw the main manu screen.
@@ -697,9 +694,9 @@ void drawGraph()
 void drawMenu()
 {
 	display.setFont(u8g_font_helvB10r);
-	display.drawStr(10, 10, (const char*)pgm_read_word(&(menuItems[MENU_SET_DATE])));
-	display.drawStr(10, 30, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME])));
-	display.drawStr(10, 50, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME_FORMAT])));
+	display.drawStr(10, 45, (const char*)pgm_read_word(&(menuItems[MENU_SET_DATE])));
+	display.drawStr(10, 25, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME])));
+	display.drawStr(10, 5, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME_FORMAT])));
 
 	display.setFontRefHeightExtendedText();
 	display.setFontPosTop();
@@ -707,7 +704,7 @@ void drawMenu()
 	byte h = display.getFontAscent() - display.getFontDescent();
 	byte w = display.getStrWidth((const char*)pgm_read_word(&(menuItems[menuMode])));;
 
-	display.drawFrame(10 - 1, 10 + menuMode * 20, w + 2, h + 2);
+	display.drawFrame(9, 5 + menuMode * 20, w + 2, h + 2);
 }
 
 /// <summary>
