@@ -42,7 +42,7 @@ extern "C" void __cxa_pure_virtual() {;}
 //
 inline void getHiLo(byte* hiVal, byte* loVal, float val);
 //
-void getButtonInput(byte pin, boolean *clicked);
+void getButtonInput(byte pin, boolean *clicked, unsigned long current_time_milis);
 boolean isLeapYear(short year);
 byte getDaysInMonth(byte month);
 short daysPassedInYear();

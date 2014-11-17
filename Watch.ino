@@ -132,13 +132,18 @@ byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
 //----- Button control
 #define buttonPin 5
 boolean isClicked = LOW; // LOW = false = 0x0
-boolean isChanged = false;
 
 #define buttonPinUp 6
 boolean isClickedUp = LOW; // LOW = false = 0x0
 
 #define buttonPinDown 7
 boolean isClickedDown = LOW; // LOW = false = 0x0
+
+boolean isChanged = false;
+
+boolean insideDebounce = false;
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+#define debounceDelay 50    // the debounce time; increase if the output flickers
 
 //----- Global
 //byte startUpCount = 0;
@@ -192,14 +197,14 @@ void loop()
 	isChanged = false;
 
 	unsigned long current_time_milis = 0;
-
-	// Get button input
-	getButtonInput(buttonPin, &isClicked);
-	getButtonInput(buttonPinUp, &isClickedUp);
-	getButtonInput(buttonPinDown, &isClickedDown);
-
 	// Update clock time
 	current_time_milis = millis();
+
+	// Get button input
+	getButtonInput(buttonPin, &isClicked, current_time_milis);
+	getButtonInput(buttonPinUp, &isClickedUp, current_time_milis);
+	getButtonInput(buttonPinDown, &isClickedDown, current_time_milis);
+
 	boolean timeUpdated;
 	if ((timeUpdated = updateTime(current_time_milis)) || isChanged)
 	{
@@ -217,7 +222,6 @@ void loop()
 			if (hourCount > HOUR_COUNT)
 			{
 				// One hour has elapsed
-
 				getHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / HOUR_COUNT);
 
 				startTempGraphIndex++;
@@ -254,15 +258,37 @@ void loop()
 /// </summary>
 /// <param name="pin">The pin.</param>
 /// <param name="clicked">The clicked.</param>
-void getButtonInput(byte pin, boolean *clicked)
+void getButtonInput(byte pin, boolean *clicked, unsigned long current_time_milis)
 {
-	if (digitalRead(pin) == HIGH)
+	boolean reading = digitalRead(pin);	
+
+	if (reading == LOW && *clicked == LOW && insideDebounce == false)
 	{
-		if (*clicked == LOW)
+		lastDebounceTime = current_time_milis;
+	}
+	
+	if (reading == HIGH && *clicked == LOW && insideDebounce == false)
+	{
+		insideDebounce = true;
+	}
+	
+	if (*clicked == LOW && insideDebounce == true)
+	{
+		if ((current_time_milis - lastDebounceTime) > debounceDelay)
 		{
+			lastDebounceTime = current_time_milis;
+
+			*clicked = reading;
+
 			isChanged = true;
-			*clicked = HIGH;
+
+			insideDebounce = false;
 		}
+	}
+
+	if (reading == HIGH && *clicked == HIGH && insideDebounce == false)
+	{
+		*clicked = LOW;
 	}
 }
 
@@ -457,7 +483,7 @@ void onDraw()
 			break;
 		}
 
-		toggleOption(&menuMode, 0, 3);
+		toggleOption(&menuMode, 0, 2);
 
 		drawMenu();
 		break;
@@ -540,7 +566,7 @@ void drawSetMenu()
 		iWeek = calcDayOfWeek();
 
 		drawDateDigital(29, 12);
-		display.drawHLine(29, 12, 5);
+		display.drawHLine(29, 12 + 10, 5);
 
 		break;
 	case MENU_SET_TIME:
@@ -553,15 +579,15 @@ void drawSetMenu()
 			toggleOption(&iHour, 1, 24);
 		}
 
-		drawClockDigital(14, 45);
-		display.drawHLine(29, 12, 5);
+		drawClockDigital(29, 12);
+		display.drawHLine(29, 12 + 10, 5);
 
 		break;
 	case MENU_SET_TIME_FORMAT:
 		toggleOption(&iTimeFormat, 0, 1);
 
-		drawTimeFormat(14, 45);
-		display.drawHLine(29, 12, 5);
+		drawTimeFormat(29, 12);
+		display.drawHLine(29, 12 + 10, 5);
 
 		break;
 	}
