@@ -164,7 +164,7 @@ void setup()
 	display.setColorIndex(1);         // pixel on BW
 
 	iWeek = calcDayOfWeek();
-        (iHour > 12) ? iAmPm = 1 : iAmPm = 0;
+	(iHour > 12) ? iAmPm = 1 : iAmPm = 0;
 
 	// Start up the temperature sensor library
 	TempSensor.begin();
@@ -306,7 +306,7 @@ short daysPassedInYear()
 		passed += getDaysInMonth(i);
 	}
 
-	return passed + iDay -1;  // Adjust days passed in current month
+	return passed + iDay - 1;  // Adjust days passed in current month
 }
 
 /// <summary>
@@ -589,9 +589,6 @@ void drawStartUp()
 	displayMode = DISPLAY_MODE_CLOCK;
 }
 
-float max = 0;
-float min = 0;
-
 /// <summary>
 /// Converts hi and lo to float.
 /// </summary>
@@ -603,30 +600,35 @@ float hiLoToFloat(byte hiVal, byte loVal)
 	return hiVal + loVal / 100.0;
 }
 
+byte maxHi = 0;
+byte maxLo = 0;
+byte minHi = 0;
+byte minLo = 0;
+
+float min = 0;
+
 /// <summary>
 /// Finds the maximum and minimum.
 /// </summary>
-/// <returns>Min index</returns>
-byte findMaxMin()
+void findMaxMin()
 {
-	byte minIndex = 0;
-	max = hiLoToFloat(tempGraphHi[0], tempGraphLo[0]);
-	min = hiLoToFloat(tempGraphHi[0], tempGraphLo[0]);
+	maxHi = minHi = tempGraphHi[0];
+	maxLo = minLo = tempGraphLo[0];
+
 	for (byte i = 0; i < TEMP_GRAPH_LEN; i++)
 	{
-		if (max > hiLoToFloat(tempGraphHi[i], tempGraphLo[i]))
+		if (tempGraphHi[i] > maxHi || (tempGraphHi[i] == maxHi && tempGraphLo[i] > minLo))
 		{
-			max = hiLoToFloat(tempGraphHi[i], tempGraphLo[i]);
+			maxHi = tempGraphHi[i];
+			maxLo = tempGraphLo[i];
 		}
 
-		if (min < hiLoToFloat(tempGraphHi[i], tempGraphLo[i]))
+		if (tempGraphHi[i] < minHi || (tempGraphHi[i] == maxHi && tempGraphLo[i] < minLo))
 		{
-			min = hiLoToFloat(tempGraphHi[i], tempGraphLo[i]);
-			minIndex = i;
+			minHi = tempGraphHi[i];
+			minLo = tempGraphLo[i];
 		}
 	}
-
-	return minIndex;
 }
 
 void drawGraphLine(byte start, byte end, byte* x, float rescale)
@@ -643,40 +645,40 @@ void drawGraphLine(byte start, byte end, byte* x, float rescale)
 void drawGraph()
 {
 	byte i;
-
 	byte xPos = 0;
 
-	byte minIndex = findMaxMin();
+	findMaxMin();
 
-	byte yScale = (max - min) / 0.5;
+	min = hiLoToFloat(minHi, minLo);
 
-	float rescale = 64.0 / (max - min);
+	float diff = hiLoToFloat(maxHi, maxLo) - min;
+	float rescale = 64.0 / diff;
 
 	// draw scale
-
 	// calculate first y coord
 	byte hiVal, loVal;
-	if ((loVal = tempGraphLo[minIndex] > 50))
+	if ((minLo > 50))
 	{
-		hiVal = tempGraphHi[minIndex] + 1;
+		hiVal = minHi + 1;
 		loVal = 0;
 	}
 	else
 	{
-		hiVal = tempGraphHi[minIndex];
+		hiVal = minHi;
 		loVal = 50;
 	}
 
 	float yCoord = hiLoToFloat(hiVal, loVal);
 
-	for (i = 0; i < yScale; i++)
+	byte yScaleCount = diff / 0.5;
+	for (i = 0; i < yScaleCount; i++)
 	{
 		// calculate y coord
-		display.drawHLine(0, (yCoord - min) * rescale, 2);
+		display.drawHLine(1, (yCoord - min) * rescale, 2);
 		yCoord += 0.5;
 	}
 
-	for (i = 0 ; i < TEMP_GRAPH_LEN; i += 12)
+	for (i = 0; i < TEMP_GRAPH_LEN; i += 12)
 	{
 		display.drawVLine(i, 60, 2);
 	}
@@ -686,6 +688,7 @@ void drawGraph()
 
 	drawGraphLine(0, startTempGraphIndex, &xPos, rescale);
 }
+
 
 /// <summary>
 /// Draw the main manu screen.
@@ -746,7 +749,7 @@ void drawClock()
 		display.setFont(u8g_font_helvB12);
 		drawTemp(80, 63);
 
-		drawClockAnalog(centerX-10, centerY, iRadius);
+		drawClockAnalog(centerX - 10, centerY, iRadius);
 
 		break;
 
@@ -773,13 +776,13 @@ void drawClock()
 }
 
 #define SHORT_CHAR_COUNT 5
-static const short stoa_tab[SHORT_CHAR_COUNT] = { 10000, 1000, 100, 10, 1 };
+static const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
 void stoa(short v, char * dest)
 {
 	byte d;
 	short c;
-        byte firstIndex = 4;
-	for (byte i = 0; i < SHORT_CHAR_COUNT; i++)
+	byte firstIndex = 0;
+	for (byte i = 4; i != 255; i--)
 	{
 		c = stoa_tab[i];
 		if (v >= c)
@@ -788,15 +791,15 @@ void stoa(short v, char * dest)
 			d += v / c;
 			v %= c;
 			*dest++ = d;
-                        if(firstIndex == 4)
-                        {
-                            firstIndex = i;
-                        }
+			if (firstIndex == 0)
+			{
+				firstIndex = i;
+			}
 		}
-                else if(i >= firstIndex)
-                {
-                  *dest++ = '0';
-                }
+		else if (i <= firstIndex)
+		{
+			*dest++ = '0';
+		}
 	}
 
 	*dest = '\0';
@@ -865,7 +868,7 @@ void drawTemp(byte xPos, byte yPos)
 	display.drawStr(xPos + offset, yPos, s);
 	offset += display.getStrPixelWidth(s) + 1;
 
-        s[0] = '°', s[1] = 'C', s[3] = 0;
+	s[0] = '°', s[1] = 'C', s[3] = 0;
 	display.drawStr(xPos + offset, yPos, s);
 }
 
@@ -952,7 +955,7 @@ void drawClockAnalog(byte xPos, byte yPos, byte radius)
 	double hourAngleOffset = iMinutes / 12.0;
 	showTimePin(xPos, yPos, 0.1, 0.5, iHour * 5 + hourAngleOffset, radius, -1);
 	showTimePin(xPos, yPos, 0.1, 0.78, iMinutes, radius, -1);
-	// showTimePin(xPos, yPos, 0.1, 0.9, iSecond, radius);
+	// showTimePin(xPos, yPos, 0.1, 0.9, iSecond, radius, -1);
 }
 
 // Calculate clock pin position
