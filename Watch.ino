@@ -992,13 +992,12 @@ void drawClockAnalog(byte xPos, byte yPos, byte radius)
 	display.drawCircle(xPos, yPos, radius);
 
 	// print hour pin lines
-	for (byte i = 0; i < 12; i++)
+	for (byte i = 0; i < 60; i+=5)
 	{
-		showTimePin(xPos, yPos, 0.9, 1, i * 5, radius, 1);
+		showTimePin(xPos, yPos, 0.9, 1, i, radius, 1);
 	}
 
-	double hourAngleOffset = iMinutes / 12.0;
-	showTimePin(xPos, yPos, 0.1, 0.5, iHour * 5 + hourAngleOffset, radius, -1);
+	showTimePin(xPos, yPos, 0.1, 0.5, iHour * 5 + iMinutes / 12, radius, -1);
 	showTimePin(xPos, yPos, 0.1, 0.78, iMinutes, radius, -1);
 	// showTimePin(xPos, yPos, 0.1, 0.9, iSecond, radius, -1);
 }
@@ -1006,13 +1005,14 @@ void drawClockAnalog(byte xPos, byte yPos, byte radius)
 // Calculate clock pin position
 #define RAD 0.01745329251994329576923690768489 // = Pi / 180;
 #define LR 89.999
+#define roundToByte(x) (byte)((x)+0.5)
 
-byte getPointCoordinate(byte center, byte radius, double pl, double angle, byte sign, double(*trigFn)(double))
+byte getPointCoordinate(byte center, byte radius, double pl, byte angle, byte sign, double(*trigFn)(double))
 {
-	return center + round((radius * pl) * (*trigFn)((6 * angle + LR * sign) * RAD));
+	return center + roundToByte((radius * pl) * (*trigFn)((6 * angle + LR * sign) * RAD));
 }
 
-void showTimePin(byte center_x, byte center_y, double pl1, double pl2, double angle, byte radius, byte sign)
+void showTimePin(byte center_x, byte center_y, double pl1, double pl2, byte angle, byte radius, byte sign)
 {
 	byte x1, x2, y1, y2;
 

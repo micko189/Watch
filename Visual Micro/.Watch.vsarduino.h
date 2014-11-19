@@ -69,7 +69,7 @@ byte drawClockDigital(byte xPos, byte yPos);
 void drawSecondsDigital(byte xPos, byte yPos);
 void drawDateDigital(byte xPos, byte yPos);
 void drawClockAnalog(byte xPos, byte yPos, byte radius);
-void showTimePin(byte center_x, byte center_y, double pl1, double pl2, double angle, byte radius, byte sign);
+void showTimePin(byte center_x, byte center_y, double pl1, double pl2, byte angle, byte radius, byte sign);
 
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\arduino.h"
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\avr\variants\eightanaloginputs\pins_arduino.h" 
