@@ -140,6 +140,9 @@ boolean isClickedUp = LOW; // LOW = false = 0x0
 #define buttonPinDown 7
 boolean isClickedDown = LOW; // LOW = false = 0x0
 
+#define buttonPinBack 8
+boolean isClickedBack = LOW; // LOW = false = 0x0
+
 boolean isChanged = false;
 
 boolean insideDebounce = false;
@@ -172,6 +175,7 @@ void setup()
 	pinMode(buttonPin, INPUT);  // Defines button pin
 	pinMode(buttonPinUp, INPUT);  // Defines button pin
 	pinMode(buttonPinDown, INPUT);  // Defines button pin
+	pinMode(buttonPinBack, INPUT);  // Defines button pin
 
 	// By default, we'll generate the high voltage from the 3.3v line internally! (neat!)
 	// Assign default color value
@@ -200,6 +204,7 @@ void loop()
 	getButtonInput(buttonPin, &isClicked);
 	getButtonInput(buttonPinUp, &isClickedUp);
 	getButtonInput(buttonPinDown, &isClickedDown);
+	getButtonInput(buttonPinBack, &isClickedBack);
 
 	boolean timeUpdated = updateTime();
 	if (timeUpdated || isChanged)
@@ -582,7 +587,7 @@ void onDraw()
 			break;
 		}
 
-		if (isClickedUp == HIGH && isClickedDown == HIGH)
+		if (isClickedBack == HIGH)
 		{
 			// Go back
 			displayMode = DISPLAY_MODE_CLOCK;
@@ -593,10 +598,11 @@ void onDraw()
 		toggleOption(&menuMode, 0, 2);
 
 		drawMenu();
+
 		break;
 
 	case DISPLAY_MODE_SET_MENU:
-		if (isClickedUp == HIGH && isClickedDown == HIGH)
+		if (isClickedBack == HIGH)
 		{
 			// Go back
 			displayMode = DISPLAY_MODE_MENU;
@@ -608,13 +614,11 @@ void onDraw()
 		{
 			// Go to next set value
 			setPosition++;
+			rollOverValue(&setPosition, menuMode);
 		}
 
 		drawSetMenu();
 
-		break;
-	default:
-		displayMode = DISPLAY_MODE_CLOCK;    // This means there's an error
 		break;
 	}
 
@@ -628,7 +632,6 @@ void onDraw()
 /// </summary>
 void drawSetMenu()
 {
-	rollOverValue(&setPosition, menuMode);
 	switch (menuMode)
 	{
 	case MENU_SET_DATE:
@@ -642,17 +645,11 @@ void drawSetMenu()
 			break;
 		case 2:
 			if (isClickedUp == HIGH)
-			{
 				if (++iYear > 32767)
 					iYear = 2000;
-			}
-
 			if (isClickedDown == HIGH)
-			{
 				if (--iYear < 2000)
 					iYear = 2000;
-			}
-
 			break;
 		}
 
@@ -702,7 +699,7 @@ void drawStartUp()
 
 	//display.drawStr(25, 12, "Temperature");
 
-	//display.drawStr(35, 28, "Watch");
+	display.drawStr(35, 28, "Watch");
 
 	//display.drawStr(25, 45, "Arduino v1.0");
 
