@@ -93,12 +93,13 @@ byte startTempGraphIndex = 0;
 short hourCount = 0;
 float tempAccum = 0;
 
+//----- Strings
 PGM_P const weekString[] PROGMEM = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
-PROGMEM const byte daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // standard year days
-
-PGM_P const menuItems[] PROGMEM = { "Set date", "Set time", "Set time format" };
+PGM_P const menuItems[] PROGMEM = { "Set date", "Set time", "Set format" };
 PGM_P const timeFormat[] PROGMEM = { "12h", "24h" };
+
+PROGMEM const byte daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // standard year days
 
 //PGM_P const dayNames[] PROGMEM = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 //PGM_P const months[] PROGMEM = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
@@ -191,7 +192,7 @@ void setup()
 void loop()
 {
 	isChanged = false;
-	
+
 	// Update clock time
 	current_time_milis = millis();
 
@@ -255,7 +256,7 @@ void loop()
 /// <param name="clicked">The clicked button pointer.</param>
 void getButtonInput(byte pin, boolean *clicked)
 {
-	boolean reading = digitalRead(pin);	
+	boolean reading = digitalRead(pin);
 
 	if (insideDebounce == false)
 	{
@@ -281,7 +282,7 @@ void getButtonInput(byte pin, boolean *clicked)
 		isChanged = true;
 
 		insideDebounce = false;
-	}	
+	}
 }
 
 /// <summary>
