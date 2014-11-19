@@ -150,6 +150,13 @@ byte tempLo = 0;
 byte tempHi = 0;
 byte setPosition = 0; // position of value currently being set
 
+byte maxHi = 0;
+byte maxLo = 0;
+byte minHi = 0;
+byte minLo = 0;
+
+float min = 0;
+
 #define HOUR_COUNT 1 //3600
 
 unsigned long current_time_milis = 0;
@@ -181,18 +188,6 @@ void setup()
 	//LightSensor.SetMode(Continuous_H_resolution_Mode);
 }
 
-/// <summary>
-/// Gets the hi and lo.
-/// </summary>
-/// <param name="hiVal">The hi value.</param>
-/// <param name="loVal">The lo value.</param>
-/// <param name="val">The value.</param>
-inline void getHiLo(byte* hiVal, byte* loVal, float val)
-{
-	*hiVal = (byte)val;
-	*loVal = ((short)(val * 100)) % 100;
-}
-
 void loop()
 {
 	isChanged = false;
@@ -216,13 +211,13 @@ void loop()
 			float temp = TempSensor.getTempCByIndex(0);
 			tempAccum += temp;
 
-			getHiLo(&tempHi, &tempLo, temp);
+			floatToHiLo(&tempHi, &tempLo, temp);
 
 			hourCount++;
 			if (hourCount > HOUR_COUNT)
 			{
 				// One hour has elapsed
-				getHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / HOUR_COUNT);
+				floatToHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / HOUR_COUNT);
 
 				startTempGraphIndex++;
 				rollOver(&startTempGraphIndex, TEMP_GRAPH_LEN);
@@ -252,7 +247,6 @@ void loop()
 ///////////////////////////////////
 //----- Utils
 ///////////////////////////////////
-
 
 /// <summary>
 /// Gets the button input.
@@ -436,6 +430,106 @@ void toggleOption(byte *option, byte minVal, byte maxVal)
 	}
 }
 
+#define SHORT_CHAR_COUNT 5
+static const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
+/// <summary>
+/// Short to string convert
+/// </summary>
+/// <param name="v">The value.</param>
+/// <param name="dest">The string destination.</param>
+void stoa(short v, char * dest)
+{
+	byte d;
+	short c;
+	byte firstIndex = 0;
+	for (byte i = 4; i != 255; i--)
+	{
+		c = stoa_tab[i];
+		if (v >= c)
+		{
+			d = '0';
+			d += v / c;
+			v %= c;
+			*dest++ = d;
+			if (firstIndex == 0)
+			{
+				firstIndex = i;
+			}
+		}
+		else if (i <= firstIndex)
+		{
+			*dest++ = '0';
+		}
+	}
+
+	*dest = '\0';
+}
+
+/// <summary>
+/// Converts byte value to two character string.
+/// </summary>
+/// <param name="value">The value.</param>
+/// <param name="s">The string.</param>
+void byteToStr(byte value, char* s)
+{
+	if (value < 10)
+	{
+		s[0] = '0';
+		stoa(value, s + 1);
+	}
+	else
+	{
+		stoa(value, s);
+	}
+}
+
+/// <summary>
+/// Gets the hi and lo from float.
+/// </summary>
+/// <param name="hiVal">The hi value.</param>
+/// <param name="loVal">The lo value.</param>
+/// <param name="val">The value.</param>
+inline void floatToHiLo(byte* hiVal, byte* loVal, float val)
+{
+	*hiVal = (byte)val;
+	*loVal = ((short)(val * 100)) % 100;
+}
+
+/// <summary>
+/// Converts hi and lo to float.
+/// </summary>
+/// <param name="hiVal">The hi value.</param>
+/// <param name="loVal">The lo value.</param>
+/// <returns></returns>
+float hiLoToFloat(byte hiVal, byte loVal)
+{
+	return hiVal + loVal / 100.0;
+}
+
+/// <summary>
+/// Finds the maximum and minimum.
+/// </summary>
+void findMaxMin()
+{
+	maxHi = minHi = tempGraphHi[0];
+	maxLo = minLo = tempGraphLo[0];
+
+	for (byte i = 0; i < TEMP_GRAPH_LEN; i++)
+	{
+		if (tempGraphHi[i] > maxHi || (tempGraphHi[i] == maxHi && tempGraphLo[i] > maxLo))
+		{
+			maxHi = tempGraphHi[i];
+			maxLo = tempGraphLo[i];
+		}
+
+		if (tempGraphHi[i] < minHi || (tempGraphHi[i] == minHi && tempGraphLo[i] < minLo))
+		{
+			minHi = tempGraphHi[i];
+			minLo = tempGraphLo[i];
+		}
+	}
+}
+
 ///////////////////////////////////
 //----- Drawing methods
 ///////////////////////////////////
@@ -615,47 +709,12 @@ void drawStartUp()
 }
 
 /// <summary>
-/// Converts hi and lo to float.
+/// Draws the graph line.
 /// </summary>
-/// <param name="hiVal">The hi value.</param>
-/// <param name="loVal">The lo value.</param>
-/// <returns></returns>
-float hiLoToFloat(byte hiVal, byte loVal)
-{
-	return hiVal + loVal / 100.0;
-}
-
-byte maxHi = 0;
-byte maxLo = 0;
-byte minHi = 0;
-byte minLo = 0;
-
-float min = 0;
-
-/// <summary>
-/// Finds the maximum and minimum.
-/// </summary>
-void findMaxMin()
-{
-	maxHi = minHi = tempGraphHi[0];
-	maxLo = minLo = tempGraphLo[0];
-
-	for (byte i = 0; i < TEMP_GRAPH_LEN; i++)
-	{
-		if (tempGraphHi[i] > maxHi || (tempGraphHi[i] == maxHi && tempGraphLo[i] > maxLo))
-		{
-			maxHi = tempGraphHi[i];
-			maxLo = tempGraphLo[i];
-		}
-
-		if (tempGraphHi[i] < minHi || (tempGraphHi[i] == minHi && tempGraphLo[i] < minLo))
-		{
-			minHi = tempGraphHi[i];
-			minLo = tempGraphLo[i];
-		}
-	}
-}
-
+/// <param name="start">The start.</param>
+/// <param name="end">The end.</param>
+/// <param name="x">The x.</param>
+/// <param name="rescale">The rescale.</param>
 void drawGraphLine(byte start, byte end, byte* x, float rescale)
 {
 	for (byte i = start; i < end; i++)
@@ -794,54 +853,6 @@ void drawClock()
 		drawGraph();
 
 		break;
-	}
-}
-
-#define SHORT_CHAR_COUNT 5
-static const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
-void stoa(short v, char * dest)
-{
-	byte d;
-	short c;
-	byte firstIndex = 0;
-	for (byte i = 4; i != 255; i--)
-	{
-		c = stoa_tab[i];
-		if (v >= c)
-		{
-			d = '0';
-			d += v / c;
-			v %= c;
-			*dest++ = d;
-			if (firstIndex == 0)
-			{
-				firstIndex = i;
-			}
-		}
-		else if (i <= firstIndex)
-		{
-			*dest++ = '0';
-		}
-	}
-
-	*dest = '\0';
-}
-
-/// <summary>
-/// Converts byte value to two character string.
-/// </summary>
-/// <param name="value">The value.</param>
-/// <param name="s">The string.</param>
-void byteToStr(byte value, char* s)
-{
-	if (value < 10)
-	{
-		s[0] = '0';
-		stoa(value, s + 1);
-	}
-	else
-	{
-		stoa(value, s);
 	}
 }
 

@@ -40,7 +40,6 @@ typedef unsigned char byte;
 extern "C" void __cxa_pure_virtual() {;}
 
 //
-inline void getHiLo(byte* hiVal, byte* loVal, float val);
 //
 void getButtonInput(byte pin, boolean *clicked);
 boolean isLeapYear(short year);
@@ -49,18 +48,19 @@ short daysPassedInYear();
 byte calcDayOfWeek();
 boolean updateTime();
 void toggleOption(byte *option, byte minVal, byte maxVal);
+void stoa(short v, char * dest);
+void byteToStr(byte value, char* s);
+inline void floatToHiLo(byte* hiVal, byte* loVal, float val);
+float hiLoToFloat(byte hiVal, byte loVal);
+void findMaxMin();
 void onDraw();
 void rollOver(byte *value, byte rollOverVal);
 void drawSetMenu();
 void drawStartUp();
-float hiLoToFloat(byte hiVal, byte loVal);
-void findMaxMin();
 void drawGraphLine(byte start, byte end, byte* x, float rescale);
 void drawGraph();
 void drawMenu();
 void drawClock();
-void stoa(short v, char * dest);
-void byteToStr(byte value, char* s);
 void drawTimeFormat(byte xPos, byte yPos);
 void drawDayAmPm(byte xPos, byte yPos);
 void drawTemp(byte xPos, byte yPos);
