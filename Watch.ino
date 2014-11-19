@@ -450,7 +450,7 @@ void rollOverValue(byte *value, byte rollOverVal)
 }
 
 #define SHORT_CHAR_COUNT 5
-static const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
+PROGMEM const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
 /// <summary>
 /// Short to string convert
 /// </summary>
