@@ -200,8 +200,8 @@ void loop()
 	getButtonInput(buttonPinUp, &isClickedUp);
 	getButtonInput(buttonPinDown, &isClickedDown);
 
-	boolean timeUpdated;
-	if ((timeUpdated = updateTime()) || isChanged)
+	boolean timeUpdated = updateTime();
+	if (timeUpdated || isChanged)
 	{
 		// One second has elapsed or we have input (button clicked)
 
@@ -220,7 +220,7 @@ void loop()
 				floatToHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / HOUR_COUNT);
 
 				startTempGraphIndex++;
-				rollOver(&startTempGraphIndex, TEMP_GRAPH_LEN);
+				rollOverValue(&startTempGraphIndex, TEMP_GRAPH_LEN);
 
 				tempAccum = 0;
 				hourCount = 0;
@@ -252,7 +252,7 @@ void loop()
 /// Gets the button input.
 /// </summary>
 /// <param name="pin">The pin number.</param>
-/// <param name="clicked">The clicked.</param>
+/// <param name="clicked">The clicked button pointer.</param>
 void getButtonInput(byte pin, boolean *clicked)
 {
 	boolean reading = digitalRead(pin);	
@@ -298,7 +298,7 @@ boolean isLeapYear(short year)
 /// Gets the days in month.
 /// </summary>
 /// <param name="month">The month.</param>
-/// <returns></returns>
+/// <returns>Days in month</returns>
 byte getDaysInMonth(byte month)
 {
 	month--; // Adjust for indexing in daysInMonth
@@ -315,7 +315,7 @@ byte getDaysInMonth(byte month)
 /// <summary>
 /// Gets the days passed in year.
 /// </summary>
-/// <returns></returns>
+/// <returns>Days passed in year</returns>
 short daysPassedInYear()
 {
 	short passed = 0;
@@ -427,6 +427,19 @@ void toggleOption(byte *option, byte minVal, byte maxVal)
 		{
 			*option = maxVal;
 		}
+	}
+}
+
+/// <summary>
+/// Rolls the value over to 0 if grater than roll over value.
+/// </summary>
+/// <param name="value">The value.</param>
+/// <param name="rollOverVal">The roll over value.</param>
+void rollOverValue(byte *value, byte rollOverVal)
+{
+	if (*value > rollOverVal)
+	{
+		*value = 0;
 	}
 }
 
@@ -610,24 +623,11 @@ void onDraw()
 }  // End of onDraw()
 
 /// <summary>
-/// Rolls the value over to 0.
-/// </summary>
-/// <param name="value">The value.</param>
-/// <param name="rollOverVal">The roll over value.</param>
-void rollOver(byte *value, byte rollOverVal)
-{
-	if (*value > rollOverVal)
-	{
-		*value = 0;
-	}
-}
-
-/// <summary>
 /// Draws the set menu.
 /// </summary>
 void drawSetMenu()
 {
-	rollOver(&setPosition, menuMode);
+	rollOverValue(&setPosition, menuMode);
 	switch (menuMode)
 	{
 	case MENU_SET_DATE:
@@ -797,7 +797,7 @@ void drawMenu()
 /// </summary>
 void drawClock()
 {
-	byte offset = 0;
+	byte offset;
 
 	switch (clockStyle)
 	{
@@ -840,6 +840,7 @@ void drawClock()
 
 		display.setFont(u8g_font_helvB12);
 		drawTemp(80, 63);
+		drawDay(5, 16);
 
 		display.setFont(u8g_font_helvB24n);
 		offset = drawClockDigital(14, 45);
@@ -873,11 +874,21 @@ void drawTimeFormat(byte xPos, byte yPos)
 /// <param name="yPos">The y position.</param>
 void drawDayAmPm(byte xPos, byte yPos)
 {
-	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(weekString[iWeek])));
+	drawDay(xPos, yPos);
 	if (iTimeFormat == 0) // 0 = 12h
 	{
 		display.drawStr(xPos + display.getStrPixelWidth((const char*)pgm_read_word(&(weekString[iWeek]))) + 2, yPos, (const char*)pgm_read_word(&(ampmString[iAmPm])));
 	}
+}
+
+/// <summary>
+/// Draws the day.
+/// </summary>
+/// <param name="xPos">The x position.</param>
+/// <param name="yPos">The y position.</param>
+void drawDay(byte xPos, byte yPos)
+{
+	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(weekString[iWeek])));
 }
 
 /// <summary>
@@ -888,13 +899,13 @@ void drawDayAmPm(byte xPos, byte yPos)
 void drawTemp(byte xPos, byte yPos)
 {
 	char s[4];
-	byte offset = 0;
+	byte offset;
 
 	stoa(tempHi, s);
 	display.drawStr(xPos - display.getStrPixelWidth(s) + 1, yPos, s);
 
 	display.drawStr(xPos, yPos, ".");
-	offset += display.getStrPixelWidth(".") + 1;
+	offset = display.getStrPixelWidth(".") + 1;
 
 	byteToStr(tempLo, s);
 
