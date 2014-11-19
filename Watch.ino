@@ -146,12 +146,13 @@ unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
 #define debounceDelay 50    // the debounce time; increase if the output flickers
 
 //----- Global
-//byte startUpCount = 0;
 byte tempLo = 0;
 byte tempHi = 0;
 byte setPosition = 0; // position of value currently being set
 
 #define HOUR_COUNT 1 //3600
+
+unsigned long current_time_milis = 0;
 
 ///////////////////////////////////
 //----- Arduino setup and loop methods
@@ -195,18 +196,17 @@ inline void getHiLo(byte* hiVal, byte* loVal, float val)
 void loop()
 {
 	isChanged = false;
-
-	unsigned long current_time_milis = 0;
+	
 	// Update clock time
 	current_time_milis = millis();
 
 	// Get button input
-	getButtonInput(buttonPin, &isClicked, current_time_milis);
-	getButtonInput(buttonPinUp, &isClickedUp, current_time_milis);
-	getButtonInput(buttonPinDown, &isClickedDown, current_time_milis);
+	getButtonInput(buttonPin, &isClicked);
+	getButtonInput(buttonPinUp, &isClickedUp);
+	getButtonInput(buttonPinDown, &isClickedDown);
 
 	boolean timeUpdated;
-	if ((timeUpdated = updateTime(current_time_milis)) || isChanged)
+	if ((timeUpdated = updateTime()) || isChanged)
 	{
 		// One second has elapsed or we have input (button clicked)
 
@@ -253,43 +253,41 @@ void loop()
 //----- Utils
 ///////////////////////////////////
 
+
 /// <summary>
 /// Gets the button input.
 /// </summary>
-/// <param name="pin">The pin.</param>
+/// <param name="pin">The pin number.</param>
 /// <param name="clicked">The clicked.</param>
-void getButtonInput(byte pin, boolean *clicked, unsigned long current_time_milis)
+void getButtonInput(byte pin, boolean *clicked)
 {
 	boolean reading = digitalRead(pin);	
 
-	if (reading == LOW && *clicked == LOW && insideDebounce == false)
+	if (insideDebounce == false)
 	{
-		lastDebounceTime = current_time_milis;
-	}
-	
-	if (reading == HIGH && *clicked == LOW && insideDebounce == false)
-	{
-		insideDebounce = true;
-	}
-	
-	if (*clicked == LOW && insideDebounce == true)
-	{
-		if ((current_time_milis - lastDebounceTime) > debounceDelay)
+		if (reading == LOW && *clicked == LOW)
 		{
 			lastDebounceTime = current_time_milis;
-
-			*clicked = reading;
-
-			isChanged = true;
-
-			insideDebounce = false;
+		}
+		else if (reading == HIGH && *clicked == LOW)
+		{
+			insideDebounce = true;
+		}
+		else if (reading == HIGH && *clicked == HIGH)
+		{
+			*clicked = LOW;
 		}
 	}
-
-	if (reading == HIGH && *clicked == HIGH && insideDebounce == false)
+	else if (*clicked == LOW && (current_time_milis - lastDebounceTime) > debounceDelay) // inside debounce period
 	{
-		*clicked = LOW;
-	}
+		lastDebounceTime = current_time_milis;
+
+		*clicked = reading;
+
+		isChanged = true;
+
+		insideDebounce = false;
+	}	
 }
 
 /// <summary>
@@ -362,9 +360,10 @@ byte calcDayOfWeek()
 /// <summary>
 /// Updates the time.
 /// </summary>
-/// <param name="current_time_milis">The current_time_milis.</param>
-/// <returns> whether time is updated - one seccond is ellapsed </returns>
-boolean updateTime(unsigned long current_time_milis)
+/// <returns>
+/// whether time is updated - one seccond is ellapsed
+/// </returns>
+boolean updateTime()
 {
 	short timeElapse = current_time_milis - prevClockTime;
 	if (timeElapse >= adjustedUpdateTimeInterval) // check if one second has elapsed
