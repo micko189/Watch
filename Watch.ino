@@ -171,7 +171,7 @@ unsigned long current_time_milis = 0;
 
 void setup()
 {
-	//Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
+	Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
 	pinMode(buttonPin, INPUT);  // Defines button pin
 	pinMode(buttonPinUp, INPUT);  // Defines button pin
 	pinMode(buttonPinDown, INPUT);  // Defines button pin
@@ -247,7 +247,7 @@ void loop()
 	}
 
 	// Delay to get next current time (10ms), this is essentially time deviation in one second cycle (~ +-10ms)
-	delay(10);
+	delay(200);
 }
 
 ///////////////////////////////////
@@ -288,6 +288,12 @@ void getButtonInput(byte pin, boolean *clicked)
 
 		insideDebounce = false;
 	}
+
+Serial.print(pin);
+Serial.print(insideDebounce);
+Serial.print(reading);
+Serial.print(*clicked);
+Serial.println(isChanged);
 }
 
 /// <summary>
@@ -450,7 +456,7 @@ void rollOverValue(byte *value, byte rollOverVal)
 }
 
 #define SHORT_CHAR_COUNT 5
-PROGMEM const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
+static const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
 /// <summary>
 /// Short to string convert
 /// </summary>
