@@ -133,20 +133,25 @@ byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
 //----- Button control
 #define buttonPin 5
 boolean isClicked = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
+boolean insideDebounce = false;
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
 
 #define buttonPinUp 6
 boolean isClickedUp = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
+boolean insideDebounceUp = false;
+unsigned long lastDebounceTimeUp = 0;  // the last time the output pin was toggled
 
 #define buttonPinDown 7
 boolean isClickedDown = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
+boolean insideDebounceDown = false;
+unsigned long lastDebounceTimeDown = 0;  // the last time the output pin was toggled
 
 #define buttonPinBack 8
 boolean isClickedBack = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
+boolean insideDebounceBack = false;
+unsigned long lastDebounceTimeBack = 0;  // the last time the output pin was toggled
 
 boolean isChanged = false;
-
-boolean insideDebounce = false;
-unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
 #define debounceDelay 50    // the debounce time; increase if the output flickers
 
 //----- Global
@@ -201,10 +206,10 @@ void loop()
 	current_time_milis = millis();
 
 	// Get button input
-	getButtonInput(buttonPin, &isClicked);
-	getButtonInput(buttonPinUp, &isClickedUp);
-	getButtonInput(buttonPinDown, &isClickedDown);
-	getButtonInput(buttonPinBack, &isClickedBack);
+	getButtonInput(buttonPin, &isClicked, &insideDebounce, &lastDebounceTime);
+	getButtonInput(buttonPinUp, &isClickedUp, &insideDebounceUp, &lastDebounceTimeUp);
+	getButtonInput(buttonPinDown, &isClickedDown, &insideDebounceDown, &lastDebounceTimeDown);
+	getButtonInput(buttonPinBack, &isClickedBack, &insideDebounceBack, &lastDebounceTimeBack);
 
 	boolean timeUpdated = updateTime();
 	if (timeUpdated || isChanged)
@@ -259,38 +264,40 @@ void loop()
 /// </summary>
 /// <param name="pin">The pin number.</param>
 /// <param name="clicked">The clicked button pointer.</param>
-void getButtonInput(byte pin, boolean *clicked)
+/// <param name="insideDebounce">The inside debounce.</param>
+/// <param name="lastDebounceTime">The last debounce time.</param>
+void getButtonInput(byte pin, boolean *clicked, boolean *insideDebounce, unsigned long *lastDebounceTime)
 {
 	boolean reading = digitalRead(pin);
 
-	if (insideDebounce == false)
+	if (*insideDebounce == false)
 	{
 		if (reading == HIGH && *clicked == HIGH) // not pressed now and was not pressed before
 		{
-			lastDebounceTime = current_time_milis;
+			*lastDebounceTime = current_time_milis;
 		}
 		else if (reading == LOW && *clicked == HIGH) // pressed now and was not pressed before
 		{
-			insideDebounce = true;
+			*insideDebounce = true;
 		}
 		else if (reading == LOW && *clicked == LOW) // pressed now and was pressed before
 		{
 			*clicked = HIGH;
 		}
 	}
-	else if (*clicked == HIGH && (current_time_milis - lastDebounceTime) > debounceDelay) // button was not pressed, inside debounce period
+	else if (*clicked == HIGH && (current_time_milis - *lastDebounceTime) > debounceDelay) // button was not pressed, inside debounce period
 	{
-		lastDebounceTime = current_time_milis;
+		*lastDebounceTime = current_time_milis;
 
 		*clicked = reading;
 
 		isChanged = true;
 
-		insideDebounce = false;
+		*insideDebounce = false;
 	}
 
 	Serial.print(pin);
-	Serial.print(insideDebounce);
+	Serial.print(*insideDebounce);
 	Serial.print(reading);
 	Serial.print(*clicked);
 	Serial.println(isChanged);
