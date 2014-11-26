@@ -272,22 +272,17 @@ void getButtonInput(byte pin, boolean *clicked, boolean *insideDebounce, unsigne
 
 	if (*insideDebounce == false)
 	{
-		if (reading == HIGH && *clicked == HIGH) // not pressed now and was not pressed before
-		{
-			*lastDebounceTime = current_time_milis;
-		}
-		else if (reading == LOW && *clicked == HIGH) // pressed now and was not pressed before
+		// steady state, update last debounce time
+		*lastDebounceTime = current_time_milis;
+
+		if (reading != *clicked) // we have a change of state, start debouncing
 		{
 			*insideDebounce = true;
 		}
-		else if (reading == LOW && *clicked == LOW) // pressed now and was pressed before
-		{
-			*clicked = HIGH;
-		}
 	}
-	else if (*clicked == HIGH && (current_time_milis - *lastDebounceTime) > debounceDelay) // button was not pressed, inside debounce period
+	else if ((current_time_milis - *lastDebounceTime) > debounceDelay) // inside debounce period
 	{
-		// it has passed debounce time since last change of reading from HIGH to LOW - press of button (start of debouncing) 
+		// it has passed debounce time since last change of reading press/release of button (start of debouncing) 
 		// now read the pin state and update last debounce time
 
 		*clicked = reading;
