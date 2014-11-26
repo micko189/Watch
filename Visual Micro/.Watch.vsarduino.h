@@ -41,7 +41,7 @@ extern "C" void __cxa_pure_virtual() {;}
 
 //
 //
-void getButtonInput(byte pin, boolean *clicked, boolean *insideDebounce, unsigned long *lastDebounceTime);
+void getButtonInput(byte pinNo, boolean *btnPinState, boolean *insideDebounce, unsigned long *lastDebounceTime);
 boolean isLeapYear(short year);
 byte getDaysInMonth(byte month);
 short daysPassedInYear();

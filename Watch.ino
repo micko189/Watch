@@ -132,26 +132,26 @@ byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
 
 //----- Button control
 #define buttonPin 5
-boolean isClicked = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
+boolean btnPinState = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
 boolean insideDebounce = false;
 unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
 
 #define buttonPinUp 6
-boolean isClickedUp = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
+boolean btnPinStateUp = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
 boolean insideDebounceUp = false;
 unsigned long lastDebounceTimeUp = 0;  // the last time the output pin was toggled
 
 #define buttonPinDown 7
-boolean isClickedDown = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
+boolean btnPinStateDown = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
 boolean insideDebounceDown = false;
 unsigned long lastDebounceTimeDown = 0;  // the last time the output pin was toggled
 
 #define buttonPinBack 8
-boolean isClickedBack = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
+boolean btnPinStateBack = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
 boolean insideDebounceBack = false;
 unsigned long lastDebounceTimeBack = 0;  // the last time the output pin was toggled
 
-boolean isChanged = false;
+boolean anyPinStateChanged = false;
 #define debounceDelay 50    // the debounce time; increase if the output flickers
 
 //----- Global
@@ -200,19 +200,19 @@ void setup()
 
 void loop()
 {
-	isChanged = false;
+	anyPinStateChanged = false;
 
 	// Update clock time
 	current_time_milis = millis();
 
 	// Get button input
-	getButtonInput(buttonPin, &isClicked, &insideDebounce, &lastDebounceTime);
-	getButtonInput(buttonPinUp, &isClickedUp, &insideDebounceUp, &lastDebounceTimeUp);
-	getButtonInput(buttonPinDown, &isClickedDown, &insideDebounceDown, &lastDebounceTimeDown);
-	getButtonInput(buttonPinBack, &isClickedBack, &insideDebounceBack, &lastDebounceTimeBack);
+	getButtonInput(buttonPin, &btnPinState, &insideDebounce, &lastDebounceTime);
+	getButtonInput(buttonPinUp, &btnPinStateUp, &insideDebounceUp, &lastDebounceTimeUp);
+	getButtonInput(buttonPinDown, &btnPinStateDown, &insideDebounceDown, &lastDebounceTimeDown);
+	getButtonInput(buttonPinBack, &btnPinStateBack, &insideDebounceBack, &lastDebounceTimeBack);
 
 	boolean timeUpdated = updateTime();
-	if (timeUpdated || isChanged)
+	if (timeUpdated || anyPinStateChanged)
 	{
 		// One second has elapsed or we have input (button clicked)
 
@@ -262,20 +262,20 @@ void loop()
 /// <summary>
 /// Gets the button input.
 /// </summary>
-/// <param name="pin">The pin number.</param>
-/// <param name="clicked">The clicked button pointer.</param>
+/// <param name="pinNo">The pin number.</param>
+/// <param name="btnPinState">State of the BTN pin.</param>
 /// <param name="insideDebounce">The inside debounce.</param>
 /// <param name="lastDebounceTime">The last debounce time.</param>
-void getButtonInput(byte pin, boolean *clicked, boolean *insideDebounce, unsigned long *lastDebounceTime)
+void getButtonInput(byte pinNo, boolean *btnPinState, boolean *insideDebounce, unsigned long *lastDebounceTime)
 {
-	boolean reading = digitalRead(pin);
+	boolean reading = digitalRead(pinNo);
 
 	if (*insideDebounce == false)
 	{
 		// steady state, update last debounce time
 		*lastDebounceTime = current_time_milis;
 
-		if (reading != *clicked) // we have a change of state, start debouncing
+		if (reading != *btnPinState) // we have a change of state, start debouncing
 		{
 			*insideDebounce = true;
 		}
@@ -285,18 +285,18 @@ void getButtonInput(byte pin, boolean *clicked, boolean *insideDebounce, unsigne
 		// it has passed debounce time since last change of reading press/release of button (start of debouncing) 
 		// now read the pin state and update last debounce time
 
-		*clicked = reading;
+		*btnPinState = reading;
 		*lastDebounceTime = current_time_milis;
 		*insideDebounce = false;
 
-		isChanged = true;
+		anyPinStateChanged = true;
 	}
 
-	Serial.print(pin);
+	Serial.print(pinNo);
 	Serial.print(*insideDebounce);
 	Serial.print(reading);
-	Serial.print(*clicked);
-	Serial.println(isChanged);
+	Serial.print(*btnPinState);
+	Serial.println(anyPinStateChanged);
 }
 
 /// <summary>
@@ -426,7 +426,7 @@ boolean updateTime()
 /// <param name="maxVal">The maximum value.</param>
 void toggleOption(byte *option, byte minVal, byte maxVal)
 {
-	if (isClickedUp == LOW) // pressed
+	if (btnPinStateUp == LOW) // pressed
 	{
 		(*option)++;
 		if (*option > maxVal)
@@ -435,7 +435,7 @@ void toggleOption(byte *option, byte minVal, byte maxVal)
 		}
 	}
 
-	if (isClickedDown == LOW) // pressed
+	if (btnPinStateDown == LOW) // pressed
 	{
 		(*option)--;
 		if (*option < minVal)
@@ -577,7 +577,7 @@ void onDraw()
 		break;
 
 	case DISPLAY_MODE_CLOCK:
-		if (isClicked == LOW) // pressed
+		if (btnPinState == LOW) // pressed
 		{
 			displayMode = DISPLAY_MODE_MENU;
 			break;
@@ -590,13 +590,13 @@ void onDraw()
 		break;
 
 	case DISPLAY_MODE_MENU:
-		if (isClicked == LOW) // pressed
+		if (btnPinState == LOW) // pressed
 		{
 			displayMode = DISPLAY_MODE_SET_MENU;
 			break;
 		}
 
-		if (isClickedBack == LOW) // pressed
+		if (btnPinStateBack == LOW) // pressed
 		{
 			// Go back
 			displayMode = DISPLAY_MODE_CLOCK;
@@ -611,7 +611,7 @@ void onDraw()
 		break;
 
 	case DISPLAY_MODE_SET_MENU:
-		if (isClickedBack == LOW) // pressed
+		if (btnPinStateBack == LOW) // pressed
 		{
 			// Go back
 			displayMode = DISPLAY_MODE_MENU;
@@ -619,7 +619,7 @@ void onDraw()
 			break;
 		}
 
-		if (isClicked == LOW) // pressed
+		if (btnPinState == LOW) // pressed
 		{
 			// Go to next set value
 			setPosition++;
@@ -631,9 +631,10 @@ void onDraw()
 		break;
 	}
 
-	isClicked = HIGH;
-	isClickedUp = HIGH;
-	isClickedDown = HIGH;
+	btnPinState = HIGH;
+	btnPinStateUp = HIGH;
+	btnPinStateDown = HIGH;
+	btnPinStateBack = HIGH;
 }  // End of onDraw()
 
 /// <summary>
@@ -653,10 +654,10 @@ void drawSetMenu()
 			toggleOption(&iMonth, 1, 60);
 			break;
 		case 2:
-			if (isClickedUp == LOW) // pressed
+			if (btnPinStateUp == LOW) // pressed
 			if (++iYear > 32767)
 				iYear = 2000;
-			if (isClickedDown == LOW) // pressed
+			if (btnPinStateDown == LOW) // pressed
 			if (--iYear < 2000)
 				iYear = 2000;
 			break;
