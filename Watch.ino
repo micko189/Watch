@@ -287,13 +287,14 @@ void getButtonInput(byte pin, boolean *clicked, boolean *insideDebounce, unsigne
 	}
 	else if (*clicked == HIGH && (current_time_milis - *lastDebounceTime) > debounceDelay) // button was not pressed, inside debounce period
 	{
-		*lastDebounceTime = current_time_milis;
+		// it has passed debounce time since last change of reading from HIGH to LOW - press of button (start of debouncing) 
+		// now read the pin state and update last debounce time
 
 		*clicked = reading;
+		*lastDebounceTime = current_time_milis;
+		*insideDebounce = false;
 
 		isChanged = true;
-
-		*insideDebounce = false;
 	}
 
 	Serial.print(pin);
