@@ -132,16 +132,16 @@ byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
 
 //----- Button control
 #define buttonPin 5
-boolean isClicked = LOW; // LOW = false = 0x0
+boolean isClicked = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
 
 #define buttonPinUp 6
-boolean isClickedUp = LOW; // LOW = false = 0x0
+boolean isClickedUp = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
 
 #define buttonPinDown 7
-boolean isClickedDown = LOW; // LOW = false = 0x0
+boolean isClickedDown = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
 
 #define buttonPinBack 8
-boolean isClickedBack = LOW; // LOW = false = 0x0
+boolean isClickedBack = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x1 = Not pressed
 
 boolean isChanged = false;
 
@@ -172,10 +172,10 @@ unsigned long current_time_milis = 0;
 void setup()
 {
 	Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
-	pinMode(buttonPin, INPUT);  // Defines button pin
-	pinMode(buttonPinUp, INPUT);  // Defines button pin
-	pinMode(buttonPinDown, INPUT);  // Defines button pin
-	pinMode(buttonPinBack, INPUT);  // Defines button pin
+	pinMode(buttonPin, INPUT_PULLUP);  // Defines button pin, turn on internal Pull-Up Resistor
+	pinMode(buttonPinUp, INPUT_PULLUP);  // Defines button pin
+	pinMode(buttonPinDown, INPUT_PULLUP);  // Defines button pin
+	pinMode(buttonPinBack, INPUT_PULLUP);  // Defines button pin
 
 	// By default, we'll generate the high voltage from the 3.3v line internally! (neat!)
 	// Assign default color value
@@ -265,20 +265,20 @@ void getButtonInput(byte pin, boolean *clicked)
 
 	if (insideDebounce == false)
 	{
-		if (reading == LOW && *clicked == LOW)
+		if (reading == HIGH && *clicked == HIGH) // not pressed now and was not pressed before
 		{
 			lastDebounceTime = current_time_milis;
 		}
-		else if (reading == HIGH && *clicked == LOW)
+		else if (reading == LOW && *clicked == HIGH) // pressed now and was not pressed before
 		{
 			insideDebounce = true;
 		}
-		else if (reading == HIGH && *clicked == HIGH)
+		else if (reading == LOW && *clicked == LOW) // pressed now and was pressed before
 		{
-			*clicked = LOW;
+			*clicked = HIGH;
 		}
 	}
-	else if (*clicked == LOW && (current_time_milis - lastDebounceTime) > debounceDelay) // inside debounce period
+	else if (*clicked == HIGH && (current_time_milis - lastDebounceTime) > debounceDelay) // button was not pressed, inside debounce period
 	{
 		lastDebounceTime = current_time_milis;
 
@@ -289,11 +289,11 @@ void getButtonInput(byte pin, boolean *clicked)
 		insideDebounce = false;
 	}
 
-Serial.print(pin);
-Serial.print(insideDebounce);
-Serial.print(reading);
-Serial.print(*clicked);
-Serial.println(isChanged);
+	Serial.print(pin);
+	Serial.print(insideDebounce);
+	Serial.print(reading);
+	Serial.print(*clicked);
+	Serial.println(isChanged);
 }
 
 /// <summary>
@@ -423,7 +423,7 @@ boolean updateTime()
 /// <param name="maxVal">The maximum value.</param>
 void toggleOption(byte *option, byte minVal, byte maxVal)
 {
-	if (isClickedUp == HIGH)
+	if (isClickedUp == LOW) // pressed
 	{
 		(*option)++;
 		if (*option > maxVal)
@@ -432,7 +432,7 @@ void toggleOption(byte *option, byte minVal, byte maxVal)
 		}
 	}
 
-	if (isClickedDown == HIGH)
+	if (isClickedDown == LOW) // pressed
 	{
 		(*option)--;
 		if (*option < minVal)
@@ -574,7 +574,7 @@ void onDraw()
 		break;
 
 	case DISPLAY_MODE_CLOCK:
-		if (isClicked == HIGH)
+		if (isClicked == LOW) // pressed
 		{
 			displayMode = DISPLAY_MODE_MENU;
 			break;
@@ -587,13 +587,13 @@ void onDraw()
 		break;
 
 	case DISPLAY_MODE_MENU:
-		if (isClicked == HIGH)
+		if (isClicked == LOW) // pressed
 		{
 			displayMode = DISPLAY_MODE_SET_MENU;
 			break;
 		}
 
-		if (isClickedBack == HIGH)
+		if (isClickedBack == LOW) // pressed
 		{
 			// Go back
 			displayMode = DISPLAY_MODE_CLOCK;
@@ -608,7 +608,7 @@ void onDraw()
 		break;
 
 	case DISPLAY_MODE_SET_MENU:
-		if (isClickedBack == HIGH)
+		if (isClickedBack == LOW) // pressed
 		{
 			// Go back
 			displayMode = DISPLAY_MODE_MENU;
@@ -616,7 +616,7 @@ void onDraw()
 			break;
 		}
 
-		if (isClicked == HIGH)
+		if (isClicked == LOW) // pressed
 		{
 			// Go to next set value
 			setPosition++;
@@ -628,9 +628,9 @@ void onDraw()
 		break;
 	}
 
-	isClicked = LOW;
-	isClickedUp = LOW;
-	isClickedDown = LOW;
+	isClicked = HIGH;
+	isClickedUp = HIGH;
+	isClickedDown = HIGH;
 }  // End of onDraw()
 
 /// <summary>
@@ -650,12 +650,12 @@ void drawSetMenu()
 			toggleOption(&iMonth, 1, 60);
 			break;
 		case 2:
-			if (isClickedUp == HIGH)
-				if (++iYear > 32767)
-					iYear = 2000;
-			if (isClickedDown == HIGH)
-				if (--iYear < 2000)
-					iYear = 2000;
+			if (isClickedUp == LOW) // pressed
+			if (++iYear > 32767)
+				iYear = 2000;
+			if (isClickedDown == LOW) // pressed
+			if (--iYear < 2000)
+				iYear = 2000;
 			break;
 		}
 
@@ -995,7 +995,7 @@ void drawClockAnalog(byte xPos, byte yPos, byte radius)
 	display.drawCircle(xPos, yPos, radius);
 
 	// print hour pin lines
-	for (byte i = 0; i < 60; i+=5)
+	for (byte i = 0; i < 60; i += 5)
 	{
 		showTimePin(xPos, yPos, 0.9, 1, i, radius, 1);
 	}

@@ -1,8 +1,6 @@
-﻿Build started 11/17/2014 11:09:14 AM.
+﻿Build started 11/26/2014 11:43:48 AM.
      1>Project "C:\Users\milan.ajdinovic\Documents\GitHub\Watch\Watch.vcxproj" on node 2 (Build target(s)).
-     1>PrepareForBuild:
-         Creating directory "Debug\Watch.tlog\".
-       InitializeBuildStatus:
+     1>InitializeBuildStatus:
          Creating "Debug\Watch.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
        FinalizeBuildStatus:
          Deleting file "Debug\Watch.tlog\unsuccessfulbuild".
@@ -11,4 +9,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.34
+Time Elapsed 00:00:01.05
