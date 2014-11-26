@@ -176,7 +176,7 @@ unsigned long current_time_milis = 0;
 
 void setup()
 {
-	//Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
+	Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
 	pinMode(buttonPin, INPUT_PULLUP);  // Defines button pin, turn on internal Pull-Up Resistor
 	pinMode(buttonPinUp, INPUT_PULLUP);  // Defines button pin
 	pinMode(buttonPinDown, INPUT_PULLUP);  // Defines button pin
@@ -214,11 +214,13 @@ void loop()
 	getButtonInput(buttonPinDown, &btnPinStateDown, &insideDebounceDown, &lastDebounceTimeDown);
 	getButtonInput(buttonPinBack, &btnPinStateBack, &insideDebounceBack, &lastDebounceTimeBack);
 
+	digitalWrite(13, (btnPinState == LOW || buttonPinUp == LOW || btnPinStateDown == LOW || buttonPinBack == LOW));
+        
 	boolean timeUpdated = updateTime();
 	if (timeUpdated || anyPinStateChanged)
 	{
 		//for debugung
-		digitalWrite(13, (btnPinStateUp == LOW));
+		
 		// One second has elapsed or we have input (button clicked)
 
 		if (timeUpdated)
