@@ -176,11 +176,14 @@ unsigned long current_time_milis = 0;
 
 void setup()
 {
-	Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
+	//Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
 	pinMode(buttonPin, INPUT_PULLUP);  // Defines button pin, turn on internal Pull-Up Resistor
 	pinMode(buttonPinUp, INPUT_PULLUP);  // Defines button pin
 	pinMode(buttonPinDown, INPUT_PULLUP);  // Defines button pin
 	pinMode(buttonPinBack, INPUT_PULLUP);  // Defines button pin
+
+	//for debugung
+	pinMode(13, OUTPUT);    // Use Built-In LED for Indication
 
 	// By default, we'll generate the high voltage from the 3.3v line internally! (neat!)
 	// Assign default color value
@@ -214,6 +217,8 @@ void loop()
 	boolean timeUpdated = updateTime();
 	if (timeUpdated || anyPinStateChanged)
 	{
+		//for debugung
+		digitalWrite(13, (btnPinStateUp == LOW));
 		// One second has elapsed or we have input (button clicked)
 
 		if (timeUpdated)
@@ -252,7 +257,7 @@ void loop()
 	}
 
 	// Delay to get next current time (10ms), this is essentially time deviation in one second cycle (~ +-10ms)
-	delay(200);
+	delay(10);
 }
 
 ///////////////////////////////////
@@ -292,11 +297,11 @@ void getButtonInput(byte pinNo, boolean *btnPinState, boolean *insideDebounce, u
 		anyPinStateChanged = true;
 	}
 
-	Serial.print(pinNo);
-	Serial.print(*insideDebounce);
-	Serial.print(reading);
-	Serial.print(*btnPinState);
-	Serial.println(anyPinStateChanged);
+	//Serial.print(pinNo);
+	//Serial.print(*insideDebounce);
+	//Serial.print(reading);
+	//Serial.print(*btnPinState);
+	//Serial.println(anyPinStateChanged);
 }
 
 /// <summary>
