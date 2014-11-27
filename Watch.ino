@@ -256,6 +256,8 @@ void loop()
 		} while (display.nextPage());
 	}
 
+	//Serial.println(millis() - current_time_milis);
+
 	// Delay to get next current time (10ms), this is essentially time deviation in one second cycle (~ +-10ms)
 	delay(10);
 }
@@ -308,7 +310,7 @@ void getButtonInput(byte pinNo, boolean *btnPinState, boolean *insideDebounce, u
 /// Determines whether [is leap year] [the specified year].
 /// </summary>
 /// <param name="year">The year.</param>
-/// <returns></returns>
+/// <returns>Is leap year</returns>
 boolean isLeapYear(short year)
 {
 	return ((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0));
@@ -533,7 +535,7 @@ inline void floatToHiLo(byte* hiVal, byte* loVal, float val)
 /// </summary>
 /// <param name="hiVal">The hi value.</param>
 /// <param name="loVal">The lo value.</param>
-/// <returns></returns>
+/// <returns>Float value</returns>
 float hiLoToFloat(byte hiVal, byte loVal)
 {
 	return hiVal + loVal / 100.0;
@@ -850,10 +852,10 @@ void drawClock()
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
 		display.setFont(u8g_font_helvB10r);
 		drawDateDigital(29, 12);
+		drawDay(2, 12);
 
 		display.setFont(u8g_font_helvB12);
 		drawTemp(80, 63);
-		drawDay(5, 16);
 
 		display.setFont(u8g_font_helvB24n);
 		offset = drawClockDigital(14, 45);
