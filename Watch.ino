@@ -105,7 +105,7 @@ PROGMEM const byte daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 
 //PGM_P const months[] PROGMEM = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
 #define firstYear 2000 //This is our start point
-#define dayOffset 5 //The first day of our start year may not be a Sunday ( in 2000 it was Sat which is indexed 6) ofsset is index - 1 = 5
+#define dayOffset 5 //The first day of our start year may not be a Sunday ( in 2000 it was Sat which is index 6) offset is index - 1 = 5
 
 //----- Display features
 #define DISPLAY_MODE_START_UP	0x0
