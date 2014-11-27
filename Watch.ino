@@ -99,13 +99,13 @@ PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
 PGM_P const menuItems[] PROGMEM = { "Set date", "Set time", "Set format" };
 PGM_P const timeFormat[] PROGMEM = { "12h", "24h" };
 
-PROGMEM const byte daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // standard year days
+PROGMEM const byte daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // standard year days
 
 //PGM_P const dayNames[] PROGMEM = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 //PGM_P const months[] PROGMEM = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
 #define firstYear 2000 //This is our start point
-#define dayOffset 6 //The first day of our start year may not be a Sunday ( in 1800 it was Wednesday)
+#define dayOffset 5 //The first day of our start year may not be a Sunday ( in 2000 it was Sat which is indexed 6) ofsset is index - 1 = 5
 
 //----- Display features
 #define DISPLAY_MODE_START_UP	0x0
@@ -323,8 +323,7 @@ boolean isLeapYear(short year)
 /// <returns>Days in month</returns>
 byte getDaysInMonth(byte month)
 {
-	month--; // Adjust for indexing in daysInMonth
-	if (month != 1)
+	if (month != 2)
 	{
 		return daysInMonth[month];
 	}
@@ -341,12 +340,12 @@ byte getDaysInMonth(byte month)
 short daysPassedInYear()
 {
 	short passed = 0;
-	for (byte i = 1; i <= iMonth; i++)
+	for (byte i = 1; i < iMonth; i++)
 	{
 		passed += getDaysInMonth(i);
 	}
 
-	return passed + iDay - 1;  // Adjust days passed in current month
+	return passed + iDay;  // Adjust days passed in current month
 }
 
 /// <summary>
