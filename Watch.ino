@@ -231,8 +231,8 @@ void loop()
 
 			if (timeUpdated)
 			{
-				TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
-				float temp = TempSensor.getTempCByIndex(0);
+				//TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
+				float temp = 22.22;//TempSensor.getTempCByIndex(0);
 				tempAccum += temp;
 
 				floatToHiLo(&tempHi, &tempLo, temp);
@@ -255,6 +255,7 @@ void loop()
 				//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
 				//display.setContrast(0);  
 			}
+
 			// prepare all the date before entering the picture loop (onDraw will be called multiple times)
 			prepareDraw();
 
@@ -268,10 +269,10 @@ void loop()
 	}
 	else
 	{
-		delay(40);
+		delay(20);
 	}
 
-	//Serial.println(millis() - current_time_milis);
+	Serial.println(millis() - current_time_milis);
 
 	// Delay to get next current time (10ms), this is essentially time deviation in one second cycle (~ +-10ms)
 	delay(10);
@@ -786,7 +787,7 @@ inline void drawStartUp()
 	// y : Y - position(upper position of the bitmap).
 	// cnt : Number of bytes of the bitmap in horizontal direction.The width of the bitmap is cnt*8.
 	// h : Height of the bitmap. 
-	display.drawBitmapP(10, 10, 3, 24, IMG_logo_24x24);
+	//display.drawBitmapP(10, 10, 3, 24, IMG_logo_24x24);
 
 	display.drawStr(25, 12, "Temperature");
 
