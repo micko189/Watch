@@ -393,7 +393,7 @@ byte calcDayOfWeek()
 /// <returns>
 /// whether time is updated - one seccond is ellapsed
 /// </returns>
-boolean updateTime()
+inline boolean updateTime()
 {
 	short timeElapse = current_time_milis - prevClockTime;
 	if (timeElapse >= adjustedUpdateTimeInterval) // check if one second has elapsed
@@ -586,7 +586,7 @@ void findMaxMin()
 /// <summary>
 /// prepares the data for draw
 /// </summary>
-void prepareDraw()
+inline void prepareDraw()
 {
 	// First determine what to display
 	switch (displayMode)
@@ -672,7 +672,7 @@ void prepareDraw()
 /// Main drawing routine.
 /// Every drawing starts here.
 /// </summary>
-void onDraw()
+inline void onDraw()
 {
 	switch (displayMode)
 	{
@@ -749,7 +749,7 @@ void prepareDrawSetMenu()
 /// <summary>
 /// Draws the set menu.
 /// </summary>
-void drawSetMenu()
+inline void drawSetMenu()
 {
 	display.setFont(u8g_font_helvB10r);
 
@@ -776,7 +776,7 @@ void drawSetMenu()
 /// <summary>
 /// Draws the start up splash screen.
 /// </summary>
-void drawStartUp()
+inline void drawStartUp()
 {
 	display.setFont(u8g_font_helvB10r);
 
@@ -867,7 +867,7 @@ void drawGraph()
 /// Draw the main manu screen.
 /// Menu changes according to user selection.
 /// </summary>
-void drawMenu()
+inline void drawMenu()
 {
 	display.setFont(u8g_font_helvB10r);
 	display.drawStr(10, 45, (const char*)pgm_read_word(&(menuItems[MENU_SET_DATE])));
@@ -922,7 +922,7 @@ void prepareDrawClock()
 /// Draw the main clock screen.
 /// Clock style changes according to user selection.
 /// </summary>
-void drawClock()
+inline void drawClock()
 {
 	byte offset;
 
