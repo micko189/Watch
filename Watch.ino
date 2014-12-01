@@ -251,6 +251,8 @@ void loop()
 				//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
 				//display.setContrast(0);  
 			}
+			// prepare all the date before entering the picture loop (onDraw will be called multiple times)
+			prepareDraw();
 
 			// picture loop
 			display.firstPage();
@@ -581,12 +583,11 @@ void findMaxMin()
 /// Main drawing routine.
 /// Every drawing starts here.
 /// </summary>
-void onDraw()
+void prepareDraw()
 {
 	switch (displayMode)
 	{
 	case DISPLAY_MODE_START_UP:
-		drawStartUp();
 		break;
 
 	case DISPLAY_MODE_CLOCK:
@@ -598,7 +599,7 @@ void onDraw()
 
 		toggleOption(&clockStyle, 0, 4);
 
-		drawClock();
+		prepareDrawClock();
 
 		break;
 
@@ -619,7 +620,6 @@ void onDraw()
 
 		toggleOption(&menuMode, 0, 2);
 
-		drawMenu();
 
 		break;
 
@@ -639,7 +639,7 @@ void onDraw()
 			rollOverValue(&setPosition, menuMode);
 		}
 
-		drawSetMenu();
+		prepareDrawSetMenu();
 
 		break;
 	}
@@ -651,12 +651,35 @@ void onDraw()
 }  // End of onDraw()
 
 /// <summary>
-/// Draws the set menu.
+/// Main drawing routine.
+/// Every drawing starts here.
 /// </summary>
-void drawSetMenu()
+void onDraw()
 {
-	display.setFont(u8g_font_helvB10r);
+	switch (displayMode)
+	{
+	case DISPLAY_MODE_START_UP:
+		drawStartUp();
+		break;
 
+	case DISPLAY_MODE_CLOCK:
+		drawClock();
+		break;
+
+	case DISPLAY_MODE_MENU:
+		drawMenu();
+		break;
+
+	case DISPLAY_MODE_SET_MENU:
+		drawSetMenu();
+		break;
+
+	}
+}  // End of onDraw()
+
+
+void prepareDrawSetMenu()
+{
 	switch (menuMode)
 	{
 	case MENU_SET_DATE:
@@ -681,9 +704,6 @@ void drawSetMenu()
 		// Calculate week index
 		iWeek = calcDayOfWeek();
 
-		drawDateDigital(29, 12);
-		display.drawHLine(29, 12 + 10, 5);
-
 		break;
 	case MENU_SET_TIME:
 		if (setPosition) // 1 = MM
@@ -695,13 +715,35 @@ void drawSetMenu()
 			toggleOption(&iHour, 1, 24);
 		}
 
+		break;
+	case MENU_SET_TIME_FORMAT:
+		toggleOption(&iTimeFormat, 0, 1);
+
+		break;
+	}
+}
+
+
+/// <summary>
+/// Draws the set menu.
+/// </summary>
+void drawSetMenu()
+{
+	display.setFont(u8g_font_helvB10r);
+
+	switch (menuMode)
+	{
+	case MENU_SET_DATE:
+		drawDateDigital(29, 12);
+		display.drawHLine(29, 12 + 10, 5);
+
+		break;
+	case MENU_SET_TIME:
 		drawClockDigital(29, 12);
 		display.drawHLine(29, 12 + 10, 5);
 
 		break;
 	case MENU_SET_TIME_FORMAT:
-		toggleOption(&iTimeFormat, 0, 1);
-
 		drawTimeFormat(29, 12);
 		display.drawHLine(29, 12 + 10, 5);
 
@@ -748,20 +790,15 @@ void drawGraphLine(byte start, byte end, byte* x, float rescale)
 	}
 }
 
-/// <summary>
-/// Draws the start up splash screen.
-/// </summary>
-void drawGraph()
+float yCoord;
+byte yScaleCount;
+float rescale;
+void prepareDrawGraph()
 {
-	byte i;
-	byte xPos = 0;
-
 	findMaxMin();
-
 	min = hiLoToFloat(minHi, minLo);
-
 	float diff = hiLoToFloat(maxHi, maxLo) - min;
-	float rescale = 64.0 / diff;
+	rescale = 64.0 / diff;
 
 	// draw scale
 	// calculate first y coord
@@ -777,9 +814,19 @@ void drawGraph()
 		loVal = 50;
 	}
 
-	float yCoord = hiLoToFloat(hiVal, loVal);
+	 yCoord = hiLoToFloat(hiVal, loVal);
+	 yScaleCount = diff / 0.5;
+}
 
-	byte yScaleCount = diff / 0.5;
+
+/// <summary>
+/// Draws the start up splash screen.
+/// </summary>
+void drawGraph()
+{
+	byte i;
+	byte xPos = 0;
+
 	for (i = 0; i < yScaleCount; i++)
 	{
 		// calculate y coord
@@ -814,6 +861,14 @@ void drawMenu()
 	byte w = display.getStrWidth((const char*)pgm_read_word(&(menuItems[menuMode])));;
 
 	display.drawFrame(9, 5 + menuMode * 20, w + 2, h + 2);
+}
+
+void prepareDrawClock()
+{
+	if (clockStyle == CLOCK_STYLE_SIMPLE_GRAPH)
+	{
+		prepareDrawGraph();
+	}
 }
 
 /// <summary>
