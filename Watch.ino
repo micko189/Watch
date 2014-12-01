@@ -219,7 +219,7 @@ void loop()
 	getButtonInput(buttonPinBack, &btnPinStateBack, &insideDebounceBack, &lastDebounceTimeBack);
 
 	digitalWrite(13, (btnPinState == LOW || buttonPinUp == LOW || btnPinStateDown == LOW || buttonPinBack == LOW));
-        
+
 	if (insideDebounce == false || insideDebounceUp == false || insideDebounceDown == false || insideDebounceBack == false)
 	{
 		boolean timeUpdated = updateTime();
@@ -834,10 +834,9 @@ void prepareDrawGraph()
 		loVal = 50;
 	}
 
-	 yCoord = hiLoToFloat(hiVal, loVal);
-	 yScaleCount = diff / 0.5;
+	yCoord = hiLoToFloat(hiVal, loVal);
+	yScaleCount = diff / 0.5;
 }
-
 
 /// <summary>
 /// Draws the start up splash screen.
@@ -1026,8 +1025,6 @@ void drawDay(byte xPos, byte yPos)
 {
 	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(weekString[iWeek])));
 }
-
-
 
 char temperatureHi[4];
 char temperatureLo[4];
