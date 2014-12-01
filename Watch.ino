@@ -282,7 +282,7 @@ void loop()
 /// <param name="btnPinState">State of the BTN pin.</param>
 /// <param name="insideDebounce">The inside debounce.</param>
 /// <param name="lastDebounceTime">The last debounce time.</param>
-void getButtonInput(byte pinNo, boolean *btnPinState, boolean *insideDebounce, unsigned long *lastDebounceTime)
+void getButtonInput(const byte pinNo, boolean *btnPinState, boolean *insideDebounce, unsigned long *lastDebounceTime)
 {
 	boolean reading = digitalRead(pinNo);
 
@@ -439,7 +439,7 @@ boolean updateTime()
 /// <param name="option">The option.</param>
 /// <param name="minVal">The minimum value.</param>
 /// <param name="maxVal">The maximum value.</param>
-void toggleOption(byte *option, byte minVal, byte maxVal)
+void toggleOption(byte *option, const byte minVal, const byte maxVal)
 {
 	if (btnPinStateUp == LOW) // pressed
 	{
