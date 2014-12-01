@@ -55,7 +55,7 @@ const unsigned char PROGMEM IMG_logo_24x24[] = {
 
 ///////////////////////////////////////////////////////////////////
 //----- OLED instance
-U8GLIB_SSD1306_128X64 display(U8G_I2C_OPT_NONE);	// I2C / TWI 
+U8GLIB_SSD1306_128X64_2X display(U8G_I2C_OPT_NONE);	// I2C / TWI 
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -216,46 +216,53 @@ void loop()
 
 	digitalWrite(13, (btnPinState == LOW || buttonPinUp == LOW || btnPinStateDown == LOW || buttonPinBack == LOW));
         
-	boolean timeUpdated = updateTime();
-	if (timeUpdated || anyPinStateChanged)
+	if (insideDebounce == false || insideDebounceUp == false || insideDebounceDown == false || insideDebounceBack == false)
 	{
-		//for debugung
-		
-		// One second has elapsed or we have input (button clicked)
-
-		if (timeUpdated)
+		boolean timeUpdated = updateTime();
+		if (timeUpdated || anyPinStateChanged)
 		{
-			TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
-			float temp = TempSensor.getTempCByIndex(0);
-			tempAccum += temp;
+			//for debugung
 
-			floatToHiLo(&tempHi, &tempLo, temp);
+			// One second has elapsed or we have input (button clicked)
 
-			hourCount++;
-			if (hourCount > HOUR_COUNT)
+			if (timeUpdated)
 			{
-				// One hour has elapsed
-				floatToHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / HOUR_COUNT);
+				TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
+				float temp = TempSensor.getTempCByIndex(0);
+				tempAccum += temp;
 
-				startTempGraphIndex++;
-				rollOverValue(&startTempGraphIndex, TEMP_GRAPH_LEN);
+				floatToHiLo(&tempHi, &tempLo, temp);
 
-				tempAccum = 0;
-				hourCount = 0;
+				hourCount++;
+				if (hourCount > HOUR_COUNT)
+				{
+					// One hour has elapsed
+					floatToHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / HOUR_COUNT);
+
+					startTempGraphIndex++;
+					rollOverValue(&startTempGraphIndex, TEMP_GRAPH_LEN);
+
+					tempAccum = 0;
+					hourCount = 0;
+				}
+
+				//uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
+
+				//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
+				//display.setContrast(0);  
 			}
 
-			//uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
-
-			//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
-			//display.setContrast(0);  
+			// picture loop
+			display.firstPage();
+			do {
+				// Display routine
+				onDraw();
+			} while (display.nextPage());
 		}
-
-		// picture loop
-		display.firstPage();
-		do {
-			// Display routine
-			onDraw();
-		} while (display.nextPage());
+	}
+	else
+	{
+		delay(40);
 	}
 
 	//Serial.println(millis() - current_time_milis);
@@ -576,8 +583,6 @@ void findMaxMin()
 /// </summary>
 void onDraw()
 {
-	display.setFont(u8g_font_helvB10r);
-
 	switch (displayMode)
 	{
 	case DISPLAY_MODE_START_UP:
@@ -650,6 +655,8 @@ void onDraw()
 /// </summary>
 void drawSetMenu()
 {
+	display.setFont(u8g_font_helvB10r);
+
 	switch (menuMode)
 	{
 	case MENU_SET_DATE:
@@ -707,6 +714,8 @@ void drawSetMenu()
 /// </summary>
 void drawStartUp()
 {
+	display.setFont(u8g_font_helvB10r);
+
 	//Arguments:
 	// u8g : Pointer to the u8g structure(C interface only).
 	// x : X - position(left position of the bitmap).
