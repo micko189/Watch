@@ -756,17 +756,17 @@ inline void drawSetMenu()
 	{
 	case MENU_SET_DATE:
 		drawDateDigital(29, 12);
-		display.drawHLine(29, 12 + 10, 5);
+		display.drawHLine(29 + 14 * setPosition, 12 + 14, 5);
 
 		break;
 	case MENU_SET_TIME:
 		drawClockDigital(29, 12);
-		display.drawHLine(29, 12 + 10, 5);
+		display.drawHLine(29 + 14 * setPosition, 12 + 14, 5);
 
 		break;
 	case MENU_SET_TIME_FORMAT:
 		drawTimeFormat(29, 12);
-		display.drawHLine(29, 12 + 10, 5);
+		display.drawHLine(29 + 14 * setPosition, 12 + 14, 5);
 
 		break;
 	}
@@ -961,8 +961,8 @@ inline void drawClock()
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
 		display.setFont(u8g_font_helvB10r);
-		drawDateDigital(29, 12);
-		drawDay(2, 12);
+		drawDateDigital(40, 12);
+		drawDay(6, 12);
 
 		display.setFont(u8g_font_helvB12);
 		drawTemp(80, 63);
