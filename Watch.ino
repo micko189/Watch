@@ -584,26 +584,26 @@ void findMaxMin()
 ///////////////////////////////////
 
 /// <summary>
-/// Main drawing routine.
-/// Every drawing starts here.
+/// prepares the data for draw
 /// </summary>
 void prepareDraw()
 {
+	// First determine what to display
 	switch (displayMode)
 	{
 	case DISPLAY_MODE_START_UP:
+		if (btnPinState == LOW) // pressed
+		{
+			displayMode = DISPLAY_MODE_CLOCK;
+		}
+
 		break;
 
 	case DISPLAY_MODE_CLOCK:
 		if (btnPinState == LOW) // pressed
 		{
 			displayMode = DISPLAY_MODE_MENU;
-			break;
 		}
-
-		toggleOption(&clockStyle, 0, 4);
-
-		prepareDrawClock();
 
 		break;
 
@@ -619,11 +619,7 @@ void prepareDraw()
 			// Go back
 			displayMode = DISPLAY_MODE_CLOCK;
 			menuMode = 0;
-			break;
 		}
-
-		toggleOption(&menuMode, 0, 2);
-
 
 		break;
 
@@ -633,9 +629,27 @@ void prepareDraw()
 			// Go back
 			displayMode = DISPLAY_MODE_MENU;
 			setPosition = 0;
-			break;
 		}
 
+		break;
+	}
+
+	// prepare the data for displaying
+	switch (displayMode)
+	{
+	case DISPLAY_MODE_START_UP:
+		break;
+
+	case DISPLAY_MODE_CLOCK:
+		toggleOption(&clockStyle, 0, 4);
+		prepareDrawClock();
+		break;
+
+	case DISPLAY_MODE_MENU:
+		toggleOption(&menuMode, 0, 2);
+		break;
+
+	case DISPLAY_MODE_SET_MENU:
 		if (btnPinState == LOW) // pressed
 		{
 			// Go to next set value
@@ -772,15 +786,13 @@ void drawStartUp()
 	// y : Y - position(upper position of the bitmap).
 	// cnt : Number of bytes of the bitmap in horizontal direction.The width of the bitmap is cnt*8.
 	// h : Height of the bitmap. 
-	//display.drawBitmapP(10, 10, 3, 24, IMG_logo_24x24);
+	display.drawBitmapP(10, 10, 3, 24, IMG_logo_24x24);
 
-	//display.drawStr(25, 12, "Temperature");
+	display.drawStr(25, 12, "Temperature");
 
 	display.drawStr(35, 28, "Watch");
 
-	//display.drawStr(25, 45, "Arduino v1.0");
-
-	displayMode = DISPLAY_MODE_CLOCK;
+	display.drawStr(25, 45, "Arduino v1.0");
 }
 
 /// <summary>
