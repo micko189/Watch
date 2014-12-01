@@ -170,6 +170,8 @@ float min = 0;
 
 unsigned long current_time_milis = 0;
 
+char tempSufix[4];
+
 ///////////////////////////////////
 //----- Arduino setup and loop methods
 ///////////////////////////////////
@@ -199,6 +201,8 @@ void setup()
 	//LightSensor.begin();
 	//LightSensor.SetAddress(Device_Address_H);//Address 0x5C
 	//LightSensor.SetMode(Continuous_H_resolution_Mode);
+
+	tempSufix[0] = '°', tempSufix[1] = 'C', tempSufix[3] = 0;
 }
 
 void loop()
@@ -701,8 +705,10 @@ void prepareDrawSetMenu()
 			break;
 		}
 
-		// Calculate week index
+		// Calculate week index and update it
 		iWeek = calcDayOfWeek();
+
+		prepareDrawDateDigital();
 
 		break;
 	case MENU_SET_TIME:
@@ -714,6 +720,8 @@ void prepareDrawSetMenu()
 		{
 			toggleOption(&iHour, 1, 24);
 		}
+
+		prepareDrawClockDigital();
 
 		break;
 	case MENU_SET_TIME_FORMAT:
@@ -865,9 +873,36 @@ void drawMenu()
 
 void prepareDrawClock()
 {
-	if (clockStyle == CLOCK_STYLE_SIMPLE_GRAPH)
+	switch (clockStyle)
 	{
+	case CLOCK_STYLE_SIMPLE_DIGIT:
+		prepareDrawTemp();
+		prepareDrawDayAmPm();
+		prepareDrawClockDigital();
+		break;
+
+	case CLOCK_STYLE_SIMPLE_MIX:
+		//drawClockAnalog(centerX - 30, centerY, iRadius - 4);
+		prepareDrawTemp();
+		prepareDrawDayAmPm();
+		prepareDrawClockDigital();
+		break;
+
+	case CLOCK_STYLE_SIMPLE_ANALOG:
+		//drawClockAnalog(centerX - 10, centerY, iRadius);
+		prepareDrawTemp();
+		break;
+
+	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
+		prepareDrawTemp();
+		prepareDrawDateDigital();
+		prepareDrawClockDigital();
+		prepareDrawSecondsDigital();
+		break;
+
+	case CLOCK_STYLE_SIMPLE_GRAPH:
 		prepareDrawGraph();
+		break;
 	}
 }
 
@@ -947,6 +982,15 @@ void drawTimeFormat(byte xPos, byte yPos)
 	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(timeFormat[iTimeFormat])));
 }
 
+byte amPmOffset;
+void prepareDrawDayAmPm()
+{
+	if (iTimeFormat == 0) // 0 = 12h
+	{
+		amPmOffset = display.getStrPixelWidth((const char*)pgm_read_word(&(weekString[iWeek]))) + 2;
+	}
+}
+
 /// <summary>
 /// Draws the day in week and am/pm.
 /// </summary>
@@ -957,7 +1001,7 @@ void drawDayAmPm(byte xPos, byte yPos)
 	drawDay(xPos, yPos);
 	if (iTimeFormat == 0) // 0 = 12h
 	{
-		display.drawStr(xPos + display.getStrPixelWidth((const char*)pgm_read_word(&(weekString[iWeek]))) + 2, yPos, (const char*)pgm_read_word(&(ampmString[iAmPm])));
+		display.drawStr(xPos + amPmOffset, yPos, (const char*)pgm_read_word(&(ampmString[iAmPm])));
 	}
 }
 
@@ -971,6 +1015,26 @@ void drawDay(byte xPos, byte yPos)
 	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(weekString[iWeek])));
 }
 
+
+
+char temperatureHi[4];
+char temperatureLo[4];
+byte offsetHi;
+byte offsetDot;
+byte offsetLo;
+void prepareDrawTemp()
+{
+	stoa(tempHi, temperatureHi);
+
+	offsetHi = display.getStrPixelWidth(temperatureHi) + 1;
+
+	offsetDot = display.getStrPixelWidth(".") + 1;
+
+	byteToStr(tempLo, temperatureLo);
+
+	offsetLo = offsetDot + display.getStrPixelWidth(temperatureLo) + 1;
+}
+
 /// <summary>
 /// Draws the temperature (x,y is the possition of '.').
 /// </summary>
@@ -978,23 +1042,29 @@ void drawDay(byte xPos, byte yPos)
 /// <param name="yPos">The y position.</param>
 void drawTemp(byte xPos, byte yPos)
 {
-	char s[4];
-	byte offset;
-
-	stoa(tempHi, s);
-	display.drawStr(xPos - display.getStrPixelWidth(s) + 1, yPos, s);
-
+	display.drawStr(xPos - offsetHi, yPos, temperatureHi);
 	display.drawStr(xPos, yPos, ".");
-	offset = display.getStrPixelWidth(".") + 1;
-
-	byteToStr(tempLo, s);
-
-	display.drawStr(xPos + offset, yPos, s);
-	offset += display.getStrPixelWidth(s) + 1;
-
-	s[0] = '°', s[1] = 'C', s[3] = 0;
-	display.drawStr(xPos + offset, yPos, s);
+	display.drawStr(xPos + offsetDot, yPos, temperatureLo);
+	display.drawStr(xPos + offsetLo, yPos, tempSufix);
 }
+
+char clockDigital[6];
+byte prepareDrawClockDigital()
+{
+	if (iAmPm && iTimeFormat == 0) // 1 = PM && 0 = 12h
+	{
+		byteToStr(iHour - 12, clockDigital);
+	}
+	else
+	{
+		byteToStr(iHour, clockDigital);
+	}
+
+	clockDigital[2] = ':';
+
+	byteToStr(iMinutes, clockDigital + 3);
+}
+
 
 /// <summary>
 /// Draws the clock digital.
@@ -1004,24 +1074,14 @@ void drawTemp(byte xPos, byte yPos)
 /// <returns>Length in pixels of the clock</returns>
 byte drawClockDigital(byte xPos, byte yPos)
 {
-	char s[6];
+	display.drawStr(xPos, yPos, clockDigital);
+	return display.getStrPixelWidth(clockDigital);
+}
 
-	if (iAmPm && iTimeFormat == 0) // 1 = PM && 0 = 12h
-	{
-		byteToStr(iHour - 12, s);
-	}
-	else
-	{
-		byteToStr(iHour, s);
-	}
-
-	s[2] = ':';
-
-	byteToStr(iMinutes, s + 3);
-
-	display.drawStr(xPos, yPos, s);
-
-	return display.getStrPixelWidth(s);
+char seconds[3];
+void prepareDrawSecondsDigital()
+{
+	byteToStr(iSecond, seconds);
 }
 
 /// <summary>
@@ -1031,11 +1091,21 @@ byte drawClockDigital(byte xPos, byte yPos)
 /// <param name="yPos">The y position.</param>
 void drawSecondsDigital(byte xPos, byte yPos)
 {
-	char s[3];
+	display.drawStr(xPos, yPos, seconds);
+}
 
-	byteToStr(iSecond, s);
+char dateDigital[11];
+void prepareDrawDateDigital()
+{
+	byteToStr(iDay, dateDigital);
 
-	display.drawStr(xPos, yPos, s);
+	dateDigital[2] = '/';
+
+	byteToStr(iMonth, dateDigital + 3);
+
+	dateDigital[5] = '/';
+
+	stoa(iYear, dateDigital + 6);
 }
 
 /// <summary>
@@ -1045,19 +1115,7 @@ void drawSecondsDigital(byte xPos, byte yPos)
 /// <param name="yPos">The y position.</param>
 void drawDateDigital(byte xPos, byte yPos)
 {
-	char s[11];
-
-	byteToStr(iDay, s);
-
-	s[2] = '/';
-
-	byteToStr(iMonth, s + 3);
-
-	s[5] = '/';
-
-	stoa(iYear, s + 6);
-
-	display.drawStr(xPos, yPos, s);
+	display.drawStr(xPos, yPos, dateDigital);
 }
 
 /// <summary>
