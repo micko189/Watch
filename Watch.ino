@@ -170,7 +170,7 @@ float min = 0;
 
 unsigned long current_time_milis = 0;
 
-char tempSufix[4];
+char tempSufix[3];
 
 DeviceAddress tempDeviceAddress;
 
@@ -184,22 +184,6 @@ DeviceAddress tempDeviceAddress;
 
 void setup()
 {
-	Serial.begin(9600);    // Do not enable serial. This makes serious problem because of shortage of RAM.
-	pinMode(buttonPin, INPUT_PULLUP);  // Defines button pin, turn on internal Pull-Up Resistor
-	pinMode(buttonPinUp, INPUT_PULLUP);  // Defines button pin
-	pinMode(buttonPinDown, INPUT_PULLUP);  // Defines button pin
-	pinMode(buttonPinBack, INPUT_PULLUP);  // Defines button pin
-
-	//for debugung
-	pinMode(13, OUTPUT);    // Use Built-In LED for Indication
-
-	// By default, we'll generate the high voltage from the 3.3v line internally! (neat!)
-	// Assign default color value
-	display.setColorIndex(1);         // pixel on BW
-
-	calcDayOfWeek();
-	calcAmPm();
-
 	// Start up the temperature sensor library
 	TempSensor.begin();
 	TempSensor.getAddress(tempDeviceAddress, 0);
@@ -211,12 +195,30 @@ void setup()
 	//delayInMillis = 750 / (1 << (12 - resolution));
 	//lastTempRequest = millis();
 
+	Serial.begin(9600);    // Enable serial com.
+	 
+
+	// Define button pins, turn on internal Pull-Up Resistor
+	pinMode(buttonPin, INPUT_PULLUP);  
+	pinMode(buttonPinUp, INPUT_PULLUP); 
+	pinMode(buttonPinDown, INPUT_PULLUP); 
+	pinMode(buttonPinBack, INPUT_PULLUP); 
+
+	// Define otput pin for button debugung
+	pinMode(13, OUTPUT);    // Use Built-In LED for Indication
+
+	// Assign default color value
+	display.setColorIndex(1);         // pixel on BW
+	
 	// Start up the light sensor library
 	//LightSensor.begin();
 	//LightSensor.SetAddress(Device_Address_H);//Address 0x5C
 	//LightSensor.SetMode(Continuous_H_resolution_Mode);
 
-	tempSufix[0] = '°', tempSufix[1] = 'C', tempSufix[3] = 0;
+	calcDayOfWeek();
+	calcAmPm();
+
+	tempSufix[0] = '°', tempSufix[1] = 'C', tempSufix[2] = 0;
 }
 
 void loop()
@@ -239,8 +241,6 @@ void loop()
 		boolean timeUpdated = updateTime();
 		if (timeUpdated || anyPinStateChanged)
 		{
-			//for debugung
-
 			// One second has elapsed or we have input (button clicked)
 
 			if (timeUpdated /*&& (current_time_milis - lastTempRequest >= delayInMillis)*/) // one second elapsed, no need for adiitional check 
@@ -615,52 +615,23 @@ void findMaxMin()
 /// </summary>
 inline void prepareDraw()
 {
-	// First determine what to display
-	switch (displayMode)
+	// First determine what to display, set displayMode
+	if (btnPinState == LOW) // pressed
 	{
-	case DISPLAY_MODE_START_UP:
-		if (btnPinState == LOW) // pressed
+		if (displayMode < 4)
 		{
-			displayMode = DISPLAY_MODE_CLOCK;
+			displayMode++;
 		}
-
-		break;
-
-	case DISPLAY_MODE_CLOCK:
-		if (btnPinState == LOW) // pressed
-		{
-			displayMode = DISPLAY_MODE_MENU;
-		}
-
-		break;
-
-	case DISPLAY_MODE_MENU:
-		if (btnPinState == LOW) // pressed
-		{
-			displayMode = DISPLAY_MODE_SET_MENU;
-			break;
-		}
-
-		if (btnPinStateBack == LOW) // pressed
-		{
-			// Go back
-			displayMode = DISPLAY_MODE_CLOCK;
-			menuMode = 0;
-		}
-
-		break;
-
-	case DISPLAY_MODE_SET_MENU:
-		if (btnPinStateBack == LOW) // pressed
-		{
-			// Go back
-			displayMode = DISPLAY_MODE_MENU;
-			setPosition = 0;
-		}
-
-		break;
 	}
 
+	if (btnPinStateBack == LOW) // pressed
+	{
+		if (displayMode > 1)
+		{
+			displayMode--;
+		}
+	}
+	
 	// prepare the data for displaying
 	switch (displayMode)
 	{
@@ -674,6 +645,7 @@ inline void prepareDraw()
 
 	case DISPLAY_MODE_MENU:
 		toggleOption(&menuMode, 1, 3);
+		setPosition = 0;
 		break;
 
 	case DISPLAY_MODE_SET_MENU:
@@ -685,10 +657,10 @@ inline void prepareDraw()
 		}
 
 		prepareDrawSetMenu();
-
 		break;
 	}
 
+	// TODO: doa I need this?
 	btnPinState = HIGH;
 	btnPinStateUp = HIGH;
 	btnPinStateDown = HIGH;
