@@ -83,8 +83,48 @@ byte calcDayOfWeek()
 	return days % 7;
 }
 
+
+#define SHORT_CHAR_COUNT 5
+static const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
+/// <summary>
+/// Short to string convert
+/// </summary>
+/// <param name="v">The value.</param>
+/// <param name="dest">The string destination.</param>
+void stoa(short v, char * dest)
+{
+	byte d;
+	short c;
+	byte firstIndex = 0;
+	for (char i = 4; i >= 0; i--)
+	{
+		c = stoa_tab[i];
+		if (v >= c)
+		{
+			d = '0';
+			d += v / c;
+			v %= c;
+			*dest++ = d;
+			if (firstIndex == 0)
+			{
+				firstIndex = i;
+			}
+		}
+		else if (i <= firstIndex)
+		{
+			*dest++ = '0';
+		}
+	}
+
+	*dest = '\0';
+}
+
+
 void main()
 {
+	short val = 1050;
+	char s[5];
+	stoa(val, s);
 	byte index = calcDayOfWeek();
 
 }

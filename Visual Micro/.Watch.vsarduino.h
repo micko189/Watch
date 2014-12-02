@@ -41,11 +41,12 @@ extern "C" void __cxa_pure_virtual() {;}
 
 //
 //
+void calcAmPm();
 void getButtonInput(const byte pinNo, boolean *btnPinState, boolean *insideDebounce, unsigned long *lastDebounceTime);
 boolean isLeapYear(short year);
 byte getDaysInMonth(byte month);
 short daysPassedInYear();
-byte calcDayOfWeek();
+void calcDayOfWeek();
 inline boolean updateTime();
 void toggleOption(byte *option, const byte minVal, const byte maxVal);
 void rollOverValue(byte *value, byte rollOverVal);

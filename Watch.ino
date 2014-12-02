@@ -84,7 +84,7 @@ byte iAmPm = 1;    // 0:AM, 1:PM
 byte iHour = 9;
 byte iMinutes = 0;
 byte iSecond = 0;
-byte iTimeFormat = 0;
+byte iTimeFormat = 1;
 unsigned long prevClockTime = 0;
 #define TEMP_GRAPH_LEN 128
 byte tempGraphHi[TEMP_GRAPH_LEN] = { 0 };
@@ -108,22 +108,22 @@ PROGMEM const byte daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 
 #define dayOffset 5 //The first day of our start year may not be a Sunday ( in 2000 it was Sat which is index 6) offset is index - 1 = 5
 
 //----- Display features
-#define DISPLAY_MODE_START_UP	0x0
-#define DISPLAY_MODE_CLOCK		0x1
-#define DISPLAY_MODE_MENU		0x2
-#define DISPLAY_MODE_SET_MENU	0x3
+#define DISPLAY_MODE_START_UP			0x1
+#define DISPLAY_MODE_CLOCK				0x2
+#define DISPLAY_MODE_MENU				0x3
+#define DISPLAY_MODE_SET_MENU			0x4
 byte displayMode = DISPLAY_MODE_START_UP;
 
-#define MENU_SET_DATE			0x2
-#define MENU_SET_TIME			0x1
-#define MENU_SET_TIME_FORMAT	0x0
+#define MENU_SET_DATE					0x1
+#define MENU_SET_TIME					0x2
+#define MENU_SET_TIME_FORMAT			0x3
 byte menuMode = MENU_SET_DATE;
 
-#define CLOCK_STYLE_SIMPLE_ANALOG		0x0
-#define CLOCK_STYLE_SIMPLE_DIGIT		0x1
-#define CLOCK_STYLE_SIMPLE_MIX			0x2
-#define CLOCK_STYLE_SIMPLE_DIGIT_SEC	0x3
-#define CLOCK_STYLE_SIMPLE_GRAPH		0x4
+#define CLOCK_STYLE_SIMPLE_ANALOG		0x1
+#define CLOCK_STYLE_SIMPLE_DIGIT		0x2
+#define CLOCK_STYLE_SIMPLE_MIX			0x3
+#define CLOCK_STYLE_SIMPLE_DIGIT_SEC	0x4
+#define CLOCK_STYLE_SIMPLE_GRAPH		0x5
 byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
 
 #define centerX 64
@@ -172,6 +172,12 @@ unsigned long current_time_milis = 0;
 
 char tempSufix[4];
 
+DeviceAddress tempDeviceAddress;
+
+#define resolution 12
+//unsigned long lastTempRequest = 0;
+//int  delayInMillis = 0;
+
 ///////////////////////////////////
 //----- Arduino setup and loop methods
 ///////////////////////////////////
@@ -191,11 +197,19 @@ void setup()
 	// Assign default color value
 	display.setColorIndex(1);         // pixel on BW
 
-	iWeek = calcDayOfWeek();
-	(iHour > 12) ? iAmPm = 1 : iAmPm = 0;
+	calcDayOfWeek();
+	calcAmPm();
 
 	// Start up the temperature sensor library
 	TempSensor.begin();
+	TempSensor.getAddress(tempDeviceAddress, 0);
+	TempSensor.setResolution(tempDeviceAddress, resolution);
+
+	// Request temperature conversion - non-blocking / async
+	TempSensor.setWaitForConversion(false);
+	TempSensor.requestTemperaturesByAddress(tempDeviceAddress);
+	//delayInMillis = 750 / (1 << (12 - resolution));
+	//lastTempRequest = millis();
 
 	// Start up the light sensor library
 	//LightSensor.begin();
@@ -218,7 +232,7 @@ void loop()
 	getButtonInput(buttonPinDown, &btnPinStateDown, &insideDebounceDown, &lastDebounceTimeDown);
 	getButtonInput(buttonPinBack, &btnPinStateBack, &insideDebounceBack, &lastDebounceTimeBack);
 
-	digitalWrite(13, (btnPinState == LOW || buttonPinUp == LOW || btnPinStateDown == LOW || buttonPinBack == LOW));
+	digitalWrite(13, (btnPinState == LOW || btnPinStateUp == LOW || btnPinStateDown == LOW || btnPinStateBack == LOW));
 
 	if (insideDebounce == false || insideDebounceUp == false || insideDebounceDown == false || insideDebounceBack == false)
 	{
@@ -229,10 +243,10 @@ void loop()
 
 			// One second has elapsed or we have input (button clicked)
 
-			if (timeUpdated)
+			if (timeUpdated /*&& (current_time_milis - lastTempRequest >= delayInMillis)*/) // one second elapsed, no need for adiitional check 
 			{
-				//TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures
-				float temp = 22.22;//TempSensor.getTempCByIndex(0);
+				//TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures, sync call
+				float temp = TempSensor.getTempC(tempDeviceAddress);
 				tempAccum += temp;
 
 				floatToHiLo(&tempHi, &tempLo, temp);
@@ -254,6 +268,10 @@ void loop()
 
 				//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
 				//display.setContrast(0);  
+
+				TempSensor.requestTemperaturesByAddress(tempDeviceAddress);
+				//delayInMillis = 750 / (1 << (12 - resolution));
+				//lastTempRequest = millis();
 			}
 
 			// prepare all the date before entering the picture loop (onDraw will be called multiple times)
@@ -272,7 +290,7 @@ void loop()
 		delay(20);
 	}
 
-	Serial.println(millis() - current_time_milis);
+	//Serial.println(millis() - current_time_milis);
 
 	// Delay to get next current time (10ms), this is essentially time deviation in one second cycle (~ +-10ms)
 	delay(10);
@@ -281,6 +299,14 @@ void loop()
 ///////////////////////////////////
 //----- Utils
 ///////////////////////////////////
+
+/// <summary>
+/// Calculates the am pm.
+/// </summary>
+void calcAmPm()
+{
+	(iHour > 12) ? iAmPm = 1 : iAmPm = 0;
+}
 
 /// <summary>
 /// Gets the button input.
@@ -368,7 +394,7 @@ short daysPassedInYear()
 /// Calculates the day of week index.
 /// </summary>
 /// <returns>The day of week index.</returns>
-byte calcDayOfWeek()
+void calcDayOfWeek()
 {
 	short days = dayOffset;
 
@@ -385,7 +411,7 @@ byte calcDayOfWeek()
 		}
 	}
 
-	return days % 7;
+	iWeek = days % 7;
 }
 
 /// <summary>
@@ -417,7 +443,7 @@ inline boolean updateTime()
 						iWeek = 0;
 					}
 
-					(iHour > 12) ? iAmPm = 1 : iAmPm = 0;
+					calcAmPm();
 
 					iDay++;
 					if (iDay > getDaysInMonth(iMonth))
@@ -642,12 +668,12 @@ inline void prepareDraw()
 		break;
 
 	case DISPLAY_MODE_CLOCK:
-		toggleOption(&clockStyle, 0, 4);
+		toggleOption(&clockStyle, 1, 5);
 		prepareDrawClock();
 		break;
 
 	case DISPLAY_MODE_MENU:
-		toggleOption(&menuMode, 0, 2);
+		toggleOption(&menuMode, 1, 3);
 		break;
 
 	case DISPLAY_MODE_SET_MENU:
@@ -721,7 +747,7 @@ void prepareDrawSetMenu()
 		}
 
 		// Calculate week index and update it
-		iWeek = calcDayOfWeek();
+		calcDayOfWeek();
 
 		prepareDrawDateDigital();
 
@@ -740,7 +766,7 @@ void prepareDrawSetMenu()
 
 		break;
 	case MENU_SET_TIME_FORMAT:
-		toggleOption(&iTimeFormat, 0, 1);
+		toggleOption(&iTimeFormat, 1, 2);
 
 		break;
 	}
@@ -870,17 +896,17 @@ void drawGraph()
 inline void drawMenu()
 {
 	display.setFont(u8g_font_helvB10r);
-	display.drawStr(10, 45, (const char*)pgm_read_word(&(menuItems[MENU_SET_DATE])));
-	display.drawStr(10, 25, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME])));
-	display.drawStr(10, 5, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME_FORMAT])));
+	display.drawStr(10, 5, (const char*)pgm_read_word(&(menuItems[MENU_SET_DATE - 1])));
+	display.drawStr(10, 25, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME - 1])));
+	display.drawStr(10, 45, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME_FORMAT - 1])));
 
 	display.setFontRefHeightExtendedText();
 	display.setFontPosTop();
 
 	byte h = display.getFontAscent() - display.getFontDescent();
-	byte w = display.getStrWidth((const char*)pgm_read_word(&(menuItems[menuMode])));;
+	byte w = display.getStrWidth((const char*)pgm_read_word(&(menuItems[menuMode - 1])));
 
-	display.drawFrame(9, 5 + menuMode * 20, w + 2, h + 2);
+	display.drawFrame(9, 5 + (menuMode - 1) * 20, w + 2, h + 2);
 }
 
 void prepareDrawClock()
@@ -991,13 +1017,13 @@ inline void drawClock()
 /// <param name="yPos">The y position.</param>
 void drawTimeFormat(byte xPos, byte yPos)
 {
-	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(timeFormat[iTimeFormat])));
+	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(timeFormat[iTimeFormat -1])));
 }
 
 byte amPmOffset;
 void prepareDrawDayAmPm()
 {
-	if (iTimeFormat == 0) // 0 = 12h
+	if (iTimeFormat == 1) // 1 = 12h, 2 = 24h
 	{
 		amPmOffset = display.getStrPixelWidth((const char*)pgm_read_word(&(weekString[iWeek]))) + 2;
 	}
@@ -1011,7 +1037,7 @@ void prepareDrawDayAmPm()
 void drawDayAmPm(byte xPos, byte yPos)
 {
 	drawDay(xPos, yPos);
-	if (iTimeFormat == 0) // 0 = 12h
+	if (iTimeFormat == 1) // 1 = 12h, 2 = 24h
 	{
 		display.drawStr(xPos + amPmOffset, yPos, (const char*)pgm_read_word(&(ampmString[iAmPm])));
 	}
@@ -1061,7 +1087,7 @@ void drawTemp(byte xPos, byte yPos)
 char clockDigital[6];
 byte prepareDrawClockDigital()
 {
-	if (iAmPm && iTimeFormat == 0) // 1 = PM && 0 = 12h
+	if (iAmPm && iTimeFormat == 1) // 1 = PM && 1 = 12h
 	{
 		byteToStr(iHour - 12, clockDigital);
 	}
