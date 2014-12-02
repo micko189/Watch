@@ -96,7 +96,7 @@ float tempAccum = 0;
 //----- Strings
 PGM_P const weekString[] PROGMEM = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
-PGM_P const menuItems[] PROGMEM = { "Set date", "Set time", "Set format" };
+PGM_P const menuItems[] PROGMEM = { "Set format", "Set time", "Set date" };
 PGM_P const timeFormat[] PROGMEM = { "12h", "24h" };
 
 PROGMEM const byte daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // standard year days
@@ -114,9 +114,9 @@ PROGMEM const byte daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 
 #define DISPLAY_MODE_SET_MENU			0x4
 byte displayMode = DISPLAY_MODE_START_UP;
 
-#define MENU_SET_DATE					0x1
+#define MENU_SET_TIME_FORMAT			0x1
 #define MENU_SET_TIME					0x2
-#define MENU_SET_TIME_FORMAT			0x3
+#define MENU_SET_DATE					0x3
 byte menuMode = MENU_SET_DATE;
 
 #define CLOCK_STYLE_SIMPLE_ANALOG		0x1
@@ -196,20 +196,20 @@ void setup()
 	//lastTempRequest = millis();
 
 	Serial.begin(9600);    // Enable serial com.
-	 
+
 
 	// Define button pins, turn on internal Pull-Up Resistor
-	pinMode(buttonPin, INPUT_PULLUP);  
-	pinMode(buttonPinUp, INPUT_PULLUP); 
-	pinMode(buttonPinDown, INPUT_PULLUP); 
-	pinMode(buttonPinBack, INPUT_PULLUP); 
+	pinMode(buttonPin, INPUT_PULLUP);
+	pinMode(buttonPinUp, INPUT_PULLUP);
+	pinMode(buttonPinDown, INPUT_PULLUP);
+	pinMode(buttonPinBack, INPUT_PULLUP);
 
 	// Define otput pin for button debugung
 	pinMode(13, OUTPUT);    // Use Built-In LED for Indication
 
 	// Assign default color value
 	display.setColorIndex(1);         // pixel on BW
-	
+
 	// Start up the light sensor library
 	//LightSensor.begin();
 	//LightSensor.SetAddress(Device_Address_H);//Address 0x5C
@@ -631,11 +631,12 @@ inline void prepareDraw()
 			displayMode--;
 		}
 	}
-	
+
 	// prepare the data for displaying
 	switch (displayMode)
 	{
 	case DISPLAY_MODE_START_UP:
+		// Nothing to be done
 		break;
 
 	case DISPLAY_MODE_CLOCK:
@@ -653,7 +654,7 @@ inline void prepareDraw()
 		{
 			// Go to next set value
 			setPosition++;
-			rollOverValue(&setPosition, menuMode);
+			rollOverValue(&setPosition, menuMode - 1);
 		}
 
 		prepareDrawSetMenu();
@@ -665,7 +666,7 @@ inline void prepareDraw()
 	btnPinStateUp = HIGH;
 	btnPinStateDown = HIGH;
 	btnPinStateBack = HIGH;
-}  // End of onDraw()
+}  // End of prepareDraw()
 
 /// <summary>
 /// Main drawing routine.
@@ -694,7 +695,6 @@ inline void onDraw()
 	}
 }  // End of onDraw()
 
-
 void prepareDrawSetMenu()
 {
 	switch (menuMode)
@@ -702,13 +702,13 @@ void prepareDrawSetMenu()
 	case MENU_SET_DATE:
 		switch (setPosition)
 		{
-		case 0:
+		case 0: // DD
 			toggleOption(&iDay, 1, 12);
 			break;
-		case 1:
+		case 1: // MM
 			toggleOption(&iMonth, 1, 60);
 			break;
-		case 2:
+		case 2: //YYYY
 			if (btnPinStateUp == LOW) // pressed
 			if (++iYear > 32767)
 				iYear = 2000;
@@ -720,23 +720,23 @@ void prepareDrawSetMenu()
 
 		// Calculate week index and update it
 		calcDayOfWeek();
-
 		prepareDrawDateDigital();
-
 		break;
+
 	case MENU_SET_TIME:
-		if (setPosition) // 1 = MM
+		switch (setPosition)
 		{
-			toggleOption(&iMinutes, 1, 60);
-		}
-		else // 0 = HH
-		{
+		case 0: //HH
 			toggleOption(&iHour, 1, 24);
+			break;
+		case 1: //MM
+			toggleOption(&iMinutes, 1, 60);
+			break;
 		}
 
 		prepareDrawClockDigital();
-
 		break;
+
 	case MENU_SET_TIME_FORMAT:
 		toggleOption(&iTimeFormat, 1, 2);
 
@@ -868,9 +868,9 @@ void drawGraph()
 inline void drawMenu()
 {
 	display.setFont(u8g_font_helvB10r);
-	display.drawStr(10, 5, (const char*)pgm_read_word(&(menuItems[MENU_SET_DATE - 1])));
+	display.drawStr(10, 5, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME_FORMAT - 1])));
 	display.drawStr(10, 25, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME - 1])));
-	display.drawStr(10, 45, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME_FORMAT - 1])));
+	display.drawStr(10, 45, (const char*)pgm_read_word(&(menuItems[MENU_SET_DATE - 1])));
 
 	display.setFontRefHeightExtendedText();
 	display.setFontPosTop();
@@ -989,7 +989,7 @@ inline void drawClock()
 /// <param name="yPos">The y position.</param>
 void drawTimeFormat(byte xPos, byte yPos)
 {
-	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(timeFormat[iTimeFormat -1])));
+	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(timeFormat[iTimeFormat - 1])));
 }
 
 byte amPmOffset;
@@ -1025,8 +1025,8 @@ void drawDay(byte xPos, byte yPos)
 	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(weekString[iWeek])));
 }
 
-char temperatureHi[4];
-char temperatureLo[4];
+char temperatureHi[3];
+char temperatureLo[3];
 byte offsetHi;
 byte offsetDot;
 byte offsetLo;
@@ -1072,7 +1072,6 @@ byte prepareDrawClockDigital()
 
 	byteToStr(iMinutes, clockDigital + 3);
 }
-
 
 /// <summary>
 /// Draws the clock digital.

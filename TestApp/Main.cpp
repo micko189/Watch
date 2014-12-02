@@ -96,7 +96,7 @@ void stoa(short v, char * dest)
 	byte d;
 	short c;
 	byte firstIndex = 0;
-	for (char i = 4; i >= 0; i--)
+	for (byte i = 4; i != 255; i--)
 	{
 		c = stoa_tab[i];
 		if (v >= c)
