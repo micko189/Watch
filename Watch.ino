@@ -236,7 +236,7 @@ void loop()
 
 	digitalWrite(13, (btnPinState == LOW || btnPinStateUp == LOW || btnPinStateDown == LOW || btnPinStateBack == LOW));
 
-	if (insideDebounce == false || insideDebounceUp == false || insideDebounceDown == false || insideDebounceBack == false)
+	if (insideDebounce == false && insideDebounceUp == false && insideDebounceDown == false && insideDebounceBack == false)
 	{
 		boolean timeUpdated = updateTime();
 		if (timeUpdated || anyPinStateChanged)
