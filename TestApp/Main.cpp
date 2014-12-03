@@ -26,6 +26,19 @@ boolean isLeapYear(short year)
 	return ((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0));
 }
 
+
+byte dayInM(byte month)
+{
+	byte odd = month % 2;
+
+	if (month > 7)
+	{
+		odd = !odd;
+	}
+
+	return 30 + odd;
+}
+
 /// <summary>
 /// Gets the days in month.
 /// </summary>
@@ -40,6 +53,18 @@ byte getDaysInMonth(byte month)
 	else // feb
 	{
 		return (isLeapYear(iYear)) ? 29 : 28;
+	}
+}
+
+byte getDaysInMonth2(byte month)
+{
+	if (month != 2)
+	{
+		return dayInM(month);
+	}
+	else // feb
+	{
+		return 28 + (isLeapYear(iYear));
 	}
 }
 
@@ -125,5 +150,13 @@ void main()
 	char s[5];
 	stoa(val, s);
 	calcDayOfWeek();
+
+	for (byte i = 1; i <= 12; i++)
+	{
+		if (getDaysInMonth(i) != getDaysInMonth2(i))
+		{
+			int j = 0;
+		}
+	}
 
 }

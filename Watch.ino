@@ -99,7 +99,7 @@ PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
 PGM_P const menuItems[] PROGMEM = { "Set format", "Set time", "Set date" };
 PGM_P const timeFormat[] PROGMEM = { "12h", "24h" };
 
-PROGMEM const byte daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // standard year days
+//PROGMEM const byte daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // standard year days
 
 //PGM_P const dayNames[] PROGMEM = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 //PGM_P const months[] PROGMEM = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
@@ -351,6 +351,23 @@ boolean isLeapYear(short year)
 }
 
 /// <summary>
+/// Get number of days in the month.
+/// </summary>
+/// <param name="month">The month.</param>
+/// <returns>Number of days in the given month</returns>
+byte daysInMonth(byte month)
+{
+	byte odd = month % 2;
+
+	if (month > 7)
+	{
+		odd = !odd;
+	}
+
+	return 30 + odd;
+}
+
+/// <summary>
 /// Gets the days in month.
 /// </summary>
 /// <param name="month">The month.</param>
@@ -359,11 +376,11 @@ byte getDaysInMonth(byte month)
 {
 	if (month != 2)
 	{
-		return daysInMonth[month];
+		return daysInMonth(month);
 	}
 	else // feb
 	{
-		return (isLeapYear(iYear)) ? 29 : 28;
+		return  28 + (isLeapYear(iYear));
 	}
 }
 

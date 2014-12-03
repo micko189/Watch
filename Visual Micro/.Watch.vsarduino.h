@@ -44,6 +44,7 @@ extern "C" void __cxa_pure_virtual() {;}
 void calcAmPm();
 void getButtonInput(const byte pinNo, boolean *btnPinState, boolean *insideDebounce, unsigned long *lastDebounceTime);
 boolean isLeapYear(short year);
+byte daysInMonth(byte month);
 byte getDaysInMonth(byte month);
 inline short daysPassedInYear();
 void calcDayOfWeek();
