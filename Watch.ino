@@ -430,7 +430,7 @@ inline boolean updateTime()
 				if (++iHour >= 24)
 				{
 					iHour = 0;
-	
+
 					inrementRollOverValue(&iWeek, 6);
 					calcAmPm();
 
@@ -537,7 +537,7 @@ void stoa(short v, char * dest, byte firstIndex = 0)
 /// <param name="s">The string.</param>
 void byteToStr(byte value, char* s)
 {
-		stoa(value, s, 1);
+	stoa(value, s, 1);
 }
 
 /// <summary>
@@ -642,7 +642,7 @@ inline void prepareDraw()
 		break;
 	}
 
-	// TODO: doa I need this?
+	// TODO: do I need this?
 	btnPinState = HIGH;
 	btnPinStateUp = HIGH;
 	btnPinStateDown = HIGH;
@@ -732,7 +732,7 @@ inline void drawSetMenu()
 {
 	display.setFont(u8g_font_helvB10r);
 
-	display.drawHLine(29 + 18 * setPosition, 12 + 14, 12);
+	display.drawHLine(29 + setPosition * 16, 12 + 14, 12);
 
 	switch (menuMode)
 	{
@@ -830,7 +830,7 @@ void drawGraph()
 
 	for (i = 0; i < TEMP_GRAPH_LEN; i += 12)
 	{
-		display.drawVLine(i, 60, 2);
+		display.drawVLine(i, 62, 2);
 	}
 
 	drawGraphLine(startTempGraphIndex, TEMP_GRAPH_LEN, &xPos, rescale);
