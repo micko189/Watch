@@ -615,6 +615,7 @@ void findMaxMin()
 /// </summary>
 inline void prepareDraw()
 {
+	byte oldDisplayMode = displayMode;
 	// First determine what to display, set displayMode
 	if (btnPinState == LOW) // pressed
 	{
@@ -650,7 +651,7 @@ inline void prepareDraw()
 		break;
 
 	case DISPLAY_MODE_SET_MENU:
-		if (btnPinState == LOW) // pressed
+		if (oldDisplayMode == displayMode && btnPinState == LOW) // pressed
 		{
 			// Go to next set value
 			setPosition++;
@@ -752,22 +753,18 @@ inline void drawSetMenu()
 {
 	display.setFont(u8g_font_helvB10r);
 
+	display.drawHLine(29 + 18 * setPosition, 12 + 14, 12);
+
 	switch (menuMode)
 	{
 	case MENU_SET_DATE:
 		drawDateDigital(29, 12);
-		display.drawHLine(29 + 14 * setPosition, 12 + 14, 5);
-
 		break;
 	case MENU_SET_TIME:
 		drawClockDigital(29, 12);
-		display.drawHLine(29 + 14 * setPosition, 12 + 14, 5);
-
 		break;
 	case MENU_SET_TIME_FORMAT:
 		drawTimeFormat(29, 12);
-		display.drawHLine(29 + 14 * setPosition, 12 + 14, 5);
-
 		break;
 	}
 }
