@@ -6,11 +6,11 @@ typedef unsigned char boolean;
 #define LOW 0
 
 const char* weekString[7] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-const byte daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; //standard year
+const byte daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; //standard year
 
 short iYear = 2014;
-byte iMonth = 11;
-byte iDay = 27;
+byte iMonth = 12;
+byte iDay = 2;
 byte iWeek = 0;    // 1: SUN, MON, TUE, WED, THU, FRI,SAT // need to calculate this
 
 const short firstYear = 2000; //This is our start point
@@ -33,8 +33,7 @@ boolean isLeapYear(short year)
 /// <returns>Days in month</returns>
 byte getDaysInMonth(byte month)
 {
-	month--; // Adjust for indexing in daysInMonth
-	if (month != 1)
+	if (month != 2)
 	{
 		return daysInMonth[month];
 	}
@@ -48,7 +47,7 @@ byte getDaysInMonth(byte month)
 /// Gets the days passed in year.
 /// </summary>
 /// <returns>Days passed in year</returns>
-short daysPassedInYear()
+inline short daysPassedInYear()
 {
 	short passed = 0;
 	for (byte i = 1; i < iMonth; i++)
@@ -63,7 +62,7 @@ short daysPassedInYear()
 /// Calculates the day of week index.
 /// </summary>
 /// <returns>The day of week index.</returns>
-byte calcDayOfWeek()
+void calcDayOfWeek()
 {
 	short days = dayOffset;
 
@@ -80,7 +79,7 @@ byte calcDayOfWeek()
 		}
 	}
 
-	return days % 7;
+	iWeek = days % 7;
 }
 
 
@@ -95,7 +94,7 @@ void stoa(short v, char * dest)
 {
 	byte d;
 	short c;
-	byte firstIndex = 0;
+	byte firstIndex = 1;
 	for (byte i = 4; i != 255; i--)
 	{
 		c = stoa_tab[i];
@@ -122,9 +121,9 @@ void stoa(short v, char * dest)
 
 void main()
 {
-	short val = 1050;
+	short val = 0;
 	char s[5];
 	stoa(val, s);
-	byte index = calcDayOfWeek();
+	calcDayOfWeek();
 
 }

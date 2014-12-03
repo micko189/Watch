@@ -84,7 +84,7 @@ byte iAmPm = 1;    // 0:AM, 1:PM
 byte iHour = 9;
 byte iMinutes = 0;
 byte iSecond = 0;
-byte iTimeFormat = 1;
+byte iTimeFormat = 1; // 1 - 12h, 2 - 24h
 unsigned long prevClockTime = 0;
 #define TEMP_GRAPH_LEN 128
 byte tempGraphHi[TEMP_GRAPH_LEN] = { 0 };
@@ -104,8 +104,8 @@ PROGMEM const byte daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 
 //PGM_P const dayNames[] PROGMEM = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 //PGM_P const months[] PROGMEM = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
-#define firstYear 2000 //This is our start point
-#define dayOffset 5 //The first day of our start year may not be a Sunday ( in 2000 it was Sat which is index 6) offset is index - 1 = 5
+#define firstYear 2000 // This is our start point
+#define dayOffset 5 // The first day of our start year may not be a Sunday ( in 2000 it was Sat which is index 6) offset is index - 1 = 5
 
 //----- Display features
 #define DISPLAY_MODE_START_UP			0x1
@@ -175,8 +175,6 @@ char tempSufix[3];
 DeviceAddress tempDeviceAddress;
 
 #define resolution 12
-//unsigned long lastTempRequest = 0;
-//int  delayInMillis = 0;
 
 ///////////////////////////////////
 //----- Arduino setup and loop methods
@@ -192,11 +190,8 @@ void setup()
 	// Request temperature conversion - non-blocking / async
 	TempSensor.setWaitForConversion(false);
 	TempSensor.requestTemperaturesByAddress(tempDeviceAddress);
-	//delayInMillis = 750 / (1 << (12 - resolution));
-	//lastTempRequest = millis();
 
 	Serial.begin(9600);    // Enable serial com.
-
 
 	// Define button pins, turn on internal Pull-Up Resistor
 	pinMode(buttonPin, INPUT_PULLUP);
@@ -243,7 +238,7 @@ void loop()
 		{
 			// One second has elapsed or we have input (button clicked)
 
-			if (timeUpdated /*&& (current_time_milis - lastTempRequest >= delayInMillis)*/) // one second elapsed, no need for adiitional check 
+			if (timeUpdated) // one second elapsed, no need for adiitional check >
 			{
 				//TempSensor.requestTemperaturesByIndex(0); // Send the command to get temperatures, sync call
 				float temp = TempSensor.getTempC(tempDeviceAddress);
@@ -257,8 +252,7 @@ void loop()
 					// One hour has elapsed
 					floatToHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / HOUR_COUNT);
 
-					startTempGraphIndex++;
-					rollOverValue(&startTempGraphIndex, TEMP_GRAPH_LEN);
+					inrementRollOverValue(&startTempGraphIndex, TEMP_GRAPH_LEN);
 
 					tempAccum = 0;
 					hourCount = 0;
@@ -270,8 +264,6 @@ void loop()
 				//display.setContrast(0);  
 
 				TempSensor.requestTemperaturesByAddress(tempDeviceAddress);
-				//delayInMillis = 750 / (1 << (12 - resolution));
-				//lastTempRequest = millis();
 			}
 
 			// prepare all the date before entering the picture loop (onDraw will be called multiple times)
@@ -379,7 +371,7 @@ byte getDaysInMonth(byte month)
 /// Gets the days passed in year.
 /// </summary>
 /// <returns>Days passed in year</returns>
-short daysPassedInYear()
+inline short daysPassedInYear()
 {
 	short passed = 0;
 	for (byte i = 1; i < iMonth; i++)
@@ -438,19 +430,16 @@ inline boolean updateTime()
 				if (++iHour >= 24)
 				{
 					iHour = 0;
-					if (++iWeek > 6)
-					{
-						iWeek = 0;
-					}
-
+	
+					inrementRollOverValue(&iWeek, 6);
 					calcAmPm();
 
-					iDay++;
-					if (iDay > getDaysInMonth(iMonth))
+					if (++iDay > getDaysInMonth(iMonth))
 					{
 						iDay = 1;
 						if (++iMonth > 12)
 						{
+							iMonth = 1;
 							iYear++;
 						}
 					}
@@ -466,13 +455,13 @@ inline boolean updateTime()
 	return false;
 }
 
+#define minVal 1
 /// <summary>
 /// Toggles the option.
 /// </summary>
 /// <param name="option">The option.</param>
-/// <param name="minVal">The minimum value.</param>
 /// <param name="maxVal">The maximum value.</param>
-void toggleOption(byte *option, const byte minVal, const byte maxVal)
+void toggleOption(byte *option, const byte maxVal)
 {
 	if (btnPinStateUp == LOW) // pressed
 	{
@@ -494,13 +483,13 @@ void toggleOption(byte *option, const byte minVal, const byte maxVal)
 }
 
 /// <summary>
-/// Rolls the value over to 0 if grater than roll over value.
+/// Increments and rolls the value over to 0 if grater than roll over value.
 /// </summary>
 /// <param name="value">The value.</param>
 /// <param name="rollOverVal">The roll over value.</param>
-void rollOverValue(byte *value, byte rollOverVal)
+void inrementRollOverValue(byte *value, byte rollOverVal)
 {
-	if (*value > rollOverVal)
+	if (++(*value) > rollOverVal)
 	{
 		*value = 0;
 	}
@@ -513,11 +502,11 @@ static const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
 /// </summary>
 /// <param name="v">The value.</param>
 /// <param name="dest">The string destination.</param>
-void stoa(short v, char * dest)
+/// <param name="firstIndex">The index in stoa_tab to add 0 character (e.g. if converting 6 with 1, string will be 06).</param>
+void stoa(short v, char * dest, byte firstIndex = 0)
 {
 	byte d;
 	short c;
-	byte firstIndex = 0;
 	for (byte i = 4; i != 255; i--)
 	{
 		c = stoa_tab[i];
@@ -548,15 +537,7 @@ void stoa(short v, char * dest)
 /// <param name="s">The string.</param>
 void byteToStr(byte value, char* s)
 {
-	if (value < 10)
-	{
-		s[0] = '0';
-		stoa(value, s + 1);
-	}
-	else
-	{
-		stoa(value, s);
-	}
+		stoa(value, s, 1);
 }
 
 /// <summary>
@@ -641,12 +622,12 @@ inline void prepareDraw()
 		break;
 
 	case DISPLAY_MODE_CLOCK:
-		toggleOption(&clockStyle, 1, 5);
+		toggleOption(&clockStyle, 5);
 		prepareDrawClock();
 		break;
 
 	case DISPLAY_MODE_MENU:
-		toggleOption(&menuMode, 1, 3);
+		toggleOption(&menuMode, 3);
 		setPosition = 0;
 		break;
 
@@ -654,8 +635,7 @@ inline void prepareDraw()
 		if (oldDisplayMode == displayMode && btnPinState == LOW) // pressed
 		{
 			// Go to next set value
-			setPosition++;
-			rollOverValue(&setPosition, menuMode - 1);
+			inrementRollOverValue(&setPosition, menuMode - 1);
 		}
 
 		prepareDrawSetMenu();
@@ -704,10 +684,10 @@ void prepareDrawSetMenu()
 		switch (setPosition)
 		{
 		case 0: // DD
-			toggleOption(&iDay, 1, 12);
+			toggleOption(&iDay, getDaysInMonth(iMonth));
 			break;
 		case 1: // MM
-			toggleOption(&iMonth, 1, 60);
+			toggleOption(&iMonth, 12);
 			break;
 		case 2: //YYYY
 			if (btnPinStateUp == LOW) // pressed
@@ -728,10 +708,10 @@ void prepareDrawSetMenu()
 		switch (setPosition)
 		{
 		case 0: //HH
-			toggleOption(&iHour, 1, 24);
+			toggleOption(&iHour, 24);
 			break;
 		case 1: //MM
-			toggleOption(&iMinutes, 1, 60);
+			toggleOption(&iMinutes, 60);
 			break;
 		}
 
@@ -739,12 +719,11 @@ void prepareDrawSetMenu()
 		break;
 
 	case MENU_SET_TIME_FORMAT:
-		toggleOption(&iTimeFormat, 1, 2);
+		toggleOption(&iTimeFormat, 2);
 
 		break;
 	}
 }
-
 
 /// <summary>
 /// Draws the set menu.
