@@ -154,17 +154,21 @@ unsigned long lastDebounceTimeBack = 0;  // the last time the output pin was tog
 boolean anyPinStateChanged = false;
 #define debounceDelay 50    // the debounce time; increase if the output flickers
 
+#define ouputLedPin 13
+
 //----- Global
 byte tempLo = 0;
 byte tempHi = 0;
-byte setPosition = 0; // position of value currently being set
 
 byte maxHi = 0;
 byte maxLo = 0;
+
 byte minHi = 0;
 byte minLo = 0;
 
-float min = 0;
+float minTemp = 0;
+
+byte setPosition = 0; // position of value currently being set
 
 #define HOUR_COUNT 1 //3600
 
@@ -200,7 +204,7 @@ void setup()
 	pinMode(buttonPinBack, INPUT_PULLUP);
 
 	// Define otput pin for button debugung
-	pinMode(13, OUTPUT);    // Use Built-In LED for Indication
+	pinMode(ouputLedPin, OUTPUT);    // Use Built-In LED for Indication
 
 	// Assign default color value
 	display.setColorIndex(1);         // pixel on BW
@@ -229,9 +233,9 @@ void loop()
 	getButtonInput(buttonPinDown, &btnPinStateDown, &insideDebounceDown, &lastDebounceTimeDown);
 	getButtonInput(buttonPinBack, &btnPinStateBack, &insideDebounceBack, &lastDebounceTimeBack);
 
-	digitalWrite(13, (btnPinState == LOW || btnPinStateUp == LOW || btnPinStateDown == LOW || btnPinStateBack == LOW));
+	digitalWrite(13, !(btnPinState & btnPinStateUp & btnPinStateDown & btnPinStateBack));
 
-	if (insideDebounce == false && insideDebounceUp == false && insideDebounceDown == false && insideDebounceBack == false)
+	if (!(insideDebounce | insideDebounceUp | insideDebounceDown | insideDebounceBack))
 	{
 		boolean timeUpdated = updateTime();
 		if (timeUpdated || anyPinStateChanged)
@@ -560,24 +564,24 @@ void byteToStr(byte value, char* s)
 /// <summary>
 /// Gets the hi and lo from float.
 /// </summary>
-/// <param name="hiVal">The hi value.</param>
-/// <param name="loVal">The lo value.</param>
+/// <param name="valHi">The hi value.</param>
+/// <param name="valLo">The lo value.</param>
 /// <param name="val">The value.</param>
-inline void floatToHiLo(byte* hiVal, byte* loVal, float val)
+inline void floatToHiLo(byte* valHi, byte* valLo, float val)
 {
-	*hiVal = (byte)val;
-	*loVal = ((short)(val * 100)) % 100;
+	*valHi = (byte)val;
+	*valLo = ((short)(val * 100)) % 100;
 }
 
 /// <summary>
 /// Converts hi and lo to float.
 /// </summary>
-/// <param name="hiVal">The hi value.</param>
-/// <param name="loVal">The lo value.</param>
+/// <param name="valHi">The hi value.</param>
+/// <param name="valLo">The lo value.</param>
 /// <returns>Float value</returns>
-float hiLoToFloat(byte hiVal, byte loVal)
+float hiLoToFloat(byte valHi, byte valLo)
 {
-	return hiVal + loVal / 100.0;
+	return valHi + valLo / 100.0;
 }
 
 /// <summary>
@@ -798,7 +802,7 @@ void drawGraphLine(byte start, byte end, byte* x, float rescale)
 {
 	for (byte i = start; i < end; i++)
 	{
-		display.drawPixel((*x)++, (hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - min) * rescale);
+		display.drawPixel((*x)++, (hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - minTemp) * rescale);
 	}
 }
 
@@ -808,25 +812,25 @@ float rescale;
 void prepareDrawGraph()
 {
 	findMaxMin();
-	min = hiLoToFloat(minHi, minLo);
-	float diff = hiLoToFloat(maxHi, maxLo) - min;
+	minTemp = hiLoToFloat(minHi, minLo);
+	float diff = hiLoToFloat(maxHi, maxLo) - minTemp;
 	rescale = 64.0 / diff;
 
 	// draw scale
 	// calculate first y coord
-	byte hiVal, loVal;
+	byte startValHi, startValLo;
+	startValHi = minHi;
 	if ((minLo > 50))
 	{
-		hiVal = minHi + 1;
-		loVal = 0;
+		startValHi += 1;
+		startValLo = 0;
 	}
 	else
 	{
-		hiVal = minHi;
-		loVal = 50;
+		startValLo = 50;
 	}
 
-	yCoord = hiLoToFloat(hiVal, loVal);
+	yCoord = hiLoToFloat(startValHi, startValLo);
 	yScaleCount = diff / 0.5;
 }
 
@@ -841,7 +845,7 @@ void drawGraph()
 	for (i = 0; i < yScaleCount; i++)
 	{
 		// calculate y coord
-		display.drawHLine(0, (yCoord - min) * rescale, 2);
+		display.drawHLine(0, (yCoord - minTemp) * rescale, 2);
 		yCoord += 0.5;
 	}
 
