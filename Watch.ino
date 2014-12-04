@@ -924,36 +924,34 @@ inline void drawClock()
 	switch (clockStyle)
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
-		display.setFont(u8g_font_helvB12);
-		drawTemp(80, 63);
-
 		display.setFont(u8g_font_helvB14r);
 		drawDayAmPm(30, 15);
 
 		display.setFont(u8g_font_helvB18r);
 		drawClockDigital(35, 38);
 
+		display.setFont(u8g_font_helvB12r);
+		drawTemp(80, 63);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
 		drawClockAnalog(centerX - 30, centerY, iRadius - 4);
-
-		display.setFont(u8g_font_helvB12);
-		drawTemp(80, 63);
 
 		//display.setFont(u8g_font_helvB12);
 		drawDayAmPm(67, 23);
 
 		display.setFont(u8g_font_helvB18r);
 		drawClockDigital(61, 45);
+
+		display.setFont(u8g_font_helvB12r);
+		drawTemp(80, 63);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
-		display.setFont(u8g_font_helvB12);
-		drawTemp(80, 63);
-
 		drawClockAnalog(centerX - 10, centerY, iRadius);
 
+		display.setFont(u8g_font_helvB12r);
+		drawTemp(80, 63);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
@@ -961,15 +959,14 @@ inline void drawClock()
 		drawDateDigital(40, 12);
 		drawDay(6, 12);
 
-		display.setFont(u8g_font_helvB12);
-		drawTemp(80, 63);
-
 		display.setFont(u8g_font_helvB24n);
 		offset = drawClockDigital(14, 45);
 
 		display.setFont(u8g_font_helvB14r);
 		drawSecondsDigital(14 + offset + 2, 45);
 
+		display.setFont(u8g_font_helvB12r);
+		drawTemp(80, 63);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_GRAPH:
