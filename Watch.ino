@@ -210,9 +210,9 @@ void setup()
 	display.setColorIndex(1);         // pixel on BW
 
 	// Start up the light sensor library
-	//LightSensor.begin();
-	//LightSensor.SetAddress(Device_Address_H);//Address 0x5C
-	//LightSensor.SetMode(Continuous_H_resolution_Mode);
+	LightSensor.begin();
+	LightSensor.SetAddress(Device_Address_H);//Address 0x5C
+	LightSensor.SetMode(Continuous_H_resolution_Mode);
 
 	calcDayOfWeek();
 	calcAmPm();
@@ -233,7 +233,7 @@ void loop()
 	getButtonInput(buttonPinDown, &btnPinStateDown, &insideDebounceDown, &lastDebounceTimeDown);
 	getButtonInput(buttonPinBack, &btnPinStateBack, &insideDebounceBack, &lastDebounceTimeBack);
 
-	digitalWrite(13, !(btnPinState & btnPinStateUp & btnPinStateDown & btnPinStateBack));
+	digitalWrite(ouputLedPin, !(btnPinState & btnPinStateUp & btnPinStateDown & btnPinStateBack));
 
 	if (!(insideDebounce | insideDebounceUp | insideDebounceDown | insideDebounceBack))
 	{
@@ -262,7 +262,8 @@ void loop()
 					hourCount = 0;
 				}
 
-				//uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
+				uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
+				Serial.println(lux);
 
 				//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
 				//display.setContrast(0);  
@@ -280,13 +281,13 @@ void loop()
 				onDraw();
 			} while (display.nextPage());
 		}
+
+		Serial.println(millis() - current_time_milis);
 	}
 	else
 	{
 		delay(20);
 	}
-
-	//Serial.println(millis() - current_time_milis);
 
 	// Delay to get next current time (10ms), this is essentially time deviation in one second cycle (~ +-10ms)
 	delay(10);
