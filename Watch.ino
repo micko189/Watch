@@ -295,9 +295,11 @@ void loop()
 				// Display routine
 				onDraw();
 			} while (display.nextPage());
+
+			Serial.println(millis() - current_time_milis);
 		}
 
-		Serial.println(millis() - current_time_milis);
+
 	}
 	else
 	{
