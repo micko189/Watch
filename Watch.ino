@@ -937,7 +937,7 @@ inline void drawClock()
 	case CLOCK_STYLE_SIMPLE_MIX:
 		drawClockAnalog(centerX - 30, centerY, iRadius - 4);
 
-		//display.setFont(u8g_font_helvB12);
+		//display.setFont(u8g_font_helvB12r);
 		drawDayAmPm(67, 23);
 
 		display.setFont(u8g_font_helvB18r);
