@@ -1904,6 +1904,13 @@ extern const u8g_fntpgm_uint8_t u8g_font_profont22r[] U8G_FONT_SECTION("u8g_font
 extern const u8g_fntpgm_uint8_t u8g_font_profont29[] U8G_FONT_SECTION("u8g_font_profont29");
 extern const u8g_fntpgm_uint8_t u8g_font_profont29r[] U8G_FONT_SECTION("u8g_font_profont29r");
 
+/* helvreducedfont */
+
+extern const u8g_fntpgm_uint8_t helvB10r[] U8G_FONT_SECTION("helvB10r");
+extern const u8g_fntpgm_uint8_t helvB12r[] U8G_FONT_SECTION("helvB12r");
+extern const u8g_fntpgm_uint8_t helvB14r[] U8G_FONT_SECTION("helvB14r");
+extern const u8g_fntpgm_uint8_t helvB18r[] U8G_FONT_SECTION("helvB18r");
+extern const u8g_fntpgm_uint8_t helvB24r[] U8G_FONT_SECTION("helvB24r");
 
 #ifdef __cplusplus
 }
