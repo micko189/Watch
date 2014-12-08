@@ -606,25 +606,38 @@ uint16_t u8g_CreateReduced(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[
 	return r - red;
 }
 
-
-void main()
+void generateCFile(char* name, u8g_fntpgm_uint8_t* data, int r_size, ofstream &fout)
 {
-	u8g_t u;
-	u.font = helvB12r;
+	fout << "#include \"u8g.h\"" << endl;
+	fout << "const u8g_fntpgm_uint8_t " << name << "[" << (int)r_size << "] U8G_FONT_SECTION(\"" << name << "\") = {";
 
-	//for (size_t i = 32; i <= 255; i++)
-	//{
-	//	//cout << " " << char (i);
-	//	if (i % 16 == 0)
-	//	{
-	//		cout << endl;
-	//	}
-	//}
+	for (size_t i = 0; i < r_size; i++)
+	{
+		if (i % 16 == 0)
+		{
+			fout << endl << "  ";
+		}
 
-	// Set all from start to end
-	uint8_t requested_encoding[256] = { 0 };
+		fout << (int)data[i];
 
-	if (true)
+		if (i != r_size - 1)
+		{
+			fout << ",";
+		}
+
+	}
+
+	fout << "};" << endl;
+}
+
+void SetRequestEncoding(bool digits, bool uppercase, bool lovercase, uint8_t* requested_encoding)
+{
+	for (size_t i = 0; i < 256; i++)
+	{
+		requested_encoding[i] = 0;
+	}
+
+	if (digits)
 	{
 		// Set digits
 		for (size_t i = 48; i <= 57; i++)
@@ -633,7 +646,7 @@ void main()
 		}
 	}
 
-	if (false)
+	if (uppercase)
 	{
 		// Set upersase letters
 		for (size_t i = 65; i <= 90; i++)
@@ -642,7 +655,7 @@ void main()
 		}
 	}
 
-	if (false)
+	if (lovercase)
 	{
 		// Set lowercase letters
 		for (size_t i = 97; i <= 122; i++)
@@ -650,40 +663,40 @@ void main()
 			requested_encoding[i] = 1;
 		}
 	}
+}
 
+
+void main()
+{
+	uint8_t requested_encoding[256] = { 0 };
+	ofstream fout("helvBr_gen.c");
+	uint16_t r_size = 0;
+	u8g_t u;
+
+	// 10
+	u.font = helvB10r;
+	SetRequestEncoding(true, true, true, requested_encoding);
+	requested_encoding[47] = 1; // 47		/	 	Slash or divide
+	requested_encoding[56] = 1; // 58		:	 	Colon
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvB10r", reduced, r_size, fout);
+
+	// 12
+	u.font = helvB12r;
+	SetRequestEncoding(true, false, false, requested_encoding);
 	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
 	requested_encoding[67] = 1; // 67		C	 	Uppercase C
 	requested_encoding[176] = 1; // 176		°		Degree sign
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvB12r", reduced, r_size, fout);
 
-	uint16_t r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	// 14
+	u.font = helvB14r;
+	SetRequestEncoding(true, true, true, requested_encoding);
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvB14r", reduced, r_size, fout);
 
-
-
-	ofstream fout("helvBr_gen.c");
-
-	char name[] = "helvB12r";
-
-	fout << "#include \"u8g.h\"" << endl;
-	fout << "const u8g_fntpgm_uint8_t " << name << "[" << (int)r_size << "] U8G_FONT_SECTION(\"" << name << "\") = {";
-
-	fout << "  ";
-	for (size_t i = 0; i < r_size; i++)
-	{
-		if (i % 16 == 0)
-		{
-			fout << endl << "  ";
-		}
-
-		fout << (int)reduced[i];
-
-		if (i != r_size - 1)
-		{
-			fout << ",";
-		}
-
-	}
-	fout << "};" << endl;
-
+	// close file
 	fout.close();
 
 	u.font = reduced;
