@@ -289,7 +289,7 @@ void loop()
 		delay(20);
 	}
 
-	// Delay to get next current time (10ms), this is essentially time deviation in one second cycle (~ +-10ms)
+	// Delay to get next current time (10ms), this is essentially time deviation in one second cycle (~ ±10ms)
 	delay(10);
 }
 
@@ -298,7 +298,7 @@ void loop()
 ///////////////////////////////////
 
 /// <summary>
-/// Calculates the am pm.
+/// Calculates the am pm value.
 /// </summary>
 void calcAmPm()
 {
@@ -360,7 +360,7 @@ boolean isLeapYear(short year)
 /// </summary>
 /// <param name="month">The month.</param>
 /// <returns>Number of days in the given month</returns>
-byte daysInMonth(byte month)
+inline byte daysInMonth(byte month)
 {
 	byte odd = month % 2;
 
@@ -783,7 +783,7 @@ inline void drawStartUp()
 	// y : Y - position(upper position of the bitmap).
 	// cnt : Number of bytes of the bitmap in horizontal direction.The width of the bitmap is cnt*8.
 	// h : Height of the bitmap. 
-	//display.drawBitmapP(10, 10, 3, 24, IMG_logo_24x24);
+	display.drawBitmapP(10, 10, 3, 24, IMG_logo_24x24);
 
 	display.drawStr(25, 12, "Temperature");
 
@@ -938,7 +938,7 @@ inline void drawClock()
 	case CLOCK_STYLE_SIMPLE_MIX:
 		drawClockAnalog(centerX - 30, centerY, iRadius - 4);
 
-		//display.setFont(helvB12r);
+		display.setFont(helvB12r);
 		drawDayAmPm(67, 23);
 
 		display.setFont(helvB18r);
