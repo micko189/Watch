@@ -22,6 +22,7 @@ Watch Arduino v1.0
 #include <DallasTemperature.h>
 #include <BH1750FVI.h>
 #include <math.h>
+#include <EEPROM.h>
 
 ////////////////////////////////////////////////////
 // 16x24 Logo
@@ -80,7 +81,7 @@ short iYear = 2014;
 byte iMonth = 11;
 byte iDay = 6;
 byte iWeek = 0;    // need to calculate this during setup and on date change
-byte iAmPm = 1;    // 0:AM, 1:PM
+byte iAmPm = 1;    // need to calculate this during setup and on time change 0:AM, 1:PM
 byte iHour = 9;
 byte iMinutes = 0;
 byte iSecond = 0;
@@ -218,6 +219,10 @@ void setup()
 	calcAmPm();
 
 	tempSufix[0] = '°', tempSufix[1] = 'C', tempSufix[2] = 0;
+
+	//ReadStateEPROM();
+
+	//WriteStateEPROM();
 }
 
 void loop()
@@ -296,6 +301,30 @@ void loop()
 ///////////////////////////////////
 //----- Utils
 ///////////////////////////////////
+
+void ReadStateEPROM()
+{
+	iYear = EEPROM.read(0) << 8;
+	iYear += EEPROM.read(1);
+	iMonth = EEPROM.read(2);
+	iDay = EEPROM.read(3);
+	iHour = EEPROM.read(4);
+	iMinutes = EEPROM.read(5);
+	iSecond = EEPROM.read(6);
+	iTimeFormat = EEPROM.read(7);
+}
+
+void WriteStateEPROM()
+{
+	EEPROM.write(0, iYear >> 8);
+	EEPROM.write(1, iYear);
+	EEPROM.write(2, iMonth);
+	EEPROM.write(3, iDay);
+	EEPROM.write(4, iHour);
+	EEPROM.write(5, iMinutes);
+	EEPROM.write(6, iSecond);
+	EEPROM.write(7, iTimeFormat);
+}
 
 /// <summary>
 /// Calculates the am pm value.
@@ -711,7 +740,7 @@ void prepareDrawSetMenu()
 		case 1: // MM
 			toggleOption(&iMonth, 12);
 			break;
-		case 2: //YYYY
+		case 2: // YYYY
 			if (btnPinStateUp == LOW) // pressed
 			if (++iYear > 32767)
 				iYear = 2000;

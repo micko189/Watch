@@ -41,6 +41,8 @@ extern "C" void __cxa_pure_virtual() {;}
 
 //
 //
+void ReadStateEPROM();
+void WriteStateEPROM();
 void calcAmPm();
 void getButtonInput(const byte pinNo, boolean *btnPinState, boolean *insideDebounce, unsigned long *lastDebounceTime);
 boolean isLeapYear(short year);
