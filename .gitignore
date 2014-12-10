@@ -54,3 +54,5 @@ Temporary Items
 *.idb
 *.log
 *.log
+Debug/Watch.log
+Debug/Watch.log

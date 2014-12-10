@@ -1906,6 +1906,7 @@ extern const u8g_fntpgm_uint8_t u8g_font_profont29r[] U8G_FONT_SECTION("u8g_font
 
 /* helvreducedfont */
 
+extern const u8g_fntpgm_uint8_t helvB08r[] U8G_FONT_SECTION("helvB08r");
 extern const u8g_fntpgm_uint8_t helvB10r[] U8G_FONT_SECTION("helvB10r");
 extern const u8g_fntpgm_uint8_t helvB12r[] U8G_FONT_SECTION("helvB12r");
 extern const u8g_fntpgm_uint8_t helvB14r[] U8G_FONT_SECTION("helvB14r");
