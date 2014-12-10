@@ -675,7 +675,9 @@ void main()
 
 	// 08
 	u.font = helvB10r;
-	SetRequestEncoding(true, false, true, requested_encoding);
+	SetRequestEncoding(true, true, true, requested_encoding);
+	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
+	requested_encoding[176] = 1; // 176		°		Degree sign
 	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
 	generateCFile("helvB08r", reduced, r_size, fout);
 

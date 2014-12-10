@@ -1093,6 +1093,7 @@ inline void drawClock()
 		break;
 
 	case CLOCK_STYLE_SIMPLE_GRAPH:
+		display.setFont(helvB08r);
 		drawGraph();
 		break;
 
