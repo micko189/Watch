@@ -77,18 +77,24 @@ BH1750FVI LightSensor;
 //----- Time
 #define UPDATE_TIME_INTERVAL 1000 // 1s
 short adjustedUpdateTimeInterval = UPDATE_TIME_INTERVAL;
+unsigned long prevClockTime = 0;
+unsigned long current_time_milis = 0;
+
 short iYear = 2014;
 byte iMonth = 11;
 byte iDay = 6;
-byte iWeek = 0;    // need to calculate this during setup and on date change
-byte iAmPm = 1;    // need to calculate this during setup and on time change 0:AM, 1:PM
+
 byte iHour = 9;
 byte iMinutes = 0;
 byte iSecond = 0;
+
+byte iWeek = 0;    // need to calculate this during setup and on date change
+byte iAmPm = 1;    // need to calculate this during setup and on time change 0:AM, 1:PM
+
 #define TF_12h 1
 #define TF_24h 2
 byte iTimeFormat = TF_12h; // 1 - 12h, 2 - 24h
-unsigned long prevClockTime = 0;
+
 #define TEMP_GRAPH_LEN 128
 byte tempGraphHi[TEMP_GRAPH_LEN] = { 0 };
 byte tempGraphLo[TEMP_GRAPH_LEN] = { 0 };
@@ -177,8 +183,6 @@ byte setPosition = 0; // position of value currently being set
 
 #define HOUR_COUNT 1 //3600
 
-unsigned long current_time_milis = 0;
-
 char tempSufix[3];
 
 DeviceAddress tempDeviceAddress;
@@ -186,8 +190,6 @@ DeviceAddress tempDeviceAddress;
 #define resolution 12
 
 uint16_t lux;
-
-byte monthOffset = 3;
 
 ///////////////////////////////////
 //----- Arduino setup and loop methods
@@ -848,7 +850,6 @@ void drawGraphLine(byte start, byte end, byte* x, float rescale)
 	}
 }
 
-
 char temperatureMin[6];
 byte offsetMinSuff;
 char temperatureMax[6];
@@ -916,6 +917,8 @@ void drawGraph()
 	drawTemp(15, 60, temperatureMin, offsetMinSuff);
 
 }
+
+byte monthOffset;
 byte daysInM;
 void prepareDrawCalendar()
 {
@@ -993,7 +996,7 @@ void prepareDrawClock()
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
-		//drawClockAnalog(centerX - 30, centerY, iRadius - 4);
+		//drawClockAnalog
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
@@ -1001,7 +1004,7 @@ void prepareDrawClock()
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
-		//drawClockAnalog(centerX - 10, centerY, iRadius);
+		//drawClockAnalog
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawLumens();
 		break;
@@ -1147,7 +1150,6 @@ void drawDay(byte xPos, byte yPos)
 	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(weekString[iWeek])));
 }
 
-
 byte prepareDrawTemp(byte tmpHi, byte tmpLo, char* temperatureStr)
 {
 	byte offset = stoa(tmpHi, temperatureStr);
@@ -1168,7 +1170,7 @@ byte prepareDrawTemp(byte tmpHi, byte tmpLo, char* temperatureStr)
 /// <param name="offsetSuff">The offset suff.</param>
 void drawTemp(byte xPos, byte yPos, char* temperatureStr, byte offsetSuff)
 {
-	display.drawStr(xPos, yPos, temperature);
+	display.drawStr(xPos, yPos, temperatureStr);
 	display.drawStr(xPos + offsetSuff, yPos, tempSufix);
 }
 
@@ -1219,7 +1221,6 @@ void drawLumens(byte xPos, byte yPos)
 {
 	display.drawStr(xPos, yPos, lumens);
 }
-
 
 char seconds[3];
 void prepareDrawSecondsDigital()
