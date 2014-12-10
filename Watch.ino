@@ -85,7 +85,9 @@ byte iAmPm = 1;    // need to calculate this during setup and on time change 0:A
 byte iHour = 9;
 byte iMinutes = 0;
 byte iSecond = 0;
-byte iTimeFormat = 1; // 1 - 12h, 2 - 24h
+#define TF_12h 1
+#define TF_24h 2
+byte iTimeFormat = TF_12h; // 1 - 12h, 2 - 24h
 unsigned long prevClockTime = 0;
 #define TEMP_GRAPH_LEN 128
 byte tempGraphHi[TEMP_GRAPH_LEN] = { 0 };
@@ -333,7 +335,7 @@ void WriteStateEPROM()
 /// </summary>
 void calcAmPm()
 {
-	(iHour > 12) ? iAmPm = 1 : iAmPm = 0;
+	iAmPm = (iHour > 12);
 }
 
 /// <summary>
@@ -1041,7 +1043,7 @@ void drawTimeFormat(byte xPos, byte yPos)
 byte amPmOffset;
 void prepareDrawDayAmPm()
 {
-	if (iTimeFormat == 1) // 1 = 12h, 2 = 24h
+	if (iTimeFormat == TF_12h) // 1 = 12h, 2 = 24h
 	{
 		amPmOffset = display.getStrPixelWidth((const char*)pgm_read_word(&(weekString[iWeek]))) + 2;
 	}
@@ -1055,7 +1057,7 @@ void prepareDrawDayAmPm()
 void drawDayAmPm(byte xPos, byte yPos)
 {
 	drawDay(xPos, yPos);
-	if (iTimeFormat == 1) // 1 = 12h, 2 = 24h
+	if (iTimeFormat == TF_12h) // 1 = 12h, 2 = 24h
 	{
 		display.drawStr(xPos + amPmOffset, yPos, (const char*)pgm_read_word(&(ampmString[iAmPm])));
 	}
@@ -1105,7 +1107,7 @@ void drawTemp(byte xPos, byte yPos)
 char clockDigital[6];
 byte prepareDrawClockDigital()
 {
-	if (iAmPm && iTimeFormat == 1) // 1 = PM && 1 = 12h
+	if (iTimeFormat == TF_12h && iAmPm == 1) // 1 = PM
 	{
 		byteToStr(iHour - 12, clockDigital);
 	}
