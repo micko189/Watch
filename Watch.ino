@@ -556,8 +556,10 @@ static const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
 /// <param name="v">The value.</param>
 /// <param name="dest">The string destination.</param>
 /// <param name="firstIndex">The index in stoa_tab to add 0 character (e.g. if converting 6 with 1, string will be 06).</param>
-void stoa(short v, char * dest, byte firstIndex = 0)
+/// <returns>String length</returns>
+byte stoa(short v, char * dest, byte firstIndex = 0)
 {
+	char * origDest = dest;
 	byte d;
 	short c;
 	for (byte i = 4; i != 255; i--)
@@ -581,6 +583,8 @@ void stoa(short v, char * dest, byte firstIndex = 0)
 	}
 
 	*dest = '\0';
+
+	return dest - origDest;
 }
 
 /// <summary>
@@ -918,6 +922,7 @@ void prepareDrawClock()
 		prepareDrawTemp();
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
+		prepareDrawLumens();
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
@@ -925,11 +930,13 @@ void prepareDrawClock()
 		prepareDrawTemp();
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
+		prepareDrawLumens();
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
 		//drawClockAnalog(centerX - 10, centerY, iRadius);
 		prepareDrawTemp();
+		prepareDrawLumens();
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
@@ -937,6 +944,7 @@ void prepareDrawClock()
 		prepareDrawDateDigital();
 		prepareDrawClockDigital();
 		prepareDrawSecondsDigital();
+		prepareDrawLumens();
 		break;
 
 	case CLOCK_STYLE_SIMPLE_GRAPH:
@@ -956,6 +964,9 @@ inline void drawClock()
 	switch (clockStyle)
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
+		display.setFont(helvB08r);
+		drawLumens(5, 63);
+
 		display.setFont(helvB14r);
 		drawDayAmPm(30, 15);
 
@@ -967,6 +978,9 @@ inline void drawClock()
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
+		display.setFont(helvB08r);
+		drawLumens(5, 63);
+
 		drawClockAnalog(centerX - 30, centerY, iRadius - 4);
 
 		display.setFont(helvB12r);
@@ -980,6 +994,9 @@ inline void drawClock()
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
+		display.setFont(helvB08r);
+		drawLumens(5, 63);
+
 		drawClockAnalog(centerX - 10, centerY, iRadius);
 
 		display.setFont(helvB12r);
@@ -987,6 +1004,9 @@ inline void drawClock()
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
+		display.setFont(helvB08r);
+		drawLumens(5, 63);
+
 		display.setFont(helvB10r);
 		drawDateDigital(40, 12);
 		drawDay(6, 12);
@@ -1110,6 +1130,26 @@ byte drawClockDigital(byte xPos, byte yPos)
 	display.drawStr(xPos, yPos, clockDigital);
 	return display.getStrPixelWidth(clockDigital);
 }
+
+char lumens[7];
+void prepareDrawLumens()
+{
+	byte len = stoa(lux, lumens);
+	lumens[len] = 'l';
+	lumens[++len] = 'm';
+	lumens[++len] = '\0';
+}
+
+/// <summary>
+/// Draws the lumens.
+/// </summary>
+/// <param name="xPos">The x position.</param>
+/// <param name="yPos">The y position.</param>
+void drawLumens(byte xPos, byte yPos)
+{
+	display.drawStr(xPos, yPos, lumens);
+}
+
 
 char seconds[3];
 void prepareDrawSecondsDigital()

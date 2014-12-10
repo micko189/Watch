@@ -76,6 +76,8 @@ void prepareDrawTemp();
 void drawTemp(byte xPos, byte yPos);
 byte prepareDrawClockDigital();
 byte drawClockDigital(byte xPos, byte yPos);
+void prepareDrawLumens();
+void drawLumens(byte xPos, byte yPos);
 void prepareDrawSecondsDigital();
 void drawSecondsDigital(byte xPos, byte yPos);
 void prepareDrawDateDigital();
