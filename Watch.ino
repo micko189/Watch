@@ -98,6 +98,7 @@ float tempAccum = 0;
 
 //----- Strings
 PGM_P const weekString[] PROGMEM = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+PGM_P const dayString[] PROGMEM = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
 PGM_P const ampmString[] PROGMEM = { "AM", "PM" };
 PGM_P const menuItems[] PROGMEM = { "Set format", "Set time", "Set date" };
 PGM_P const timeFormat[] PROGMEM = { "12h", "24h" };
@@ -127,6 +128,7 @@ byte menuMode = MENU_SET_DATE;
 #define CLOCK_STYLE_SIMPLE_MIX			0x3
 #define CLOCK_STYLE_SIMPLE_DIGIT_SEC	0x4
 #define CLOCK_STYLE_SIMPLE_GRAPH		0x5
+#define CLOCK_STYLE_SIMPLE_CALENDAR		0x6
 byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
 
 #define centerX 64
@@ -184,6 +186,8 @@ DeviceAddress tempDeviceAddress;
 #define resolution 12
 
 uint16_t lux;
+
+byte monthOffset = 3;
 
 ///////////////////////////////////
 //----- Arduino setup and loop methods
@@ -681,7 +685,7 @@ inline void prepareDraw()
 		break;
 
 	case DISPLAY_MODE_CLOCK:
-		toggleOption(&clockStyle, 5);
+		toggleOption(&clockStyle, 6);
 		prepareDrawClock();
 		break;
 
@@ -895,6 +899,49 @@ void drawGraph()
 	drawGraphLine(startTempGraphIndex, TEMP_GRAPH_LEN, &xPos, rescale);
 	drawGraphLine(0, startTempGraphIndex, &xPos, rescale);
 }
+byte daysInM;
+void prepareDrawCalendar()
+{
+	monthOffset = iWeek - iDay % 7 + 1;
+	daysInM = getDaysInMonth(iMonth);
+}
+
+/// <summary>
+/// Draws the start up splash screen.
+/// </summary>
+void drawCalendar()
+{
+	byte x, y;
+	byte j, i, dayCnt = 1;
+	for (byte i = 0; i < 6; i++)
+	{
+		x = 5;
+		y = 10;
+		for (j = 0; j < 7; j++)
+		{
+			if (i == 0)
+			{
+				// Daraw days
+				display.drawStr(x, y, (const char*)pgm_read_word(&(dayString[j])));
+				x += 15;
+			}
+			else
+			{
+				if (i == 1 && monthOffset > j ||
+					daysInM < dayCnt)
+				{
+					continue;
+				}
+
+				char day[3];
+				stoa(dayCnt++, day);
+				display.drawStr(x, y, day);
+			}
+		}
+
+		y += 10;
+	}
+}
 
 /// <summary>
 /// Draw the main manu screen.
@@ -951,6 +998,10 @@ void prepareDrawClock()
 
 	case CLOCK_STYLE_SIMPLE_GRAPH:
 		prepareDrawGraph();
+		break;
+
+	case CLOCK_STYLE_SIMPLE_CALENDAR:
+		prepareDrawCalendar();
 		break;
 	}
 }
@@ -1025,7 +1076,11 @@ inline void drawClock()
 
 	case CLOCK_STYLE_SIMPLE_GRAPH:
 		drawGraph();
+		break;
 
+	case CLOCK_STYLE_SIMPLE_CALENDAR:
+		display.setFont(helvB08r);
+		drawCalendar();
 		break;
 	}
 }

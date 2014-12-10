@@ -65,6 +65,8 @@ inline void drawStartUp();
 void drawGraphLine(byte start, byte end, byte* x, float rescale);
 void prepareDrawGraph();
 void drawGraph();
+void prepareDrawCalendar();
+void drawCalendar();
 inline void drawMenu();
 void prepareDrawClock();
 inline void drawClock();
