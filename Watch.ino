@@ -181,6 +181,8 @@ DeviceAddress tempDeviceAddress;
 
 #define resolution 12
 
+uint16_t lux;
+
 ///////////////////////////////////
 //----- Arduino setup and loop methods
 ///////////////////////////////////
@@ -267,7 +269,7 @@ void loop()
 					hourCount = 0;
 				}
 
-				uint16_t lux = LightSensor.GetLightIntensity();// Get Lux value
+				lux = LightSensor.GetLightIntensity();// Get Lux value
 				Serial.println(lux);
 
 				//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)

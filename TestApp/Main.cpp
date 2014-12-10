@@ -673,6 +673,12 @@ void main()
 	uint16_t r_size = 0;
 	u8g_t u;
 
+	// 08
+	u.font = helvB10r;
+	SetRequestEncoding(true, false, true, requested_encoding);
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvB08r", reduced, r_size, fout);
+
 	// 10
 	u.font = helvB10r;
 	SetRequestEncoding(true, true, true, requested_encoding);
