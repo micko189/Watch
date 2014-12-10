@@ -848,6 +848,12 @@ void drawGraphLine(byte start, byte end, byte* x, float rescale)
 	}
 }
 
+
+char temperatureMin[6];
+byte offsetMinSuff;
+char temperatureMax[6];
+byte offsetMaxSuff;
+
 float yCoord;
 byte yScaleCount;
 float rescale;
@@ -856,6 +862,11 @@ void prepareDrawGraph()
 	findMaxMin();
 	minTemp = hiLoToFloat(minHi, minLo);
 	float diff = hiLoToFloat(maxHi, maxLo) - minTemp;
+	if (diff < 0.5)
+	{
+		diff = 0.5;
+	}
+
 	rescale = 64.0 / diff;
 
 	// draw scale
@@ -874,6 +885,9 @@ void prepareDrawGraph()
 
 	yCoord = hiLoToFloat(startValHi, startValLo);
 	yScaleCount = diff / 0.5;
+
+	offsetMinSuff = prepareDrawTemp(minHi, minLo, temperatureMin);
+	offsetMaxSuff = prepareDrawTemp(maxHi, maxLo, temperatureMax);
 }
 
 /// <summary>
@@ -898,6 +912,9 @@ void drawGraph()
 
 	drawGraphLine(startTempGraphIndex, TEMP_GRAPH_LEN, &xPos, rescale);
 	drawGraphLine(0, startTempGraphIndex, &xPos, rescale);
+	drawTemp(15, 10, temperatureMax, offsetMaxSuff);
+	drawTemp(15, 60, temperatureMin, offsetMinSuff);
+
 }
 byte daysInM;
 void prepareDrawCalendar()
@@ -962,13 +979,14 @@ inline void drawMenu()
 
 	display.drawFrame(9, 5 + (menuMode - 1) * 20, w + 2, h + 2);
 }
-
+char temperature[6];
+byte offsetSuffix;
 void prepareDrawClock()
 {
 	switch (clockStyle)
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
-		prepareDrawTemp();
+		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
 		prepareDrawLumens();
@@ -976,7 +994,7 @@ void prepareDrawClock()
 
 	case CLOCK_STYLE_SIMPLE_MIX:
 		//drawClockAnalog(centerX - 30, centerY, iRadius - 4);
-		prepareDrawTemp();
+		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
 		prepareDrawLumens();
@@ -984,12 +1002,12 @@ void prepareDrawClock()
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
 		//drawClockAnalog(centerX - 10, centerY, iRadius);
-		prepareDrawTemp();
+		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawLumens();
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
-		prepareDrawTemp();
+		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawDateDigital();
 		prepareDrawClockDigital();
 		prepareDrawSecondsDigital();
@@ -1027,7 +1045,7 @@ inline void drawClock()
 		drawClockDigital(35, 38);
 
 		display.setFont(helvB12r);
-		drawTemp(80, 63);
+		drawTemp(80, 63, temperature, offsetSuffix);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
@@ -1043,7 +1061,7 @@ inline void drawClock()
 		drawClockDigital(61, 45);
 
 		display.setFont(helvB12r);
-		drawTemp(80, 63);
+		drawTemp(80, 63, temperature, offsetSuffix);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
@@ -1053,7 +1071,7 @@ inline void drawClock()
 		drawClockAnalog(centerX - 10, centerY, iRadius);
 
 		display.setFont(helvB12r);
-		drawTemp(80, 63);
+		drawTemp(80, 63, temperature, offsetSuffix);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
@@ -1071,7 +1089,7 @@ inline void drawClock()
 		drawSecondsDigital(14 + offset + 2, 45);
 
 		display.setFont(helvB12r);
-		drawTemp(80, 63);
+		drawTemp(80, 63, temperature, offsetSuffix);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_GRAPH:
@@ -1128,22 +1146,16 @@ void drawDay(byte xPos, byte yPos)
 	display.drawStr(xPos, yPos, (const char*)pgm_read_word(&(weekString[iWeek])));
 }
 
-char temperatureHi[3];
-char temperatureLo[3];
-byte offsetHi;
-byte offsetDot;
-byte offsetLo;
-void prepareDrawTemp()
+
+byte prepareDrawTemp(byte tmpHi, byte tmpLo, char* temperatureStr)
 {
-	stoa(tempHi, temperatureHi);
+	byte offset = stoa(tmpHi, temperatureStr);
 
-	offsetHi = display.getStrPixelWidth(temperatureHi) + 1;
+	temperatureStr[offset] = '.';
 
-	offsetDot = display.getStrPixelWidth(".") + 1;
+	byteToStr(tmpLo, temperatureStr + offset + 1);
 
-	byteToStr(tempLo, temperatureLo);
-
-	offsetLo = offsetDot + display.getStrPixelWidth(temperatureLo) + 1;
+	return display.getStrPixelWidth(temperatureStr) + 1;
 }
 
 /// <summary>
@@ -1151,12 +1163,12 @@ void prepareDrawTemp()
 /// </summary>
 /// <param name="xPos">The x position.</param>
 /// <param name="yPos">The y position.</param>
-void drawTemp(byte xPos, byte yPos)
+/// <param name="temperatureStr">The temperature string.</param>
+/// <param name="offsetSuff">The offset suff.</param>
+void drawTemp(byte xPos, byte yPos, char* temperatureStr, byte offsetSuff)
 {
-	display.drawStr(xPos - offsetHi, yPos, temperatureHi);
-	display.drawStr(xPos, yPos, ".");
-	display.drawStr(xPos + offsetDot, yPos, temperatureLo);
-	display.drawStr(xPos + offsetLo, yPos, tempSufix);
+	display.drawStr(xPos, yPos, temperature);
+	display.drawStr(xPos + offsetSuff, yPos, tempSufix);
 }
 
 char clockDigital[6];
