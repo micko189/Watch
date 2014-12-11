@@ -45,12 +45,16 @@ typedef unsigned long long int uint64_t;
 
 typedef uint8_t u8g_pgm_uint8_t;
 typedef uint8_t u8g_fntpgm_uint8_t;
+typedef uint8_t u8g_uint_t;
+typedef int8_t u8g_int_t;
 
 #define u8g_pgm_read (uint8_t)*
 
 #define U8G_FONT_SECTION(x) 
 
 #define U8G_FONT_DATA_STRUCT_SIZE 17
+
+#define U8G_ALWAYS_INLINE
 
 /* helvreducedfont */
 

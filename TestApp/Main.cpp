@@ -303,6 +303,14 @@ size_t u8g_font_GetSize(const u8g_fntpgm_uint8_t *font)
 	return p - (uint8_t *)font;
 }
 
+
+typedef u8g_uint_t(*u8g_font_calc_vref_fnptr)(void *u8g);
+
+struct u8g_box_t
+{
+	u8g_uint_t x0, y0, x1, y1;
+};
+
 struct u8g_t
 {
 	int8_t glyph_dx;
@@ -311,7 +319,21 @@ struct u8g_t
 	uint8_t glyph_width;
 	uint8_t glyph_height;
 	const u8g_pgm_uint8_t *font;             /* regular font for all text procedures */
+	u8g_font_calc_vref_fnptr font_calc_vref;
+
+	u8g_box_t current_page;		/* current box of the visible page */
 };
+
+
+u8g_uint_t u8g_font_calc_vref_font(u8g_t *u8g)
+{
+	return 0;
+}
+
+void u8g_SetFontPosBaseline(u8g_t *u8g)
+{
+	u8g->font_calc_vref = (u8g_font_calc_vref_fnptr)u8g_font_calc_vref_font;
+}
 
 /*========================================================================*/
 /* u8g interface, font access */
@@ -485,6 +507,153 @@ u8g_glyph_t u8g_GetGlyph(u8g_t *u8g, uint8_t requested_encoding)
 	u8g_FillEmptyGlyphCache(u8g);
 
 	return NULL;
+}
+//static uint8_t u8g_is_intersection_decision_tree(u8g_uint_t a0, u8g_uint_t a1, u8g_uint_t v0, u8g_uint_t v1) U8G_ALWAYS_INLINE;
+static uint8_t U8G_ALWAYS_INLINE u8g_is_intersection_decision_tree(u8g_uint_t a0, u8g_uint_t a1, u8g_uint_t v0, u8g_uint_t v1)
+{
+	return 1;
+	/* surprisingly the macro leads to larger code */
+	/* return U8G_IS_INTERSECTION_MACRO(a0,a1,v0,v1); */
+	if (v0 <= a1)
+	{
+		if (v1 >= a0)
+		{
+			return 1;
+		}
+		else
+		{
+			if (v0 > v1)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		if (v1 >= a0)
+		{
+			if (v0 > v1)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			return 0;
+		}
+	}
+}
+
+
+uint8_t u8g_IsBBXIntersection(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint_t h)
+{
+	register u8g_uint_t tmp;
+	tmp = y;
+	tmp += h;
+	tmp--;
+	if (u8g_is_intersection_decision_tree(u8g->current_page.y0, u8g->current_page.y1, y, tmp) == 0)
+		return 0;
+
+	tmp = x;
+	tmp += w;
+	tmp--;
+	return u8g_is_intersection_decision_tree(u8g->current_page.x0, u8g->current_page.x1, x, tmp);
+}
+
+/* return the data start for a font and the glyph pointer */
+static uint8_t *u8g_font_GetGlyphDataStart(const void *font, u8g_glyph_t g)
+{
+	return ((u8g_fntpgm_uint8_t *)g) + u8g_font_GetFontGlyphStructureSize((const u8g_fntpgm_uint8_t *)font);
+}
+
+#include <windows.h>
+void GotoXY(byte x, byte y)
+{
+	COORD coord;
+	coord.X = x;
+	coord.Y = y;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+void printPixel(byte x, byte y)
+{
+	GotoXY(x, y);
+	printf("%c", 178);
+}
+
+void u8g_Draw8Pixel(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, uint8_t dir, uint8_t pixel)
+{
+	byte mask = 0x80;
+	for (size_t i = 0; i < 8; i++)
+	{
+		if (pixel & mask)
+		{
+			printPixel(x + i, y);
+		}
+
+		mask = mask >> 1;
+	}
+	
+}
+
+int8_t u8g_draw_glyph(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, uint8_t encoding)
+{
+	const u8g_pgm_uint8_t *data;
+	uint8_t w, h;
+	uint8_t i, j;
+	u8g_uint_t ix, iy;
+
+	{
+		u8g_glyph_t g = u8g_GetGlyph(u8g, encoding);
+		if (g == NULL)
+			return 0;
+		data = u8g_font_GetGlyphDataStart(u8g->font, g);
+	}
+
+	w = u8g->glyph_width;
+	h = u8g->glyph_height;
+
+	x += u8g->glyph_x;
+	y -= u8g->glyph_y;
+	y--;
+
+	if (u8g_IsBBXIntersection(u8g, x, y - h + 1, w, h) == 0)
+		return u8g->glyph_dx;
+
+	/* now, w is reused as bytes per line */
+	w += 7;
+	w /= 8;
+
+	iy = y;
+	iy -= h;
+	iy++;
+
+	for (j = 0; j < h; j++)
+	{
+		ix = x;
+		for (i = 0; i < w; i++)
+		{
+			u8g_Draw8Pixel(u8g, ix, iy, 0, u8g_pgm_read(data));
+			data++;
+			ix += 8;
+		}
+		iy++;
+	}
+	return u8g->glyph_dx;
+}
+
+int8_t u8g_DrawGlyph(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, uint8_t encoding)
+{
+	y += 0;//u8g->font_calc_vref(u8g);
+	return u8g_draw_glyph(u8g, x, y, encoding);
 }
 
 uint16_t u8g_CreateReduced(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[])
@@ -678,31 +847,24 @@ void prepareDrawCalendar()
 #define pgm_read_word(x) *(x)
 const char* dayString[] = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
 
-#include <windows.h>
-void GotoXY(byte x, byte y)
-{
-	COORD coord;
-	coord.X = x;
-	coord.Y = y;
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-}
-
-void print(byte x, byte y, const char* s)
-{
 
 
-	GotoXY(x, y);
-	printf("%s", s);
-
-
-}
 
 class Display
 {
 public:
+	u8g_t u;
+public:
 	void drawStr(byte x, byte y, const char* s)
 	{
-		print(x, y, s);
+		int8_t g_dx = 0;
+		while (*s != '\0')
+		{
+			 g_dx = u8g_DrawGlyph(&u, x, y, *s);
+			 x += g_dx;
+			 s++;
+		}
+		
 	}
 };
 
@@ -736,7 +898,7 @@ void drawCalendar()
 				}
 			}
 
-			x += 15;
+			x += 17;
 		}
 
 		y += 10;
@@ -750,6 +912,8 @@ void main()
 	prepareDrawLumens();
 	calcDayOfWeek();
 	prepareDrawCalendar();
+
+	display.u.font = helvB08r;
 	drawCalendar();
 
 	uint8_t requested_encoding[256] = { 0 };
