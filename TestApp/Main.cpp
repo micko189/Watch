@@ -795,7 +795,7 @@ void main()
 	u8g_t u;
 
 	// 08
-	u.font = helvB10r;
+	u.font = helvB08r;
 	SetRequestEncoding(true, true, true, requested_encoding);
 	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
 	requested_encoding[176] = 1; // 176		°		Degree sign
@@ -827,6 +827,7 @@ void main()
 
 	// close file
 	fout.close();
+
 
 	u.font = reduced;
 	u8g_GetGlyph(&u, 46);
