@@ -35,7 +35,6 @@ boolean isLeapYear(short year)
 	return ((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0));
 }
 
-
 byte dayInM(byte month)
 {
 	byte odd = month % 2;
@@ -116,7 +115,6 @@ void calcDayOfWeek()
 	iWeek = days % 7;
 }
 
-
 #define SHORT_CHAR_COUNT 5
 static const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
 /// <summary>
@@ -153,9 +151,6 @@ byte stoa(short v, char * dest, byte firstIndex = 0)
 
 	return dest - origDest;
 }
-
-
-
 
 u8g_fntpgm_uint8_t reduced[8 * 1024] = { 0 };
 
@@ -269,7 +264,6 @@ int8_t u8g_font_GetFontXDescent(const u8g_fntpgm_uint8_t *font)
 {
 	return u8g_font_get_byte(font, 16);
 }
-
 
 /* calculate the overall length of the font, only used to create the picture for the google wiki */
 size_t u8g_font_GetSize(const u8g_fntpgm_uint8_t *font)
@@ -405,7 +399,6 @@ static void u8g_CopyGlyphDataToCache(u8g_t *u8g, u8g_glyph_t g)
 		tmp >>= 4;
 		u8g->glyph_dx = tmp;
 
-
 		break;
 	}
 }
@@ -419,8 +412,6 @@ static void u8g_FillEmptyGlyphCache(u8g_t *u8g)
 	u8g->glyph_x = 0;
 	u8g->glyph_y = 0;
 }
-
-uint8_t startF, endF;
 
 /*
 Find (with some speed optimization) and return a pointer to the glyph data structure
@@ -439,8 +430,8 @@ u8g_glyph_t u8g_GetGlyph(u8g_t *u8g, uint8_t requested_encoding)
 	if (font_format == 1)
 		mask = 15;
 
-	startF = start = u8g_font_GetFontStartEncoding(u8g->font);
-	endF = end = u8g_font_GetFontEndEncoding(u8g->font);
+	start = u8g_font_GetFontStartEncoding(u8g->font);
+	end = u8g_font_GetFontEndEncoding(u8g->font);
 
 	pos = u8g_font_GetEncoding97Pos(u8g->font);
 	if (requested_encoding >= 97 && pos > 0)
@@ -496,11 +487,9 @@ u8g_glyph_t u8g_GetGlyph(u8g_t *u8g, uint8_t requested_encoding)
 	return NULL;
 }
 
-
 uint16_t u8g_CreateReduced(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[])
 {
 	uint8_t *r = (uint8_t *)(red);
-
 	uint8_t *p = (uint8_t *)(u8g->font);
 	uint8_t font_format = u8g_font_GetFormat(u8g->font);
 	uint8_t data_structure_size = u8g_font_GetFontGlyphStructureSize(u8g->font);
@@ -518,30 +507,8 @@ uint16_t u8g_CreateReduced(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[
 	// Copy header
 	memcpy(r, p, U8G_FONT_DATA_STRUCT_SIZE);
 
-	//pos = u8g_font_GetEncoding97Pos(u8g->font);
-	//if (requested_encoding >= 97 && pos > 0)
-	//{
-	//	p += pos;
-	//	start = 97;
-	//}
-	//else
-	//{
-	//	pos = u8g_font_GetEncoding65Pos(u8g->font);
-	//	if (requested_encoding >= 65 && pos > 0)
-	//	{
-	//		p += pos;
-	//		start = 65;
-	//	}
-	//	else
-			p += U8G_FONT_DATA_STRUCT_SIZE;       /* skip font general information */
-			r += U8G_FONT_DATA_STRUCT_SIZE;       /* skip font general information */
-	//}
-
-	//if (requested_encoding > end)
-	//{
-	//	u8g_FillEmptyGlyphCache(u8g);
-	//	return NULL;                      /* not found */
-	//}
+	p += U8G_FONT_DATA_STRUCT_SIZE;       /* skip font general information */
+	r += U8G_FONT_DATA_STRUCT_SIZE;       /* skip font general information */
 
 	uint16_t pos65 = 0;
 	uint16_t pos97 = 0;
@@ -555,9 +522,8 @@ uint16_t u8g_CreateReduced(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[
 			{
 				pos65 = r - red;
 
-				*(red + 6) = (pos65 & 0xFF00)>>8;
+				*(red + 6) = (pos65 & 0xFF00) >> 8;
 				*(red + 7) = pos65 & 0xFF;
-
 			}
 
 			if (i == 97)
@@ -585,7 +551,6 @@ uint16_t u8g_CreateReduced(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[
 
 					r += u8g_pgm_read(((u8g_pgm_uint8_t *)(p)) + 2) & mask;
 					r += data_structure_size;
-					//return p;
 				}
 				else
 				{
@@ -602,8 +567,6 @@ uint16_t u8g_CreateReduced(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[
 			i++;
 		}
 	}
-
-	//u8g_FillEmptyGlyphCache(u8g);
 
 	return r - red;
 }
@@ -728,7 +691,7 @@ void print(byte x, byte y, const char* s)
 {
 
 
-	GotoXY( x, y);
+	GotoXY(x, y);
 	printf("%s", s);
 
 
