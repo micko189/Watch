@@ -935,30 +935,28 @@ void drawCalendar()
 {
 	byte x, y;
 	byte j, i, dayCnt = 1;
+	y = 10;
 	for (byte i = 0; i < 6; i++)
 	{
 		x = 5;
-		y = 10;
 		for (j = 0; j < 7; j++)
 		{
 			if (i == 0)
 			{
 				// Daraw days
 				display.drawStr(x, y, (const char*)pgm_read_word(&(dayString[j])));
-				x += 15;
 			}
 			else
 			{
-				if (i == 1 && monthOffset > j ||
-					daysInM < dayCnt)
+				if (!(i == 1 && monthOffset > j) && dayCnt <= daysInM)
 				{
-					continue;
+					char day[3];
+					stoa(dayCnt++, day);
+					display.drawStr(x, y, day);
 				}
-
-				char day[3];
-				stoa(dayCnt++, day);
-				display.drawStr(x, y, day);
 			}
+
+			x += 15;
 		}
 
 		y += 10;
@@ -1050,7 +1048,7 @@ inline void drawClock()
 		drawClockDigital(35, 38);
 
 		display.setFont(helvB12r);
-		drawTemp(80, 63, temperature, offsetSuffix);
+		drawTemp(60, 63, temperature, offsetSuffix);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
@@ -1066,7 +1064,7 @@ inline void drawClock()
 		drawClockDigital(61, 45);
 
 		display.setFont(helvB12r);
-		drawTemp(80, 63, temperature, offsetSuffix);
+		drawTemp(60, 63, temperature, offsetSuffix);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
@@ -1076,7 +1074,7 @@ inline void drawClock()
 		drawClockAnalog(centerX - 10, centerY, iRadius);
 
 		display.setFont(helvB12r);
-		drawTemp(80, 63, temperature, offsetSuffix);
+		drawTemp(60, 63, temperature, offsetSuffix);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
@@ -1094,7 +1092,7 @@ inline void drawClock()
 		drawSecondsDigital(14 + offset + 2, 45);
 
 		display.setFont(helvB12r);
-		drawTemp(80, 63, temperature, offsetSuffix);
+		drawTemp(60, 63, temperature, offsetSuffix);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_GRAPH:

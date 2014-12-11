@@ -19,7 +19,7 @@ const byte daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 
 short iYear = 2014;
 byte iMonth = 12;
-byte iDay = 2;
+byte iDay = 11;
 byte iWeek = 0;    // 1: SUN, MON, TUE, WED, THU, FRI,SAT // need to calculate this
 
 const short firstYear = 2000; //This is our start point
@@ -124,11 +124,11 @@ static const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
 /// </summary>
 /// <param name="v">The value.</param>
 /// <param name="dest">The string destination.</param>
-void stoa(short v, char * dest)
+byte stoa(short v, char * dest, byte firstIndex = 0)
 {
+	char * origDest = dest;
 	byte d;
 	short c;
-	byte firstIndex = 1;
 	for (byte i = 4; i != 255; i--)
 	{
 		c = stoa_tab[i];
@@ -150,6 +150,8 @@ void stoa(short v, char * dest)
 	}
 
 	*dest = '\0';
+
+	return dest - origDest;
 }
 
 
@@ -665,9 +667,128 @@ void SetRequestEncoding(bool digits, bool uppercase, bool lovercase, uint8_t* re
 	}
 }
 
+void byteToStr(byte value, char* s)
+{
+	stoa(value, s, 1);
+}
+
+byte getStrPixelWidth(char* s)
+{
+	return strlen(s);
+}
+
+byte prepareDrawTemp(byte tmpHi, byte tmpLo, char* temperatureStr)
+{
+	byte offset = stoa(tmpHi, temperatureStr);
+
+	temperatureStr[offset] = '.';
+
+	byteToStr(tmpLo, temperatureStr + offset + 1);
+
+	return getStrPixelWidth(temperatureStr) + 1;
+}
+
+short lux = 1234;
+char lumens[7];
+void prepareDrawLumens()
+{
+	byte len = stoa(lux, lumens);
+	lumens[len] = 'l';
+	lumens[++len] = 'm';
+	lumens[++len] = '\0';
+}
+
+byte minHi = 7;
+byte minLo = 5;
+char temperatureMin[6];
+byte offsetMinSuff;
+
+
+byte monthOffset;
+byte daysInM;
+void prepareDrawCalendar()
+{
+	monthOffset = iWeek - iDay % 7 + 1;
+	daysInM = getDaysInMonth(iMonth);
+}
+
+#define pgm_read_word(x) *(x)
+const char* dayString[] = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
+
+#include <windows.h>
+void GotoXY(byte x, byte y)
+{
+	COORD coord;
+	coord.X = x;
+	coord.Y = y;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+void print(byte x, byte y, const char* s)
+{
+
+
+	GotoXY( x, y);
+	printf("%s", s);
+
+
+}
+
+class Display
+{
+public:
+	void drawStr(byte x, byte y, const char* s)
+	{
+		print(x, y, s);
+	}
+};
+
+static Display display;
+
+/// <summary>
+/// Draws the start up splash screen.
+/// </summary>
+void drawCalendar()
+{
+	byte x, y;
+	byte j, i, dayCnt = 1;
+	y = 10;
+	for (byte i = 0; i < 6; i++)
+	{
+		x = 5;
+		for (j = 0; j < 7; j++)
+		{
+			if (i == 0)
+			{
+				// Daraw days
+				display.drawStr(x, y, (const char*)pgm_read_word(&(dayString[j])));
+			}
+			else
+			{
+				if (!(i == 1 && monthOffset > j) && dayCnt <= daysInM)
+				{
+					char day[3];
+					stoa(dayCnt++, day);
+					display.drawStr(x, y, day);
+				}
+			}
+
+			x += 15;
+		}
+
+		y += 10;
+	}
+}
 
 void main()
 {
+	offsetMinSuff = prepareDrawTemp(minHi, minLo, temperatureMin);
+
+	prepareDrawLumens();
+	calcDayOfWeek();
+	prepareDrawCalendar();
+	drawCalendar();
+
 	uint8_t requested_encoding[256] = { 0 };
 	ofstream fout("helvBr_gen.c");
 	uint16_t r_size = 0;
