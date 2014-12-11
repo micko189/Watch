@@ -589,6 +589,12 @@ void printPixel(byte x, byte y)
 	printf("%c", 178);
 }
 
+void clearPixel(byte x, byte y)
+{
+	GotoXY(x, y);
+	printf("%c", ' ');
+}
+
 void u8g_Draw8Pixel(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, uint8_t dir, uint8_t pixel)
 {
 	byte mask = 0x80;
@@ -866,6 +872,33 @@ public:
 		}
 		
 	}
+
+	void setFont(const u8g_fntpgm_uint8_t *font)
+	{
+		u.font = font;
+	}
+
+	void drawPixel(u8g_uint_t x, u8g_uint_t y)
+	{
+		printPixel(x, y);
+	}
+
+	void firstPage(void) 
+	{
+		for (size_t x = 0; x < 128; x++)
+		{
+			for (size_t y = 0; y < 64; y++)
+			{
+				clearPixel(x, y);
+			}
+		}
+		
+	}
+
+	uint8_t nextPage(void)
+	{
+		return 0;
+	}
 };
 
 static Display display;
@@ -915,6 +948,8 @@ void main()
 
 	display.u.font = helvB08r;
 	drawCalendar();
+
+	display.firstPage();
 
 	uint8_t requested_encoding[256] = { 0 };
 	ofstream fout("helvBr_gen.c");
