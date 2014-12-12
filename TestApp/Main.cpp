@@ -1107,9 +1107,10 @@ void digitalWrite(uint8_t, uint8_t)
 {
 
 }
-int digitalRead(uint8_t)
+byte pins[10] = { 1,1,1,1,1,1,1,1,1,1 };
+int digitalRead(uint8_t pin)
 {
-	return 1;
+	return pins[pin];
 }
 
 #include "Watch.ino"
@@ -1134,6 +1135,7 @@ void GenerateReducedFontsCFile()
 	// 10
 	u.font = helvB10r;
 	SetRequestEncoding(true, true, true, requested_encoding);
+	requested_encoding[32] = 1; // 32		 	 	Space
 	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
 	requested_encoding[47] = 1; // 47		/	 	Slash or divide
 	requested_encoding[56] = 1; // 58		:	 	Colon
@@ -1169,9 +1171,9 @@ void main()
 		if (kbhit())
 		{
  			int ch = getch();
-			clockStyle++;
-			if (clockStyle > 6)
-				clockStyle = 1;
+			int i = ch - 48;
+			if (i >= 5 && i<=8 )
+				pins[i] = !pins[i];
 		} 
 	}
 }

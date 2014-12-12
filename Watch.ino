@@ -122,7 +122,7 @@ PGM_P const timeFormat[] PROGMEM = { "12h", "24h" };
 #define DISPLAY_MODE_CLOCK				0x2
 #define DISPLAY_MODE_MENU				0x3
 #define DISPLAY_MODE_SET_MENU			0x4
-byte displayMode = DISPLAY_MODE_CLOCK;
+byte displayMode = DISPLAY_MODE_START_UP;
 
 #define MENU_SET_TIME_FORMAT			0x1
 #define MENU_SET_TIME					0x2
