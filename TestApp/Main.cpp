@@ -165,7 +165,6 @@ size_t u8g_font_GetSize(const u8g_fntpgm_uint8_t *font)
 	return p - (uint8_t *)font;
 }
 
-
 struct u8g_box_t
 {
 	u8g_uint_t x0, y0, x1, y1;
@@ -180,7 +179,7 @@ struct u8g_t
 	uint8_t glyph_height;
 	const u8g_pgm_uint8_t *font;             /* regular font for all text procedures */
 
-typedef u8g_uint_t(*u8g_font_calc_vref_fnptr)(u8g_t *u8g);
+	typedef u8g_uint_t(*u8g_font_calc_vref_fnptr)(u8g_t *u8g);
 	u8g_font_calc_vref_fnptr font_calc_vref;
 
 	int8_t font_ref_ascent;
@@ -191,7 +190,6 @@ typedef u8g_uint_t(*u8g_font_calc_vref_fnptr)(u8g_t *u8g);
 	uint8_t screenBuffNew[128][64];
 	uint8_t screenBuffOld[128][64];
 };
-
 
 u8g_uint_t u8g_font_calc_vref_font(u8g_t *u8g)
 {
@@ -480,7 +478,7 @@ void u8g_Draw8Pixel(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, uint8_t dir, uint8_t
 
 		mask = mask >> 1;
 	}
-	
+
 }
 
 int8_t u8g_draw_glyph(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, uint8_t encoding)
@@ -898,11 +896,11 @@ public:
 		int8_t g_dx = 0;
 		while (*s != '\0')
 		{
-			 g_dx = u8g_DrawGlyph(&u, x, y, *s);
-			 x += g_dx;
-			 s++;
+			g_dx = u8g_DrawGlyph(&u, x, y, *s);
+			x += g_dx;
+			s++;
 		}
-		
+
 	}
 
 	void setFont(const u8g_fntpgm_uint8_t *font)
@@ -915,10 +913,10 @@ public:
 		setPixel(&u, x, y);
 	}
 
-	void firstPage(void) 
+	void firstPage(void)
 	{
 		memcpy(u.screenBuffOld, u.screenBuffNew, 128 * 64);
-		memset(u.screenBuffNew, 0, 128 * 64);	
+		memset(u.screenBuffNew, 0, 128 * 64);
 	}
 
 	uint8_t nextPage(void)

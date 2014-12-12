@@ -81,8 +81,8 @@ unsigned long prevClockTime = 0;
 unsigned long current_time_milis = 0;
 
 short iYear = 2014;
-byte iMonth = 11;
-byte iDay = 6;
+byte iMonth = 12;
+byte iDay = 12;
 
 byte iHour = 9;
 byte iMinutes = 0;
@@ -135,7 +135,7 @@ byte menuMode = MENU_SET_DATE;
 #define CLOCK_STYLE_SIMPLE_DIGIT_SEC	0x4
 #define CLOCK_STYLE_SIMPLE_GRAPH		0x5
 #define CLOCK_STYLE_SIMPLE_CALENDAR		0x6
-byte clockStyle = CLOCK_STYLE_SIMPLE_GRAPH;
+byte clockStyle = CLOCK_STYLE_SIMPLE_CALENDAR;
 
 #define centerX 64
 #define centerY 32
@@ -923,7 +923,7 @@ byte monthOffset;
 byte daysInM;
 void prepareDrawCalendar()
 {
-	monthOffset = iWeek - iDay % 7 + 1;
+	monthOffset = ((iWeek - iDay % 7 + 1) + 7) % 7;
 	daysInM = getDaysInMonth(iMonth);
 }
 
@@ -955,7 +955,13 @@ void drawCalendar()
 				}
 			}
 
-			x += 15;
+			x += 17;
+		}
+
+		if (i == 0)
+		{
+			y++;
+			display.drawHLine(2, y++, 124);
 		}
 
 		y += 10;
