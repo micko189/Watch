@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdlib.h>  
 #include <stdio.h>
+#include <conio.h>
 #include <string.h>
 #include <fstream>
 #include <iostream>
@@ -1165,6 +1166,13 @@ void main()
 	for (;;)
 	{
 		loop();
+		if (kbhit())
+		{
+ 			int ch = getch();
+			clockStyle++;
+			if (clockStyle > 6)
+				clockStyle = 1;
+		} 
 	}
 }
 

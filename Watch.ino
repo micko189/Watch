@@ -135,7 +135,7 @@ byte menuMode = MENU_SET_DATE;
 #define CLOCK_STYLE_SIMPLE_DIGIT_SEC	0x4
 #define CLOCK_STYLE_SIMPLE_GRAPH		0x5
 #define CLOCK_STYLE_SIMPLE_CALENDAR		0x6
-byte clockStyle = CLOCK_STYLE_SIMPLE_CALENDAR;
+byte clockStyle = CLOCK_STYLE_SIMPLE_ANALOG;
 
 #define centerX 64
 #define centerY 32
@@ -996,6 +996,7 @@ void prepareDrawClock()
 	case CLOCK_STYLE_SIMPLE_DIGIT:
 		display.setFont(helvB12r);
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
+		display.setFont(helvB14r);
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
 		prepareDrawLumens();
