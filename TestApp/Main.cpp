@@ -906,7 +906,10 @@ public:
 
 	void setFont(const u8g_fntpgm_uint8_t *font)
 	{
+		if (u.font != font)
+			u.font_calc_vref = u8g_font_calc_vref_font;
 		u.font = font;
+		
 	}
 
 	void drawPixel(u8g_uint_t x, u8g_uint_t y)
@@ -937,7 +940,7 @@ public:
 			}
 		}
 
-		u.font_calc_vref = u8g_font_calc_vref_font;
+		//u.font_calc_vref = u8g_font_calc_vref_font;
 
 		return 0;
 	}
