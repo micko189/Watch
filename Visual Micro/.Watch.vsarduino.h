@@ -76,7 +76,7 @@ void drawDayAmPm(byte xPos, byte yPos);
 void drawDay(byte xPos, byte yPos);
 byte prepareDrawTemp(byte tmpHi, byte tmpLo, char* temperatureStr);
 void drawTemp(byte xPos, byte yPos, char* temperatureStr, byte offsetSuff);
-byte prepareDrawClockDigital();
+void prepareDrawClockDigital();
 byte drawClockDigital(byte xPos, byte yPos);
 void prepareDrawLumens();
 void drawLumens(byte xPos, byte yPos);

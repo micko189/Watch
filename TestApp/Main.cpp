@@ -1,8 +1,11 @@
+#include <windows.h>
 #include <stdlib.h>  
 #include <stdio.h>
 #include <string.h>
 #include <fstream>
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 #include "u8g.h"
 #include "..\FontsBDFgen\helvBr.c"
@@ -14,151 +17,11 @@ typedef unsigned char boolean;
 #define HIGH 1
 #define LOW 0
 
-const char* weekString[7] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-const byte daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; //standard year
-
-short iYear = 2014;
-byte iMonth = 12;
-byte iDay = 11;
-byte iWeek = 0;    // 1: SUN, MON, TUE, WED, THU, FRI,SAT // need to calculate this
-
-const short firstYear = 2000; //This is our start point
-const byte dayOffset = 6 - 1; //The first day of our start year may not be a Sunday ( in 2000 it was Sat)
-
-/// <summary>
-/// Determines whether [is leap year] [the specified year].
-/// </summary>
-/// <param name="year">The year.</param>
-/// <returns>Is leap year</returns>
-boolean isLeapYear(short year)
-{
-	return ((year % 4) == 0) && (((year % 100) != 0) || ((year % 400) == 0));
-}
-
-byte dayInM(byte month)
-{
-	byte odd = month % 2;
-
-	if (month > 7)
-	{
-		odd = !odd;
-	}
-
-	return 30 + odd;
-}
-
-/// <summary>
-/// Gets the days in month.
-/// </summary>
-/// <param name="month">The month.</param>
-/// <returns>Days in month</returns>
-byte getDaysInMonth(byte month)
-{
-	if (month != 2)
-	{
-		return daysInMonth[month];
-	}
-	else // feb
-	{
-		return (isLeapYear(iYear)) ? 29 : 28;
-	}
-}
-
-byte getDaysInMonth2(byte month)
-{
-	if (month != 2)
-	{
-		return dayInM(month);
-	}
-	else // feb
-	{
-		return 28 + (isLeapYear(iYear));
-	}
-}
-
-/// <summary>
-/// Gets the days passed in year.
-/// </summary>
-/// <returns>Days passed in year</returns>
-inline short daysPassedInYear()
-{
-	short passed = 0;
-	for (byte i = 1; i < iMonth; i++)
-	{
-		passed += getDaysInMonth(i);
-	}
-
-	return passed + iDay;  // Adjust days passed in current month
-}
-
-/// <summary>
-/// Calculates the day of week index.
-/// </summary>
-/// <returns>The day of week index.</returns>
-void calcDayOfWeek()
-{
-	short days = dayOffset;
-
-	// Calculates basic number of days passed 
-	days += (iYear - firstYear) * 365;
-	days += daysPassedInYear();
-
-	// Add on the extra leapdays for past years
-	for (short i = firstYear; i < iYear; i += 4)
-	{
-		if (isLeapYear(i))
-		{
-			days++;
-		}
-	}
-
-	iWeek = days % 7;
-}
-
-#define SHORT_CHAR_COUNT 5
-static const short stoa_tab[SHORT_CHAR_COUNT] = { 1, 10, 100, 1000, 10000 };
-/// <summary>
-/// Short to string convert
-/// </summary>
-/// <param name="v">The value.</param>
-/// <param name="dest">The string destination.</param>
-byte stoa(short v, char * dest, byte firstIndex = 0)
-{
-	char * origDest = dest;
-	byte d;
-	short c;
-	for (byte i = 4; i != 255; i--)
-	{
-		c = stoa_tab[i];
-		if (v >= c)
-		{
-			d = '0';
-			d += v / c;
-			v %= c;
-			*dest++ = d;
-			if (firstIndex == 0)
-			{
-				firstIndex = i;
-			}
-		}
-		else if (i <= firstIndex)
-		{
-			*dest++ = '0';
-		}
-	}
-
-	*dest = '\0';
-
-	return dest - origDest;
-}
-
 u8g_fntpgm_uint8_t reduced[8 * 1024] = { 0 };
 
 /*========================================================================*/
 /* low level byte and word access */
 
-/* removed NOINLINE, because it leads to smaller code, might also be faster */
-//static uint8_t u8g_font_get_byte(const u8g_fntpgm_uint8_t *font, uint8_t offset) U8G_NOINLINE;
 static uint8_t u8g_font_get_byte(const u8g_fntpgm_uint8_t *font, uint8_t offset)
 {
 	font += offset;
@@ -265,7 +128,6 @@ int8_t u8g_font_GetFontXDescent(const u8g_fntpgm_uint8_t *font)
 	return u8g_font_get_byte(font, 16);
 }
 
-/* calculate the overall length of the font, only used to create the picture for the google wiki */
 size_t u8g_font_GetSize(const u8g_fntpgm_uint8_t *font)
 {
 	uint8_t *p = (uint8_t *)(font);
@@ -304,8 +166,6 @@ size_t u8g_font_GetSize(const u8g_fntpgm_uint8_t *font)
 }
 
 
-typedef u8g_uint_t(*u8g_font_calc_vref_fnptr)(void *u8g);
-
 struct u8g_box_t
 {
 	u8g_uint_t x0, y0, x1, y1;
@@ -319,9 +179,17 @@ struct u8g_t
 	uint8_t glyph_width;
 	uint8_t glyph_height;
 	const u8g_pgm_uint8_t *font;             /* regular font for all text procedures */
+
+typedef u8g_uint_t(*u8g_font_calc_vref_fnptr)(u8g_t *u8g);
 	u8g_font_calc_vref_fnptr font_calc_vref;
 
+	int8_t font_ref_ascent;
+	int8_t font_ref_descent;
+
 	u8g_box_t current_page;		/* current box of the visible page */
+
+	uint8_t screenBuffNew[128][64];
+	uint8_t screenBuffOld[128][64];
 };
 
 
@@ -332,7 +200,7 @@ u8g_uint_t u8g_font_calc_vref_font(u8g_t *u8g)
 
 void u8g_SetFontPosBaseline(u8g_t *u8g)
 {
-	u8g->font_calc_vref = (u8g_font_calc_vref_fnptr)u8g_font_calc_vref_font;
+	u8g->font_calc_vref = u8g_font_calc_vref_font;
 }
 
 /*========================================================================*/
@@ -425,7 +293,6 @@ static void u8g_CopyGlyphDataToCache(u8g_t *u8g, u8g_glyph_t g)
 	}
 }
 
-//void u8g_FillEmptyGlyphCache(u8g_t *u8g) U8G_NOINLINE;
 static void u8g_FillEmptyGlyphCache(u8g_t *u8g)
 {
 	u8g->glyph_dx = 0;
@@ -435,10 +302,6 @@ static void u8g_FillEmptyGlyphCache(u8g_t *u8g)
 	u8g->glyph_y = 0;
 }
 
-/*
-Find (with some speed optimization) and return a pointer to the glyph data structure
-Also uncompress (format 1) and copy the content of the data structure to the u8g structure
-*/
 u8g_glyph_t u8g_GetGlyph(u8g_t *u8g, uint8_t requested_encoding)
 {
 	uint8_t *p = (uint8_t *)(u8g->font);
@@ -508,7 +371,7 @@ u8g_glyph_t u8g_GetGlyph(u8g_t *u8g, uint8_t requested_encoding)
 
 	return NULL;
 }
-//static uint8_t u8g_is_intersection_decision_tree(u8g_uint_t a0, u8g_uint_t a1, u8g_uint_t v0, u8g_uint_t v1) U8G_ALWAYS_INLINE;
+
 static uint8_t U8G_ALWAYS_INLINE u8g_is_intersection_decision_tree(u8g_uint_t a0, u8g_uint_t a1, u8g_uint_t v0, u8g_uint_t v1)
 {
 	return 1;
@@ -552,7 +415,6 @@ static uint8_t U8G_ALWAYS_INLINE u8g_is_intersection_decision_tree(u8g_uint_t a0
 	}
 }
 
-
 uint8_t u8g_IsBBXIntersection(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint_t h)
 {
 	register u8g_uint_t tmp;
@@ -574,7 +436,6 @@ static uint8_t *u8g_font_GetGlyphDataStart(const void *font, u8g_glyph_t g)
 	return ((u8g_fntpgm_uint8_t *)g) + u8g_font_GetFontGlyphStructureSize((const u8g_fntpgm_uint8_t *)font);
 }
 
-#include <windows.h>
 void GotoXY(byte x, byte y)
 {
 	COORD coord;
@@ -595,6 +456,11 @@ void clearPixel(byte x, byte y)
 	printf("%c", ' ');
 }
 
+void setPixel(u8g_t *u, byte x, byte y)
+{
+	u->screenBuffNew[x][y] = 1;
+}
+
 void u8g_Draw8Pixel(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, uint8_t dir, uint8_t pixel)
 {
 	byte mask = 0x80;
@@ -602,7 +468,7 @@ void u8g_Draw8Pixel(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, uint8_t dir, uint8_t
 	{
 		if (pixel & mask)
 		{
-			printPixel(x + i, y);
+			setPixel(u8g, x + i, y);
 		}
 
 		mask = mask >> 1;
@@ -658,7 +524,7 @@ int8_t u8g_draw_glyph(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, uint8_t encoding)
 
 int8_t u8g_DrawGlyph(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, uint8_t encoding)
 {
-	y += 0;//u8g->font_calc_vref(u8g);
+	y += u8g->font_calc_vref(u8g);
 	return u8g_draw_glyph(u8g, x, y, encoding);
 }
 
@@ -805,62 +671,221 @@ void SetRequestEncoding(bool digits, bool uppercase, bool lovercase, uint8_t* re
 	}
 }
 
-void byteToStr(byte value, char* s)
-{
-	stoa(value, s, 1);
-}
-
 byte getStrPixelWidth(char* s)
 {
 	return strlen(s);
 }
 
-byte prepareDrawTemp(byte tmpHi, byte tmpLo, char* temperatureStr)
-{
-	byte offset = stoa(tmpHi, temperatureStr);
-
-	temperatureStr[offset] = '.';
-
-	byteToStr(tmpLo, temperatureStr + offset + 1);
-
-	return getStrPixelWidth(temperatureStr) + 1;
-}
-
-short lux = 1234;
-char lumens[7];
-void prepareDrawLumens()
-{
-	byte len = stoa(lux, lumens);
-	lumens[len] = 'l';
-	lumens[++len] = 'm';
-	lumens[++len] = '\0';
-}
-
-byte minHi = 7;
-byte minLo = 5;
-char temperatureMin[6];
-byte offsetMinSuff;
-
-
-byte monthOffset;
-byte daysInM;
-void prepareDrawCalendar()
-{
-	monthOffset = iWeek - iDay % 7 + 1;
-	daysInM = getDaysInMonth(iMonth);
-}
-
 #define pgm_read_word(x) *(x)
-const char* dayString[] = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
+
+void u8g_draw_hline(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t w)
+{
+	uint8_t pixel = 0x0ff;
+	while (w >= 8)
+	{
+		u8g_Draw8Pixel(u8g, x, y, 0, pixel);
+		w -= 8;
+		x += 8;
+	}
+	if (w != 0)
+	{
+		w ^= 7;
+		w++;
+		pixel <<= w & 7;
+		u8g_Draw8Pixel(u8g, x, y, 0, pixel);
+	}
+}
+
+void u8g_draw_vline(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t h)
+{
+	uint8_t pixel = 0x0ff;
+	while (h >= 8)
+	{
+		u8g_Draw8Pixel(u8g, x, y, 1, pixel);
+		h -= 8;
+		y += 8;
+	}
+	if (h != 0)
+	{
+		h ^= 7;
+		h++;
+		pixel <<= h & 7;
+		u8g_Draw8Pixel(u8g, x, y, 1, pixel);
+	}
+}
+
+void u8g_DrawHBitmapP(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t cnt, const u8g_pgm_uint8_t *bitmap)
+{
+	while (cnt > 0)
+	{
+		u8g_Draw8Pixel(u8g, x, y, 0, u8g_pgm_read(bitmap));
+		bitmap++;
+		cnt--;
+		x += 8;
+	}
+}
+
+static void u8g_draw_circle_section(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t x0, u8g_uint_t y0, uint8_t option)
+{
+	/* upper right */
+	if (option & U8G_DRAW_UPPER_RIGHT)
+	{
+		setPixel(u8g, x0 + x, y0 - y);
+		setPixel(u8g, x0 + y, y0 - x);
+	}
+
+	/* upper left */
+	if (option & U8G_DRAW_UPPER_LEFT)
+	{
+		setPixel(u8g, x0 - x, y0 - y);
+		setPixel(u8g, x0 - y, y0 - x);
+	}
+
+	/* lower right */
+	if (option & U8G_DRAW_LOWER_RIGHT)
+	{
+		setPixel(u8g, x0 + x, y0 + y);
+		setPixel(u8g, x0 + y, y0 + x);
+	}
+
+	/* lower left */
+	if (option & U8G_DRAW_LOWER_LEFT)
+	{
+		setPixel(u8g, x0 - x, y0 + y);
+		setPixel(u8g, x0 - y, y0 + x);
+	}
+}
+
+void u8g_draw_circle(u8g_t *u8g, u8g_uint_t x0, u8g_uint_t y0, u8g_uint_t rad, uint8_t option)
+{
+	u8g_int_t f;
+	u8g_int_t ddF_x;
+	u8g_int_t ddF_y;
+	u8g_uint_t x;
+	u8g_uint_t y;
+
+	f = 1;
+	f -= rad;
+	ddF_x = 1;
+	ddF_y = 0;
+	ddF_y -= rad;
+	ddF_y *= 2;
+	x = 0;
+	y = rad;
+
+	u8g_draw_circle_section(u8g, x, y, x0, y0, option);
+
+	while (x < y)
+	{
+		if (f >= 0)
+		{
+			y--;
+			ddF_y += 2;
+			f += ddF_y;
+		}
+		x++;
+		ddF_x += 2;
+		f += ddF_x;
+
+		u8g_draw_circle_section(u8g, x, y, x0, y0, option);
+	}
+}
+typedef char(*u8g_font_get_char_fn)(const void *s);
+u8g_uint_t u8g_font_calc_str_pixel_width(u8g_t *u8g, const char *s, u8g_font_get_char_fn get_char)
+{
+	u8g_uint_t  w;
+	uint8_t enc;
+
+	/* reset the total minimal width to zero, this will be expanded during calculation */
+	w = 0;
+
+	enc = get_char(s);
+
+	/* check for empty string, width is already 0 */
+	if (enc == '\0')
+	{
+		return w;
+	}
+
+	/* get the glyph information of the first char. This must be valid, because we already checked for the empty string */
+	/* if *s is not inside the font, then the cached parameters of the glyph are all zero */
+	u8g_GetGlyph(u8g, enc);
+
+	/* strlen(s) == 1:       width = width(s[0]) */
+	/* strlen(s) == 2:       width = - offx(s[0]) + deltax(s[0]) + offx(s[1]) + width(s[1]) */
+	/* strlen(s) == 3:       width = - offx(s[0]) + deltax(s[0]) + deltax(s[1]) + offx(s[2]) + width(s[2]) */
+
+	/* assume that the string has size 2 or more, than start with negative offset-x */
+	/* for string with size 1, this will be nullified after the loop */
+	w = -u8g->glyph_x;
+	for (;;)
+	{
+
+		/* check and stop if the end of the string is reached */
+		s++;
+		if (get_char(s) == '\0')
+			break;
+
+		/* if there are still more characters, add the delta to the next glyph */
+		w += u8g->glyph_dx;
+
+		/* store the encoding in a local variable, used also after the for(;;) loop */
+		enc = get_char(s);
+
+		/* load the next glyph information */
+		u8g_GetGlyph(u8g, enc);
+	}
+
+	/* finally calculate the width of the last char */
+	/* here is another exception, if the last char is a black, use the dx value instead */
+	if (enc != ' ')
+	{
+		/* if g was not updated in the for loop (strlen() == 1), then the initial offset x gets removed */
+		w += u8g->glyph_width;
+		w += u8g->glyph_x;
+	}
+	else
+	{
+		w += u8g->glyph_dx;
+	}
 
 
+	return w;
+}
 
+char u8g_font_get_char(const void *s)
+{
+	return *(const char *)(s);
+}
 
-class Display
+u8g_uint_t u8g_font_calc_vref_top(u8g_t *u8g)
+{
+	u8g_uint_t tmp;
+	/* reference pos is one pixel above the upper edge of the reference glyph */
+
+	/*
+	y += (u8g_uint_t)(u8g_int_t)(u8g->font_ref_ascent);
+	y++;
+	*/
+	tmp = (u8g_uint_t)(u8g_int_t)(u8g->font_ref_ascent);
+	tmp++;
+	return tmp;
+}
+
+class U8GLIB_SSD1306_128X64_2X
 {
 public:
 	u8g_t u;
+
 public:
+	U8GLIB_SSD1306_128X64_2X(uint8_t options = 0)
+	{
+		//u.font_ref_ascent = u8g_font_GetFontAscent(u.font);
+		//u.font_ref_descent = u8g_font_GetFontDescent(u.font);
+
+		u.font_calc_vref = u8g_font_calc_vref_font;
+	}
+
 	void drawStr(byte x, byte y, const char* s)
 	{
 		int8_t g_dx = 0;
@@ -880,77 +905,213 @@ public:
 
 	void drawPixel(u8g_uint_t x, u8g_uint_t y)
 	{
-		printPixel(x, y);
+		setPixel(&u, x, y);
 	}
 
 	void firstPage(void) 
+	{
+		memcpy(u.screenBuffOld, u.screenBuffNew, 128 * 64);
+		memset(u.screenBuffNew, 0, 128 * 64);	
+	}
+
+	uint8_t nextPage(void)
 	{
 		for (size_t x = 0; x < 128; x++)
 		{
 			for (size_t y = 0; y < 64; y++)
 			{
-				clearPixel(x, y);
-			}
-		}
-		
-	}
-
-	uint8_t nextPage(void)
-	{
-		return 0;
-	}
-};
-
-static Display display;
-
-/// <summary>
-/// Draws the start up splash screen.
-/// </summary>
-void drawCalendar()
-{
-	byte x, y;
-	byte j, i, dayCnt = 1;
-	y = 10;
-	for (byte i = 0; i < 6; i++)
-	{
-		x = 5;
-		for (j = 0; j < 7; j++)
-		{
-			if (i == 0)
-			{
-				// Daraw days
-				display.drawStr(x, y, (const char*)pgm_read_word(&(dayString[j])));
-			}
-			else
-			{
-				if (!(i == 1 && monthOffset > j) && dayCnt <= daysInM)
+				if (u.screenBuffOld[x][y] == 1 && u.screenBuffNew[x][y] == 0)
 				{
-					char day[3];
-					stoa(dayCnt++, day);
-					display.drawStr(x, y, day);
+					clearPixel(x, y);
+				}
+				if (u.screenBuffOld[x][y] == 0 && u.screenBuffNew[x][y] == 1)
+				{
+					printPixel(x, y);
 				}
 			}
-
-			x += 17;
 		}
 
-		y += 10;
+		return 0;
 	}
+
+	void drawHLine(u8g_uint_t x, u8g_uint_t y, u8g_uint_t w)
+	{
+		if (u8g_IsBBXIntersection(&u, x, y, w, 1) == 0)
+			return;
+		u8g_draw_hline(&u, x, y, w);
+	}
+
+	void drawVLine(u8g_uint_t x, u8g_uint_t y, u8g_uint_t h)
+	{
+		if (u8g_IsBBXIntersection(&u, x, y, 1, h) == 0)
+			return;
+		u8g_draw_vline(&u, x, y, h);
+	}
+
+	void drawLine(u8g_uint_t x1, u8g_uint_t y1, u8g_uint_t x2, u8g_uint_t y2){
+		u8g_uint_t tmp;
+		u8g_uint_t x, y;
+		u8g_uint_t dx, dy;
+		u8g_int_t err;
+		u8g_int_t ystep;
+
+		uint8_t swapxy = 0;
+
+		/* no BBX intersection check at the moment, should be added... */
+
+		if (x1 > x2) dx = x1 - x2; else dx = x2 - x1;
+		if (y1 > y2) dy = y1 - y2; else dy = y2 - y1;
+
+		if (dy > dx)
+		{
+			swapxy = 1;
+			tmp = dx; dx = dy; dy = tmp;
+			tmp = x1; x1 = y1; y1 = tmp;
+			tmp = x2; x2 = y2; y2 = tmp;
+		}
+		if (x1 > x2)
+		{
+			tmp = x1; x1 = x2; x2 = tmp;
+			tmp = y1; y1 = y2; y2 = tmp;
+		}
+		err = dx >> 1;
+		if (y2 > y1) ystep = 1; else ystep = -1;
+		y = y1;
+		for (x = x1; x <= x2; x++)
+		{
+			if (swapxy == 0)
+				setPixel(&u, x, y);
+			else
+				setPixel(&u, y, x);
+			err -= (uint8_t)dy;
+			if (err < 0)
+			{
+				y += (u8g_uint_t)ystep;
+				err += (u8g_uint_t)dx;
+			}
+		}
+	}
+
+	void drawBitmapP(u8g_uint_t x, u8g_uint_t y, u8g_uint_t cnt, u8g_uint_t h, const u8g_pgm_uint8_t *bitmap)
+	{
+		if (u8g_IsBBXIntersection(&u, x, y, cnt * 8, h) == 0)
+			return;
+		while (h > 0)
+		{
+			u8g_DrawHBitmapP(&u, x, y, cnt, bitmap);
+			bitmap += cnt;
+			y++;
+			h--;
+		}
+	}
+
+	void drawCircle(u8g_uint_t x0, u8g_uint_t y0, u8g_uint_t rad, uint8_t opt = U8G_DRAW_ALL)
+	{
+		/* check for bounding box */
+		{
+			u8g_uint_t radp, radp2;
+
+			radp = rad;
+			radp++;
+			radp2 = radp;
+			radp2 *= 2;
+
+			if (u8g_IsBBXIntersection(&u, x0 - radp, y0 - radp, radp2, radp2) == 0)
+				return;
+		}
+
+		/* draw circle */
+		u8g_draw_circle(&u, x0, y0, rad, opt);
+	}
+
+	void drawFrame(u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint_t h)
+	{
+		u8g_uint_t xtmp = x;
+
+		if (u8g_IsBBXIntersection(&u, x, y, w, h) == 0)
+			return;
+
+
+		u8g_draw_hline(&u, x, y, w);
+		u8g_draw_vline(&u, x, y, h);
+		x += w;
+		x--;
+		u8g_draw_vline(&u, x, y, h);
+		y += h;
+		y--;
+		u8g_draw_hline(&u, xtmp, y, w);
+	}
+
+	u8g_uint_t getStrPixelWidth(const char *s)
+	{
+		return u8g_font_calc_str_pixel_width(&u, s, u8g_font_get_char);
+	}
+
+	u8g_uint_t getStrWidth(const char *s){
+		u8g_uint_t  w;
+		uint8_t encoding;
+
+		/* reset the total width to zero, this will be expanded during calculation */
+		w = 0;
+
+		for (;;)
+		{
+			encoding = *s;
+			if (encoding == 0)
+				break;
+
+			/* load glyph information */
+			u8g_GetGlyph(&u, encoding);
+			w += u.glyph_dx;
+
+			/* goto next char */
+			s++;
+		}
+
+		return w;
+	}
+
+	int8_t getFontAscent(void) { return u8g_font_GetFontAscent(u.font); }
+	int8_t getFontDescent(void) { return u8g_font_GetFontDescent(u.font); }
+	void setFontPosTop(void){ u.font_calc_vref = u8g_font_calc_vref_top; }
+	void setFontRefHeightExtendedText(void){
+		u.font_ref_ascent = u8g_font_GetCapitalAHeight(u.font);
+		u.font_ref_descent = u8g_font_GetLowerGDescent(u.font);
+	}
+
+	void setColorIndex(uint8_t color_index){}
+};
+
+unsigned long millis(void)
+{
+	return (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+
 }
 
-void main()
+void delay(unsigned long t)
 {
-	offsetMinSuff = prepareDrawTemp(minHi, minLo, temperatureMin);
+	std::this_thread::sleep_for(std::chrono::milliseconds(t));
+}
 
-	prepareDrawLumens();
-	calcDayOfWeek();
-	prepareDrawCalendar();
+void pinMode(uint8_t, uint8_t)
+{
 
-	display.u.font = helvB08r;
-	drawCalendar();
+}
+void digitalWrite(uint8_t, uint8_t)
+{
 
-	display.firstPage();
+}
+int digitalRead(uint8_t)
+{
+	return 1;
+}
 
+#include "Watch.ino"
+
+EEPROMClass EEPROM;
+
+void GenerateReducedFontsCFile()
+{
 	uint8_t requested_encoding[256] = { 0 };
 	ofstream fout("helvBr_gen.c");
 	uint16_t r_size = 0;
@@ -967,6 +1128,7 @@ void main()
 	// 10
 	u.font = helvB10r;
 	SetRequestEncoding(true, true, true, requested_encoding);
+	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
 	requested_encoding[47] = 1; // 47		/	 	Slash or divide
 	requested_encoding[56] = 1; // 58		:	 	Colon
 	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
@@ -989,36 +1151,15 @@ void main()
 
 	// close file
 	fout.close();
+}
 
-
-	u.font = reduced;
-	u8g_GetGlyph(&u, 46);
-	u.font = helvB12r;
-	u8g_GetGlyph(&u, 46);
-
-	u.font = reduced;
-	u8g_GetGlyph(&u, 67);
-	u.font = helvB12r;
-	u8g_GetGlyph(&u, 67);
-
-	u.font = reduced;
-	u8g_GetGlyph(&u, 176);
-	u.font = helvB12r;
-	u8g_GetGlyph(&u, 176);
-
-	short val = 0;
-	char s[5];
-	stoa(val, s);
-	calcDayOfWeek();
-
-	for (byte i = 1; i <= 12; i++)
+void main()
+{
+	setup();
+	for (;;)
 	{
-		if (getDaysInMonth(i) != getDaysInMonth2(i))
-		{
-			int j = 0;
-		}
+		loop();
 	}
-
 }
 
 /*

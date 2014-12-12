@@ -122,7 +122,7 @@ PGM_P const timeFormat[] PROGMEM = { "12h", "24h" };
 #define DISPLAY_MODE_CLOCK				0x2
 #define DISPLAY_MODE_MENU				0x3
 #define DISPLAY_MODE_SET_MENU			0x4
-byte displayMode = DISPLAY_MODE_START_UP;
+byte displayMode = DISPLAY_MODE_CLOCK;
 
 #define MENU_SET_TIME_FORMAT			0x1
 #define MENU_SET_TIME					0x2
@@ -206,7 +206,7 @@ void setup()
 	TempSensor.setWaitForConversion(false);
 	TempSensor.requestTemperaturesByAddress(tempDeviceAddress);
 
-	Serial.begin(9600);    // Enable serial com.
+	//Serial.begin(9600);    // Enable serial com.
 
 	// Define button pins, turn on internal Pull-Up Resistor
 	pinMode(buttonPin, INPUT_PULLUP);
@@ -278,7 +278,7 @@ void loop()
 				}
 
 				lux = LightSensor.GetLightIntensity();// Get Lux value
-				Serial.println(lux);
+				//Serial.println(lux);
 
 				//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
 				//display.setContrast(0);  
@@ -296,10 +296,8 @@ void loop()
 				onDraw();
 			} while (display.nextPage());
 
-			Serial.println(millis() - current_time_milis);
+			//Serial.println(millis() - current_time_milis);
 		}
-
-
 	}
 	else
 	{
@@ -828,7 +826,7 @@ inline void drawStartUp()
 	// y : Y - position(upper position of the bitmap).
 	// cnt : Number of bytes of the bitmap in horizontal direction.The width of the bitmap is cnt*8.
 	// h : Height of the bitmap. 
-	display.drawBitmapP(10, 10, 3, 24, IMG_logo_24x24);
+	display.drawBitmapP(5, 10, 3, 24, IMG_logo_24x24);
 
 	display.drawStr(25, 12, "Temperature");
 
@@ -889,6 +887,7 @@ void prepareDrawGraph()
 	yCoord = hiLoToFloat(startValHi, startValLo);
 	yScaleCount = diff / 0.5;
 
+	display.setFont(helvB08r);
 	offsetMinSuff = prepareDrawTemp(minHi, minLo, temperatureMin);
 	offsetMaxSuff = prepareDrawTemp(maxHi, maxLo, temperatureMax);
 }
@@ -989,6 +988,7 @@ void prepareDrawClock()
 	switch (clockStyle)
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
+		display.setFont(helvB12r);
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
@@ -997,6 +997,7 @@ void prepareDrawClock()
 
 	case CLOCK_STYLE_SIMPLE_MIX:
 		//drawClockAnalog
+		display.setFont(helvB12r);
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
@@ -1005,11 +1006,13 @@ void prepareDrawClock()
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
 		//drawClockAnalog
+		display.setFont(helvB12r);
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawLumens();
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
+		display.setFont(helvB12r);
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawDateDigital();
 		prepareDrawClockDigital();
@@ -1175,7 +1178,7 @@ void drawTemp(byte xPos, byte yPos, char* temperatureStr, byte offsetSuff)
 }
 
 char clockDigital[6];
-byte prepareDrawClockDigital()
+void prepareDrawClockDigital()
 {
 	if (iTimeFormat == TF_12h && iAmPm == 1) // 1 = PM
 	{
