@@ -846,7 +846,7 @@ void drawGraphLine(byte start, byte end, byte* x, float rescale)
 {
 	for (byte i = start; i < end; i++)
 	{
-		display.drawPixel((*x)++, (hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - minTemp) * rescale);
+		display.drawPixel((*x)++, 64 - ((hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - minTemp) * rescale));
 	}
 }
 
