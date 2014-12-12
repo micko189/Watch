@@ -937,6 +937,8 @@ public:
 			}
 		}
 
+		u.font_calc_vref = u8g_font_calc_vref_font;
+
 		return 0;
 	}
 
