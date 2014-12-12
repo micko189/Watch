@@ -135,7 +135,7 @@ byte menuMode = MENU_SET_DATE;
 #define CLOCK_STYLE_SIMPLE_DIGIT_SEC	0x4
 #define CLOCK_STYLE_SIMPLE_GRAPH		0x5
 #define CLOCK_STYLE_SIMPLE_CALENDAR		0x6
-byte clockStyle = CLOCK_STYLE_SIMPLE_DIGIT_SEC;
+byte clockStyle = CLOCK_STYLE_SIMPLE_GRAPH;
 
 #define centerX 64
 #define centerY 32
@@ -266,7 +266,7 @@ void loop()
 				floatToHiLo(&tempHi, &tempLo, temp);
 
 				hourCount++;
-				if (hourCount > HOUR_COUNT)
+				if (hourCount >= HOUR_COUNT)
 				{
 					// One hour has elapsed
 					floatToHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / HOUR_COUNT);
