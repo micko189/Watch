@@ -1,4 +1,4 @@
-bdf2u8g_101.exe -b 47 -e 122 helvB08.bdf helvB08r helvB08r.c
+bdf2u8g_101.exe -b 46 -e 176 helvB08.bdf helvB08r helvB08r.c
 bdf2u8g_101.exe -b 47 -e 122 helvB10.bdf helvB10r helvB10r.c
 bdf2u8g_101.exe -b 46 -e 176 helvB12.bdf helvB12r helvB12r.c
 bdf2u8g_101.exe -b 48 -e 122 helvB14.bdf helvB14r helvB14r.c

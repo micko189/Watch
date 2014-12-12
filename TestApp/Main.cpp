@@ -468,7 +468,14 @@ void u8g_Draw8Pixel(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, uint8_t dir, uint8_t
 	{
 		if (pixel & mask)
 		{
-			setPixel(u8g, x + i, y);
+			if (dir == 0)
+			{
+				setPixel(u8g, x + i, y);
+			}
+			else
+			{
+				setPixel(u8g, x, y + i);
+			}
 		}
 
 		mask = mask >> 1;
@@ -1155,6 +1162,7 @@ void GenerateReducedFontsCFile()
 
 void main()
 {
+	GenerateReducedFontsCFile();
 	setup();
 	for (;;)
 	{
