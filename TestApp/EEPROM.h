@@ -1,5 +1,5 @@
-#ifndef EEPROM_h
-#define EEPROM_h
+#ifndef _EEPROM_H_
+#define _EEPROM_H_
 
 #include "u8g.h"
 

@@ -84,8 +84,8 @@ short iYear = 2014;
 byte iMonth = 12;
 byte iDay = 12;
 
-byte iHour = 9;
-byte iMinutes = 0;
+byte iHour = 16;
+byte iMinutes = 40;
 byte iSecond = 0;
 
 byte iWeek = 0;    // need to calculate this during setup and on date change
@@ -93,7 +93,7 @@ byte iAmPm = 1;    // need to calculate this during setup and on time change 0:A
 
 #define TF_12h 1
 #define TF_24h 2
-byte iTimeFormat = TF_12h; // 1 - 12h, 2 - 24h
+byte iTimeFormat = TF_24h; // 1 - 12h, 2 - 24h
 
 #define TEMP_GRAPH_LEN 128
 byte tempGraphHi[TEMP_GRAPH_LEN] = { 0 };
@@ -139,7 +139,7 @@ byte clockStyle = CLOCK_STYLE_SIMPLE_ANALOG;
 
 #define centerX 64
 #define centerY 32
-#define iRadius 30
+#define iRadius 31
 
 //----- Button control
 #define buttonPin 5
@@ -377,10 +377,6 @@ void getButtonInput(const byte pinNo, boolean *btnPinState, boolean *insideDebou
 		anyPinStateChanged = true;
 	}
 
-	//Serial.print(pinNo);
-	//Serial.print(*insideDebounce);
-	//Serial.print(reading);
-	//Serial.print(*btnPinState);
 	//Serial.println(anyPinStateChanged);
 }
 
@@ -797,7 +793,7 @@ inline void drawSetMenu()
 {
 	display.setFont(helvB10r);
 
-	display.drawHLine(29 + setPosition * 16, 12 + 14, 12);
+	display.drawHLine(29 + setPosition * 16, 12 + 14, 14);
 
 	switch (menuMode)
 	{
@@ -914,8 +910,8 @@ void drawGraph()
 
 	drawGraphLine(startTempGraphIndex, TEMP_GRAPH_LEN, &xPos, rescale);
 	drawGraphLine(0, startTempGraphIndex, &xPos, rescale);
-	drawTemp(15, 10, temperatureMax, offsetMaxSuff);
-	drawTemp(15, 60, temperatureMin, offsetMinSuff);
+	drawTemp(15, 10, temperatureMax, offsetMaxSuff,0);
+	drawTemp(15, 60, temperatureMin, offsetMinSuff,0);
 
 }
 
@@ -1052,29 +1048,29 @@ inline void drawClock()
 		drawLumens(5, 63);
 
 		display.setFont(helvB14r);
-		drawDayAmPm(30, 15);
+		drawDayAmPm(34, 15);
 
-		display.setFont(helvB18r);
-		drawClockDigital(35, 38);
+		display.setFont(helvB24r);
+		drawClockDigital(20, 45);
 
 		display.setFont(helvB12r);
-		drawTemp(60, 63, temperature, offsetSuffix);
+		drawTemp(65, 63, temperature, offsetSuffix,0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
 		display.setFont(helvB08r);
 		drawLumens(5, 63);
 
-		drawClockAnalog(centerX - 30, centerY, iRadius - 4);
+		drawClockAnalog(centerX - 33, centerY - 4, iRadius - 5);
 
 		display.setFont(helvB12r);
 		drawDayAmPm(67, 23);
 
 		display.setFont(helvB18r);
-		drawClockDigital(61, 45);
+		drawClockDigital(62, 45);
 
 		display.setFont(helvB12r);
-		drawTemp(60, 63, temperature, offsetSuffix);
+		drawTemp(65, 63, temperature, offsetSuffix,0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
@@ -1084,7 +1080,7 @@ inline void drawClock()
 		drawClockAnalog(centerX - 10, centerY, iRadius);
 
 		display.setFont(helvB12r);
-		drawTemp(60, 63, temperature, offsetSuffix);
+		drawTemp(85, 63, temperature, offsetSuffix - 20, -14);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
@@ -1102,7 +1098,7 @@ inline void drawClock()
 		drawSecondsDigital(14 + offset + 2, 45);
 
 		display.setFont(helvB12r);
-		drawTemp(60, 63, temperature, offsetSuffix);
+		drawTemp(65, 63, temperature, offsetSuffix,0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_GRAPH:
@@ -1178,10 +1174,11 @@ byte prepareDrawTemp(byte tmpHi, byte tmpLo, char* temperatureStr)
 /// <param name="yPos">The y position.</param>
 /// <param name="temperatureStr">The temperature string.</param>
 /// <param name="offsetSuff">The offset suff.</param>
-void drawTemp(byte xPos, byte yPos, char* temperatureStr, byte offsetSuff)
+/// <param name="offsetY">The offset y.</param>
+void drawTemp(byte xPos, byte yPos, char* temperatureStr, byte offsetSuff, byte offsetY)
 {
 	display.drawStr(xPos, yPos, temperatureStr);
-	display.drawStr(xPos + offsetSuff, yPos, tempSufix);
+	display.drawStr(xPos + offsetSuff, yPos + offsetY, tempSufix);
 }
 
 char clockDigital[6];

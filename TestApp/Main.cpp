@@ -13,11 +13,6 @@
 
 using namespace std;
 
-typedef unsigned char byte;
-typedef unsigned char boolean;
-#define HIGH 1
-#define LOW 0
-
 u8g_fntpgm_uint8_t reduced[8 * 1024] = { 0 };
 
 /*========================================================================*/
