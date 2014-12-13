@@ -82,7 +82,7 @@ unsigned long current_time_milis = 0;
 
 short iYear = 2014;
 byte iMonth = 12;
-byte iDay = 12;
+byte iDay = 13;
 
 byte iHour = 16;
 byte iMinutes = 40;
@@ -206,7 +206,7 @@ void setup()
 	TempSensor.setWaitForConversion(false);
 	TempSensor.requestTemperaturesByAddress(tempDeviceAddress);
 
-	//Serial.begin(9600);    // Enable serial com.
+	Serial.begin(9600);    // Enable serial com.
 
 	// Define button pins, turn on internal Pull-Up Resistor
 	pinMode(buttonPin, INPUT_PULLUP);
@@ -232,7 +232,7 @@ void setup()
 
 	//ReadStateEPROM();
 
-	//WriteStateEPROM();
+	WriteStateEPROM();
 }
 
 void loop()
@@ -296,7 +296,7 @@ void loop()
 				onDraw();
 			} while (display.nextPage());
 
-			//Serial.println(millis() - current_time_milis);
+			Serial.println(iWeek);
 		}
 	}
 	else
@@ -793,7 +793,7 @@ inline void drawSetMenu()
 {
 	display.setFont(helvB10r);
 
-	display.drawHLine(29 + setPosition * 16, 12 + 14, 14);
+	display.drawHLine(29 + setPosition * 18, 12 + 14, 14);
 
 	switch (menuMode)
 	{
@@ -1089,13 +1089,13 @@ inline void drawClock()
 
 		display.setFont(helvB10r);
 		drawDateDigital(40, 12);
-		drawDay(6, 12);
+		drawDay(10, 12);
 
 		display.setFont(helvB24r);
 		offset = drawClockDigital(14, 45);
 
 		display.setFont(helvB14r);
-		drawSecondsDigital(14 + offset + 2, 45);
+		drawSecondsDigital(14 + offset + 3, 45);
 
 		display.setFont(helvB12r);
 		drawTemp(65, 63, temperature, offsetSuffix,0);
