@@ -24,6 +24,24 @@ Watch Arduino v1.0
 #include <math.h>
 #include <EEPROM.h>
 
+byte debugVal = 0;
+
+#define DEBUG_PRINT(str) \
+   Serial.print(__FUNCTION__); \
+   Serial.print(':'); \ 
+   Serial.print(__LINE__); \
+   Serial.print(' '); \
+   Serial.println(str);
+#endif
+
+#define DEBUG_VAL(val) \
+   if(val != debugVal) \
+   { \ 
+   debugVal = val; \
+   DEBUG_PRINT(val) \
+   };
+#endif
+
 ////////////////////////////////////////////////////
 // 16x24 Logo
 ////////////////////////////////////////////////////
