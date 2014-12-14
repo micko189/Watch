@@ -57,3 +57,10 @@ Temporary Items
 Debug/Watch.log
 Debug/Watch.log
 Debug/Watch.log
+*.lastbuildstate
+*.unsuccessfulbuild
+*.cache
+*.manifest
+*.res
+*.rc
+*.ipch

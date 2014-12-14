@@ -17,7 +17,7 @@ typedef unsigned char uint8_t;
 /** \ingroup avr_stdint
 16-bit unsigned type. */
 
-//typedef unsigned int uint16_t;
+typedef unsigned int uint16_t;
 
 /** \ingroup avr_stdint
 32-bit signed type. */
@@ -76,6 +76,8 @@ typedef unsigned char byte;
 typedef unsigned char boolean;
 #define HIGH 1
 #define LOW 0
+
+
 
 /* method def */
 

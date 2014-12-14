@@ -5,8 +5,6 @@
 #include <string.h>
 #include <fstream>
 #include <iostream>
-#include <chrono>
-#include <thread>
 
 #include "u8g.h"
 #include "..\FontsBDFgen\helvBr.c"
@@ -1090,13 +1088,13 @@ public:
 
 unsigned long millis(void)
 {
-	return (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+	return GetTickCount();
 
 }
 
 void delay(unsigned long t)
 {
-	std::this_thread::sleep_for(std::chrono::milliseconds(t));
+	Sleep(t);
 }
 
 void pinMode(uint8_t, uint8_t)
@@ -1113,9 +1111,29 @@ int digitalRead(uint8_t pin)
 	return pins[pin];
 }
 
+class SerialClass
+{
+public:
+	void begin(int i)
+	{ 
+
+	}
+	void println(char* s)
+	{
+
+	}
+	void println(int i)
+	{
+
+	}
+};
+
+SerialClass Serial;
+
 #include "Watch.ino"
 
 EEPROMClass EEPROM;
+//SerialClass Serial;
 
 void GenerateReducedFontsCFile()
 {
