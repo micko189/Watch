@@ -228,7 +228,7 @@ void setup()
 	calcDayOfWeek();
 	calcAmPm();
 
-	tempSufix[0] = '°', tempSufix[1] = 'C', tempSufix[2] = 0;
+	tempSufix[0] = '°', tempSufix[1] = 'C', tempSufix[2] = '\0';
 
 	//ReadStateEPROM();
 
@@ -931,7 +931,7 @@ void drawCalendar()
 	byte x, y;
 	byte j, i, dayCnt = 1;
 	y = 10;
-	for (byte i = 0; i < 6; i++)
+	for (i = 0; i < 6; i++)
 	{
 		x = 5;
 		for (j = 0; j < 7; j++)

@@ -616,7 +616,7 @@ void generateCFile(char* name, u8g_fntpgm_uint8_t* data, int r_size, ofstream &f
 	fout << "#include \"u8g.h\"" << endl;
 	fout << "const u8g_fntpgm_uint8_t " << name << "[" << (int)r_size << "] U8G_FONT_SECTION(\"" << name << "\") = {";
 
-	for (size_t i = 0; i < r_size; i++)
+	for (int i = 0; i < r_size; i++)
 	{
 		if (i % 16 == 0)
 		{
@@ -1186,9 +1186,9 @@ void main()
 	for (;;)
 	{
 		loop();
-		if (kbhit())
+		if (_kbhit())
 		{
- 			int ch = getch();
+ 			int ch = _getch();
 			int i = ch - 48;
 			if (i >= 5 && i<=8 )
 				pins[i] = !pins[i];
