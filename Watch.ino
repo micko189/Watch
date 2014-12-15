@@ -859,9 +859,9 @@ void prepareDrawGraph()
 	findMaxMin();
 	minTemp = hiLoToFloat(minHi, minLo);
 	float diff = hiLoToFloat(maxHi, maxLo) - minTemp;
-	if (diff < 0.5)
+	if (diff < (float)0.5)
 	{
-		diff = 0.5;
+		diff = (float)0.5;
 	}
 
 	rescale = (float)64.0 / diff;
@@ -900,7 +900,7 @@ void drawGraph()
 	{
 		// calculate y coord
 		display.drawHLine(0, (yCoord - minTemp) * rescale, 2);
-		yCoord += 0.5;
+		yCoord += (float)0.5;
 	}
 
 	for (i = 0; i < TEMP_GRAPH_LEN; i += 12)
