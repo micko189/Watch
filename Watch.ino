@@ -230,9 +230,9 @@ void setup()
 
 	tempSufix[0] = '°', tempSufix[1] = 'C', tempSufix[2] = '\0';
 
-	//ReadStateEPROM();
+	//WriteStateEPROM();
 
-	WriteStateEPROM();
+	//ReadStateEPROM();
 }
 
 void loop()
@@ -271,7 +271,7 @@ void loop()
 					// One hour has elapsed
 					floatToHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / HOUR_COUNT);
 
-					inrementRollOverValue(&startTempGraphIndex, TEMP_GRAPH_LEN);
+					inrementRollOverValue(&startTempGraphIndex, TEMP_GRAPH_LEN - 1);
 
 					tempAccum = 0;
 					hourCount = 0;
@@ -326,8 +326,8 @@ void ReadStateEPROM()
 
 void WriteStateEPROM()
 {
-	EEPROM.write(0, iYear >> 8);
-	EEPROM.write(1, iYear);
+	EEPROM.write(0, (uint8_t)(iYear >> 8));
+	EEPROM.write(1, (uint8_t)iYear);
 	EEPROM.write(2, iMonth);
 	EEPROM.write(3, iDay);
 	EEPROM.write(4, iHour);
@@ -471,7 +471,7 @@ void calcDayOfWeek()
 /// </returns>
 inline boolean updateTime()
 {
-	short timeElapse = current_time_milis - prevClockTime;
+	short timeElapse = (short)(current_time_milis - prevClockTime);
 	if (timeElapse >= adjustedUpdateTimeInterval) // check if one second has elapsed
 	{
 		// Adjust next update time interval in order to reduce accumulated error
@@ -621,7 +621,7 @@ inline void floatToHiLo(byte* valHi, byte* valLo, float val)
 /// <returns>Float value</returns>
 float hiLoToFloat(byte valHi, byte valLo)
 {
-	return valHi + valLo / 100.0;
+	return valHi + valLo / (float)100.0;
 }
 
 /// <summary>
@@ -864,7 +864,7 @@ void prepareDrawGraph()
 		diff = 0.5;
 	}
 
-	rescale = 64.0 / diff;
+	rescale = (float)64.0 / diff;
 
 	// draw scale
 	// calculate first y coord
@@ -881,7 +881,7 @@ void prepareDrawGraph()
 	}
 
 	yCoord = hiLoToFloat(startValHi, startValLo);
-	yScaleCount = diff / 0.5;
+	yScaleCount = (byte)(diff / (float)0.5);
 
 	display.setFont(helvB08r);
 	offsetMinSuff = prepareDrawTemp(minHi, minLo, temperatureMin);

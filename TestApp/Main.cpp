@@ -534,7 +534,6 @@ uint16_t u8g_CreateReduced(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[
 	uint8_t font_format = u8g_font_GetFormat(u8g->font);
 	uint8_t data_structure_size = u8g_font_GetFontGlyphStructureSize(u8g->font);
 	uint8_t start, end;
-	uint16_t pos;
 	uint8_t i;
 	uint8_t mask = 255;
 
@@ -582,24 +581,22 @@ uint16_t u8g_CreateReduced(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[
 			}
 			else
 			{
+				byte dataSize = u8g_pgm_read(((u8g_pgm_uint8_t *)(p)) + 2) & mask;
 				if (requested_encoding[i] == 1) // take this glyph
 				{
-					u8g_CopyGlyphDataToCache(u8g, p);
+					memcpy(r, p, dataSize + data_structure_size);
 
-					memcpy(r, p, u8g_pgm_read(((u8g_pgm_uint8_t *)(p)) + 2) & mask);
-					memcpy(r, p, data_structure_size);
-
-					r += u8g_pgm_read(((u8g_pgm_uint8_t *)(p)) + 2) & mask;
+					r += dataSize;
 					r += data_structure_size;
 				}
 				else
 				{
-					// Skip this character 
+					// skip this character 
 					*r = 255;
 					r += 1;
 				}
 
-				p += u8g_pgm_read(((u8g_pgm_uint8_t *)(p)) + 2) & mask;
+				p += dataSize;
 				p += data_structure_size;
 			}
 			if (i == end)
@@ -1089,7 +1086,6 @@ public:
 unsigned long millis(void)
 {
 	return GetTickCount();
-
 }
 
 void delay(unsigned long t)
@@ -1101,11 +1097,14 @@ void pinMode(uint8_t, uint8_t)
 {
 
 }
+
 void digitalWrite(uint8_t, uint8_t)
 {
 
 }
+
 byte pins[10] = { 1,1,1,1,1,1,1,1,1,1 };
+
 int digitalRead(uint8_t pin)
 {
 	return pins[pin];
@@ -1114,18 +1113,11 @@ int digitalRead(uint8_t pin)
 class SerialClass
 {
 public:
-	void begin(int i)
-	{ 
-
-	}
-	void println(char* s)
-	{
-
-	}
-	void println(int i)
-	{
-
-	}
+	void begin(int i){}
+	void print(char* s){}
+	void print(int i){}
+	void println(char* s){}
+	void println(int i){}
 };
 
 SerialClass Serial;
@@ -1133,7 +1125,6 @@ SerialClass Serial;
 #include "Watch.ino"
 
 EEPROMClass EEPROM;
-//SerialClass Serial;
 
 void GenerateReducedFontsCFile()
 {
