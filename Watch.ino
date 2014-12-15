@@ -870,7 +870,7 @@ void prepareDrawGraph()
 	// calculate first y coord
 	byte startValHi, startValLo;
 	startValHi = minHi;
-	if ((minLo > 50))
+	if ((minLo >= 50))
 	{
 		startValHi += 1;
 		startValLo = 0;
