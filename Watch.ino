@@ -95,7 +95,7 @@ byte iAmPm = 1;    // need to calculate this during setup and on time change 0:A
 #define TF_24h 2
 byte iTimeFormat = TF_24h; // 1 - 12h, 2 - 24h
 
-#define TEMP_GRAPH_LEN 128
+#define TEMP_GRAPH_LEN 120
 byte tempGraphHi[TEMP_GRAPH_LEN] = { 0 };
 byte tempGraphLo[TEMP_GRAPH_LEN] = { 0 };
 byte startTempGraphIndex = 0;
@@ -842,7 +842,7 @@ void drawGraphLine(byte start, byte end, byte* x, float rescale)
 {
 	for (byte i = start; i < end; i++)
 	{
-		display.drawPixel((*x)++, 64 - ((hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - minTemp) * rescale));
+		display.drawPixel((*x)++, 61 - ((hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - minTemp) * rescale));
 	}
 }
 
@@ -864,7 +864,7 @@ void prepareDrawGraph()
 		diff = (float)0.5;
 	}
 
-	rescale = (float)64.0 / diff;
+	rescale = 60 / diff;
 
 	// draw scale
 	// calculate first y coord
@@ -894,7 +894,7 @@ void prepareDrawGraph()
 void drawGraph()
 {
 	byte i;
-	byte xPos = 0;
+	byte xPos = 4;
 
 	for (i = 0; i < yScaleCount; i++)
 	{
@@ -903,9 +903,9 @@ void drawGraph()
 		yCoord += (float)0.5;
 	}
 
-	for (i = 0; i < TEMP_GRAPH_LEN; i += 12)
+	for (i = 0; i <= TEMP_GRAPH_LEN; i += 12)
 	{
-		display.drawVLine(i, 62, 2);
+		display.drawVLine(i + xPos, 62, 2);
 	}
 
 	drawGraphLine(startTempGraphIndex, TEMP_GRAPH_LEN, &xPos, rescale);

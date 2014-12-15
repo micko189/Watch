@@ -8,6 +8,8 @@ typedef uint8_t DeviceAddress[8];
 
 class DallasTemperature
 {
+private:
+	int temp = 0;
 public:
 
 	DallasTemperature(OneWire*){}
@@ -19,7 +21,7 @@ public:
 	bool setResolution(uint8_t*, uint8_t){ return true; }
 	void setWaitForConversion(bool){}
 	bool requestTemperaturesByAddress(uint8_t*){ return true; }
-	float getTempC(uint8_t*){ return (float)25.5 + (rand()%100)/(float)100.0; }
+	float getTempC(uint8_t*){ return (float)25.5 + ((temp++)%100)/(float)100.0; }
 };
 
 #endif
