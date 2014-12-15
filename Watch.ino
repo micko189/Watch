@@ -82,7 +82,7 @@ unsigned long current_time_milis = 0;
 
 short iYear = 2014;
 byte iMonth = 12;
-byte iDay = 13;
+byte iDay = 15;
 
 byte iHour = 16;
 byte iMinutes = 40;
@@ -930,8 +930,8 @@ void drawCalendar()
 {
 	byte x, y;
 	byte j, i, dayCnt = 1;
-	y = 10;
-	for (i = 0; i < 6; i++)
+	y = 8;
+	for (i = 0; i < 7; i++)
 	{
 		x = 5;
 		for (j = 0; j < 7; j++)
@@ -945,9 +945,28 @@ void drawCalendar()
 			{
 				if (!(i == 1 && monthOffset > j) && dayCnt <= daysInM)
 				{
+					if (dayCnt == iDay)
+					{
+						display.drawVLine(x - 3, y - 9, 10);
+						display.drawPixel(x - 2, y - 9);
+						display.drawPixel(x - 2, y);
+
+						display.drawVLine(x + 13, y - 9, 10);
+						display.drawPixel(x + 12, y - 9);
+						display.drawPixel(x + 12, y);
+					}
+
 					char day[3];
-					stoa(dayCnt++, day);
-					display.drawStr(x, y, day);
+					stoa(dayCnt, day);
+
+					byte offX = 0;
+					if (dayCnt < 10)
+					{
+						offX = 6;
+					}
+
+					display.drawStr(x + offX, y, day);
+					dayCnt++;
 				}
 			}
 
@@ -960,7 +979,7 @@ void drawCalendar()
 			display.drawHLine(2, y++, 124);
 		}
 
-		y += 10;
+		y += 9;
 	}
 }
 
