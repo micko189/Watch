@@ -19,7 +19,7 @@ public:
 	bool setResolution(uint8_t*, uint8_t){ return true; }
 	void setWaitForConversion(bool){}
 	bool requestTemperaturesByAddress(uint8_t*){ return true; }
-	float getTempC(uint8_t*){ return (float)25.07; }
+	float getTempC(uint8_t*){ return (float)25.5 + (rand()%100)/(float)100.0; }
 };
 
 #endif
