@@ -992,7 +992,11 @@ void CreateEdge(u8g_t *u8g, uint8_t *r, uint8_t *p, uint8_t dataSize, uint8_t da
 						//set in result
 						if ((abs(x[0] - 1) <= 1 && abs(y[0] - 1) <= 1) && (abs(x[1] - 1) <= 1 && abs(y[1] - 1) <= 1))
 						{
-							pixelRes |= mask;
+							//check if all diagonal pixels
+							if ((x[0] != 1) && (x[1] != 1) && (y[0] != 1) && (y[1] != 1))
+							{
+								pixelRes |= mask;
+							}
 						}
 					}
 
