@@ -1912,6 +1912,14 @@ extern const u8g_fntpgm_uint8_t helvB12r[] U8G_FONT_SECTION("helvB12r");
 extern const u8g_fntpgm_uint8_t helvB14r[] U8G_FONT_SECTION("helvB14r");
 extern const u8g_fntpgm_uint8_t helvB18r[] U8G_FONT_SECTION("helvB18r");
 extern const u8g_fntpgm_uint8_t helvB24r[] U8G_FONT_SECTION("helvB24r");
+extern const u8g_fntpgm_uint8_t helvB24re[] U8G_FONT_SECTION("helvB24re");
+
+extern const u8g_fntpgm_uint8_t helvR08r[] U8G_FONT_SECTION("helvR08r");
+extern const u8g_fntpgm_uint8_t helvR10r[] U8G_FONT_SECTION("helvR10r");
+extern const u8g_fntpgm_uint8_t helvR12r[] U8G_FONT_SECTION("helvR12r");
+extern const u8g_fntpgm_uint8_t helvR14r[] U8G_FONT_SECTION("helvR14r");
+extern const u8g_fntpgm_uint8_t helvR18r[] U8G_FONT_SECTION("helvR18r");
+extern const u8g_fntpgm_uint8_t helvR24r[] U8G_FONT_SECTION("helvR24r");
 
 #ifdef __cplusplus
 }

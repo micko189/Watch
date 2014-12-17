@@ -1665,6 +1665,39 @@ void GenerateReducedFontsCFile()
 	requested_encoding[58] = 1; // 58		:	 	Colon
 	r_size = u8g_CreateReducedE(&u, reduced, requested_encoding);
 	generateCFile("helvB24re", reduced, r_size, fout);
+
+	// 08
+	u.font = helvR08r;
+	SetRequestEncoding(true, true, true, requested_encoding);
+	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
+	requested_encoding[176] = 1; // 176		°		Degree sign
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvR08r", reduced, r_size, fout);
+
+	// 10
+	u.font = helvR10r;
+	SetRequestEncoding(true, true, true, requested_encoding);
+	requested_encoding[32] = 1; // 32		 	 	Space
+	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
+	requested_encoding[47] = 1; // 47		/	 	Slash or divide
+	requested_encoding[58] = 1; // 58		:	 	Colon
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvR10r", reduced, r_size, fout);
+
+	// 12
+	u.font = helvR12r;
+	SetRequestEncoding(true, false, false, requested_encoding);
+	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
+	requested_encoding[67] = 1; // 67		C	 	Uppercase C
+	requested_encoding[176] = 1; // 176		°		Degree sign
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvR12r", reduced, r_size, fout);
+
+	// 14
+	u.font = helvR14r;
+	SetRequestEncoding(true, true, true, requested_encoding);
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvR14r", reduced, r_size, fout);
 	
 
 	// close file
@@ -1673,7 +1706,7 @@ void GenerateReducedFontsCFile()
 
 void main()
 {
-	//GenerateReducedFontsCFile();
+	GenerateReducedFontsCFile();
 	setup();
 	for (;;)
 	{
