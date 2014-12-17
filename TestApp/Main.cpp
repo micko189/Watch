@@ -7,7 +7,8 @@
 #include <iostream>
 
 #include "u8g.h"
-#include "..\FontsBDFgen\helvBr.c"
+//#include "..\FontsBDFgen\helvBr.c"
+#include "..\U8glib\utility\u8g_font_data.c"
 
 using namespace std;
 
@@ -534,7 +535,6 @@ uint16_t u8g_CreateReduced(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[
 	uint8_t font_format = u8g_font_GetFormat(u8g->font);
 	uint8_t data_structure_size = u8g_font_GetFontGlyphStructureSize(u8g->font);
 	uint8_t start, end;
-	uint16_t pos;
 	uint8_t i;
 	uint8_t mask = 255;
 
@@ -582,24 +582,514 @@ uint16_t u8g_CreateReduced(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[
 			}
 			else
 			{
+				byte dataSize = u8g_pgm_read(((u8g_pgm_uint8_t *)(p)) + 2) & mask;
 				if (requested_encoding[i] == 1) // take this glyph
 				{
-					u8g_CopyGlyphDataToCache(u8g, p);
+					memcpy(r, p, dataSize + data_structure_size);
 
-					memcpy(r, p, u8g_pgm_read(((u8g_pgm_uint8_t *)(p)) + 2) & mask);
-					memcpy(r, p, data_structure_size);
-
-					r += u8g_pgm_read(((u8g_pgm_uint8_t *)(p)) + 2) & mask;
+					r += dataSize;
 					r += data_structure_size;
 				}
 				else
 				{
-					// Skip this character 
+					// skip this character 
 					*r = 255;
 					r += 1;
 				}
 
-				p += u8g_pgm_read(((u8g_pgm_uint8_t *)(p)) + 2) & mask;
+				p += dataSize;
+				p += data_structure_size;
+			}
+			if (i == end)
+				break;
+			i++;
+		}
+	}
+
+	return r - red;
+}
+
+void CreateEdge(u8g_t *u8g, uint8_t *r, uint8_t *p, uint8_t dataSize, uint8_t data_structure_size, uint8_t encoding)
+{
+	const u8g_pgm_uint8_t *data;
+	uint8_t w, h;
+	uint8_t i, j, k;
+	
+	// Copy data structure data
+	memcpy(r, p, data_structure_size);
+	r += data_structure_size;
+
+	uint8_t *res = r;
+
+	u8g_glyph_t g = u8g_GetGlyph(u8g, encoding);
+
+	data = u8g_font_GetGlyphDataStart(u8g->font, g);
+
+	p += data_structure_size;
+
+	w = u8g->glyph_width;
+	h = u8g->glyph_height;
+
+	/* now, w is reused as bytes per line */
+	w += 7;
+	w /= 8;
+
+	uint8_t *dataAdj;
+	uint8_t *dataAdjOrig;
+	uint8_t *dataAdjOrigF;
+	dataAdjOrigF = dataAdjOrig = dataAdj = (uint8_t *)malloc(w*h);
+
+	for (j = 0; j < h; j++)
+	{
+		for (i = 0; i < w; i++)
+		{
+			uint8_t edgeCount = 0;
+			uint8_t pixelRes = 0;
+			uint8_t pixelResAdjust = 0;
+			uint8_t pixelUpper = 0;
+			uint8_t pixelLower = 0;
+
+			//u8g_Draw8Pixel(u8g, ix, iy, 0, u8g_pgm_read(data));
+
+			if (j > 0)
+			{
+				pixelUpper = u8g_pgm_read(data - w);
+			}
+
+			if (j < h - 1)
+			{
+				pixelLower = u8g_pgm_read(data + w);
+			}
+
+			uint8_t pixel = u8g_pgm_read(data);
+
+			byte mask = 0x80;
+			for (k = 0; k < 8; k++)
+			{
+				edgeCount = 0;
+
+				if (pixel & mask)
+				{
+					//now check if this is edge pixel
+
+					if (k > 0)
+					{
+						mask = mask << 1;
+						// check left
+						if ((pixelUpper & mask) == 0)
+							edgeCount++;
+						if ((pixel & mask) == 0)
+							edgeCount++;
+						if ((pixelLower & mask) == 0)
+							edgeCount++;
+						//return mask to prev position
+						mask = mask >> 1;
+					}
+					else if (k == 0 && i > 0)
+					{
+						uint8_t pixelLUpper = 0;
+						uint8_t pixelLMid = 0;
+						uint8_t pixelLLower = 0;
+
+						//observe pixels left
+						if (j > 0)
+						{
+							pixelLUpper = u8g_pgm_read(data - w - 1);
+						}
+
+						pixelLMid = u8g_pgm_read(data - 1);
+
+						if (j < h - 1)
+						{
+							pixelLLower = u8g_pgm_read(data + w - 1);
+						}
+
+						byte maskL = 0x01;
+
+						// check left
+						if ((pixelLUpper & maskL) == 0)
+							edgeCount++;
+						if ((pixelLMid & maskL) == 0)
+							edgeCount++;
+						if ((pixelLLower & maskL) == 0)
+							edgeCount++;
+					}
+					else
+					{
+						edgeCount += 3;
+					}
+
+					// check middle
+					if ((pixelUpper & mask) == 0)
+						edgeCount++;
+					if ((pixelLower & mask) == 0)
+						edgeCount++;
+
+					if (k < 8 - 1)
+					{
+						mask = mask >> 1;
+						// check right
+						if ((pixelUpper & mask) == 0)
+							edgeCount++;
+						if ((pixel & mask) == 0)
+							edgeCount++;
+						if ((pixelLower & mask) == 0)
+							edgeCount++;
+						//return mask to prev position
+						mask = mask << 1;
+					}
+					else if (k == 8 - 1 && i < w - 1)
+					{
+						uint8_t pixelRUpper = 0;
+						uint8_t pixelRMid = 0;
+						uint8_t pixelRLower = 0;
+
+						//observe pixels left
+						if (j > 0)
+						{
+							pixelRUpper = u8g_pgm_read(data - w + 1);
+						}
+
+						pixelRMid = u8g_pgm_read(data + 1);
+
+						if (j < h - 1)
+						{
+							pixelRLower = u8g_pgm_read(data + w + 1);
+						}
+
+						byte maskR = 0x80;
+
+						// check left
+						if ((pixelRUpper & maskR) == 0)
+							edgeCount++;
+						if ((pixelRMid & maskR) == 0)
+							edgeCount++;
+						if ((pixelRLower & maskR) == 0)
+							edgeCount++;
+
+					}
+					else
+					{
+						edgeCount += 3;
+					}
+
+					if (edgeCount >= 2)
+					{
+						pixelRes |= mask;
+					}
+
+					if (edgeCount == 1)
+					{
+						pixelResAdjust |= mask;
+					}
+				}
+
+				mask = mask >> 1;
+			}
+
+			//copy result data
+			*r = pixelRes;
+
+			*dataAdj = pixelResAdjust;
+			dataAdj++;
+
+			r++;
+			data++;
+		}
+	}
+
+	//return to begining
+	r = res;
+
+	//second pass just to calculate edge with one blank
+	for (j = 0; j < h; j++)
+	{
+		for (i = 0; i < w; i++)
+		{
+			uint8_t pixelRes = 0;
+			uint8_t pixelResAdjust = 0;
+			uint8_t pixelUpper = 0;
+			uint8_t pixelLower = 0;
+
+			if (j > 0)
+			{
+				pixelUpper = u8g_pgm_read(res - w);
+			}
+
+			if (j < h - 1)
+			{
+				pixelLower = u8g_pgm_read(res + w);
+			}
+
+			uint8_t pixel = u8g_pgm_read(res);
+
+			byte mask = 0x80;
+			for (k = 0; k < 8; k++)
+			{
+				byte x[9] = { 0 };
+				byte y[9] = { 0 };
+
+				byte pixCount = 0;
+
+				if (u8g_pgm_read(dataAdjOrig) & mask)
+				{
+					//now check if this is edge pixel
+
+					if (k > 0)
+					{
+						mask = mask << 1;
+						// check left
+						if (pixelUpper & mask)
+						{
+							x[pixCount] = 0;
+							y[pixCount] = 0;
+							pixCount++;
+						}
+						if (pixel & mask)
+						{
+							x[pixCount] = 0;
+							y[pixCount] = 1;
+							pixCount++;
+						}
+						if (pixelLower & mask)
+						{
+							x[pixCount] = 0;
+							y[pixCount] = 2;
+							pixCount++;
+						}
+						//return mask to prev position
+						mask = mask >> 1;
+					}
+					else if (k == 0 && i > 0)
+					{
+						uint8_t pixelLUpper = 0;
+						uint8_t pixelLMid = 0;
+						uint8_t pixelLLower = 0;
+
+						//observe pixels left
+						if (j > 0)
+						{
+							pixelLUpper = u8g_pgm_read(res - w - 1);
+						}
+
+						pixelLMid = u8g_pgm_read(res - 1);
+
+						if (j < h - 1)
+						{
+							pixelLLower = u8g_pgm_read(res + w - 1);
+						}
+
+						byte maskL = 0x01;
+
+						// check left
+						if (pixelLUpper & maskL)
+						{
+							x[pixCount] = 0;
+							y[pixCount] = 0;
+							pixCount++;
+						}
+						if (pixelLMid & maskL)
+						{
+							x[pixCount] = 0;
+							y[pixCount] = 1;
+							pixCount++;
+						}
+						if (pixelLLower & maskL)
+						{
+							x[pixCount] = 0;
+							y[pixCount] = 2;
+							pixCount++;
+						}
+					}
+
+
+					// check middle
+					if (pixelUpper & mask)
+					{
+						x[pixCount] = 1;
+						y[pixCount] = 0;
+						pixCount++;
+					}
+					if (pixelLower & mask)
+					{
+						x[pixCount] = 1;
+						y[pixCount] = 2;
+						pixCount++;
+					}
+
+					if (k < 8 - 1)
+					{
+						mask = mask >> 1;
+						// check right
+						if (pixelUpper  & mask)
+						{
+							x[pixCount] = 2;
+							y[pixCount] = 0;
+							pixCount++;
+						}
+						if (pixel & mask)
+						{
+							x[pixCount] = 2;
+							y[pixCount] = 1;
+							pixCount++;
+						}
+						if (pixelLower & mask)
+						{
+							x[pixCount] = 2;
+							y[pixCount] = 2;
+							pixCount++;
+						}
+						//return mask to prev position
+						mask = mask << 1;
+					}
+					else if (k == 8 - 1 && i < w - 1)
+					{
+						uint8_t pixelRUpper = 0;
+						uint8_t pixelRMid = 0;
+						uint8_t pixelRLower = 0;
+
+						//observe pixels left
+						if (j > 0)
+						{
+							pixelRUpper = u8g_pgm_read(res - w + 1);
+						}
+
+						pixelRMid = u8g_pgm_read(res + 1);
+
+						if (j < h - 1)
+						{
+							pixelRLower = u8g_pgm_read(res + w + 1);
+						}
+
+						byte maskR = 0x80;
+
+						// check left
+						if (pixelRUpper & maskR)
+						{
+							x[pixCount] = 2;
+							y[pixCount] = 0;
+							pixCount++;
+						}
+						if (pixelRMid & maskR)
+						{
+							x[pixCount] = 2;
+							y[pixCount] = 1;
+							pixCount++;
+						}
+						if (pixelRLower & maskR)
+						{
+							x[pixCount] = 2;
+							y[pixCount] = 2;
+							pixCount++;
+						}
+
+					}
+
+					//check if there is 2 pixels next eo each other, if not, set pixel
+
+					if (pixCount == 2 && (abs(x[0] - x[1]) > 1 || abs(y[0] - y[1]) > 1))
+					{
+						//pixels are not next to each other and result pixel will be next to each pixel
+						//set in result
+						if ((abs(x[0] - 1) <= 1 && abs(y[0] - 1) <= 1) && (abs(x[1] - 1) <= 1 && abs(y[1] - 1) <= 1))
+						{
+							//check if all diagonal pixels
+							if ((x[0] != 1) && (x[1] != 1) && (y[0] != 1) && (y[1] != 1))
+							{
+								pixelRes |= mask;
+							}
+						}
+					}
+
+
+				}
+
+				mask = mask >> 1;
+			}
+
+			//copy result data
+			*r |= pixelRes;
+
+			dataAdjOrig++;
+			r++;
+			res++;
+		}
+	}
+
+	free(dataAdjOrigF);
+}
+
+uint16_t u8g_CreateReducedE(u8g_t *u8g, uint8_t *red, uint8_t requested_encoding[])
+{
+	uint8_t *r = (uint8_t *)(red);
+	uint8_t *p = (uint8_t *)(u8g->font);
+	uint8_t font_format = u8g_font_GetFormat(u8g->font);
+	uint8_t data_structure_size = u8g_font_GetFontGlyphStructureSize(u8g->font);
+	uint8_t start, end;
+	uint8_t i;
+	uint8_t mask = 255;
+
+	if (font_format == 1)
+		mask = 15;
+
+	start = u8g_font_GetFontStartEncoding(u8g->font);
+	end = u8g_font_GetFontEndEncoding(u8g->font);
+
+	// Copy header
+	memcpy(r, p, U8G_FONT_DATA_STRUCT_SIZE);
+
+	p += U8G_FONT_DATA_STRUCT_SIZE;       /* skip font general information */
+	r += U8G_FONT_DATA_STRUCT_SIZE;       /* skip font general information */
+
+	uint16_t pos65 = 0;
+	uint16_t pos97 = 0;
+
+	i = start;
+	if (i <= end)
+	{
+		for (;;)
+		{
+			if (i == 65)
+			{
+				pos65 = r - red;
+
+				*(red + 6) = (pos65 & 0xFF00) >> 8;
+				*(red + 7) = pos65 & 0xFF;
+			}
+
+			if (i == 97)
+			{
+				pos97 = r - red;
+
+				*(red + 8) = (pos97 & 0xFF00) >> 8;
+				*(red + 9) = pos97 & 0xFF;
+			}
+
+			if (u8g_pgm_read((u8g_pgm_uint8_t *)(p)) == 255)
+			{
+				*r = *p;
+				p += 1;
+				r += 1;
+			}
+			else
+			{
+				byte dataSize = u8g_pgm_read(((u8g_pgm_uint8_t *)(p)) + 2) & mask;
+				if (requested_encoding[i] == 1) // take this glyph
+				{
+					CreateEdge(u8g, r, p, dataSize, data_structure_size, i);
+					//memcpy(r, p, dataSize + data_structure_size);
+
+					r += dataSize;
+					r += data_structure_size;
+				}
+				else
+				{
+					// skip this character 
+					*r = 255;
+					r += 1;
+				}
+
+				p += dataSize;
 				p += data_structure_size;
 			}
 			if (i == end)
@@ -1089,7 +1579,6 @@ public:
 unsigned long millis(void)
 {
 	return GetTickCount();
-
 }
 
 void delay(unsigned long t)
@@ -1101,11 +1590,14 @@ void pinMode(uint8_t, uint8_t)
 {
 
 }
+
 void digitalWrite(uint8_t, uint8_t)
 {
 
 }
+
 byte pins[10] = { 1,1,1,1,1,1,1,1,1,1 };
+
 int digitalRead(uint8_t pin)
 {
 	return pins[pin];
@@ -1114,18 +1606,11 @@ int digitalRead(uint8_t pin)
 class SerialClass
 {
 public:
-	void begin(int i)
-	{ 
-
-	}
-	void println(char* s)
-	{
-
-	}
-	void println(int i)
-	{
-
-	}
+	void begin(int i){}
+	void print(char* s){}
+	void print(int i){}
+	void println(char* s){}
+	void println(int i){}
 };
 
 SerialClass Serial;
@@ -1133,7 +1618,6 @@ SerialClass Serial;
 #include "Watch.ino"
 
 EEPROMClass EEPROM;
-//SerialClass Serial;
 
 void GenerateReducedFontsCFile()
 {
@@ -1156,7 +1640,7 @@ void GenerateReducedFontsCFile()
 	requested_encoding[32] = 1; // 32		 	 	Space
 	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
 	requested_encoding[47] = 1; // 47		/	 	Slash or divide
-	requested_encoding[56] = 1; // 58		:	 	Colon
+	requested_encoding[58] = 1; // 58		:	 	Colon
 	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
 	generateCFile("helvB10r", reduced, r_size, fout);
 
@@ -1175,13 +1659,55 @@ void GenerateReducedFontsCFile()
 	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
 	generateCFile("helvB14r", reduced, r_size, fout);
 
+	// 24
+	
+	u.font = helvB24r;
+	SetRequestEncoding(true, false, false, requested_encoding);
+	requested_encoding[58] = 1; // 58		:	 	Colon
+	r_size = u8g_CreateReducedE(&u, reduced, requested_encoding);
+	generateCFile("helvB24re", reduced, r_size, fout);
+
+	// 08
+	u.font = helvR08r;
+	SetRequestEncoding(true, true, true, requested_encoding);
+	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
+	requested_encoding[176] = 1; // 176		°		Degree sign
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvR08r", reduced, r_size, fout);
+
+	// 10
+	u.font = helvR10r;
+	SetRequestEncoding(true, true, true, requested_encoding);
+	requested_encoding[32] = 1; // 32		 	 	Space
+	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
+	requested_encoding[47] = 1; // 47		/	 	Slash or divide
+	requested_encoding[58] = 1; // 58		:	 	Colon
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvR10r", reduced, r_size, fout);
+
+	// 12
+	u.font = helvR12r;
+	SetRequestEncoding(true, false, false, requested_encoding);
+	requested_encoding[46] = 1; // 46		.	 	Period, dot or full stop
+	requested_encoding[67] = 1; // 67		C	 	Uppercase C
+	requested_encoding[176] = 1; // 176		°		Degree sign
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvR12r", reduced, r_size, fout);
+
+	// 14
+	u.font = helvR14r;
+	SetRequestEncoding(true, true, true, requested_encoding);
+	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
+	generateCFile("helvR14r", reduced, r_size, fout);
+	
+
 	// close file
 	fout.close();
 }
 
 void main()
 {
-	GenerateReducedFontsCFile();
+	//GenerateReducedFontsCFile();
 	setup();
 	for (;;)
 	{

@@ -1,5 +1,5 @@
-#ifndef _U8G_H_
-#define _U8G_H_
+#ifndef _U8G_H
+#define _U8G_H
 
 // glyph u8glib
 typedef signed char int8_t;
@@ -51,6 +51,7 @@ typedef int8_t u8g_int_t;
 #define u8g_pgm_read (uint8_t)*
 
 #define U8G_FONT_SECTION(x) 
+#define U8G_SECTION(x) 
 
 #define U8G_FONT_DATA_STRUCT_SIZE 17
 

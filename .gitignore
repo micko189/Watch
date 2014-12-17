@@ -64,3 +64,9 @@ Debug/Watch.log
 *.res
 *.rc
 *.ipch
+*.log
+*.lastcodeanalysissucceeded
+*.xml
+*.log
+*.log
+*.log

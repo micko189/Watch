@@ -100,10 +100,10 @@ unsigned long current_time_milis = 0;
 
 short iYear = 2014;
 byte iMonth = 12;
-byte iDay = 13;
+byte iDay = 15;
 
-byte iHour = 16;
-byte iMinutes = 40;
+byte iHour = 7;
+byte iMinutes = 59;
 byte iSecond = 0;
 
 byte iWeek = 0;    // need to calculate this during setup and on date change
@@ -113,7 +113,7 @@ byte iAmPm = 1;    // need to calculate this during setup and on time change 0:A
 #define TF_24h 2
 byte iTimeFormat = TF_24h; // 1 - 12h, 2 - 24h
 
-#define TEMP_GRAPH_LEN 128
+#define TEMP_GRAPH_LEN 120
 byte tempGraphHi[TEMP_GRAPH_LEN] = { 0 };
 byte tempGraphLo[TEMP_GRAPH_LEN] = { 0 };
 byte startTempGraphIndex = 0;
@@ -209,6 +209,13 @@ DeviceAddress tempDeviceAddress;
 
 uint16_t lux;
 
+#define helv08r (lux > 0) ? helvB08r : helvR08r
+#define helv10r (lux > 0) ? helvB10r : helvR10r
+#define helv12r (lux > 0) ? helvB12r : helvR12r
+#define helv14r (lux > 0) ? helvB14r : helvR14r
+#define helv18r (lux > 0) ? helvB18r : helvR18r
+#define helv24r (lux > 0) ? helvB24r : helvB24re
+
 ///////////////////////////////////
 //----- Arduino setup and loop methods
 ///////////////////////////////////
@@ -224,7 +231,7 @@ void setup()
 	TempSensor.setWaitForConversion(false);
 	TempSensor.requestTemperaturesByAddress(tempDeviceAddress);
 
-	Serial.begin(9600);    // Enable serial com.
+	//Serial.begin(9600);    // Enable serial com.
 
 	// Define button pins, turn on internal Pull-Up Resistor
 	pinMode(buttonPin, INPUT_PULLUP);
@@ -248,9 +255,9 @@ void setup()
 
 	tempSufix[0] = '°', tempSufix[1] = 'C', tempSufix[2] = '\0';
 
-	//ReadStateEPROM();
+	//WriteStateEPROM();
 
-	WriteStateEPROM();
+	//ReadStateEPROM();
 }
 
 void loop()
@@ -289,14 +296,13 @@ void loop()
 					// One hour has elapsed
 					floatToHiLo(&tempGraphHi[startTempGraphIndex], &tempGraphLo[startTempGraphIndex], tempAccum / HOUR_COUNT);
 
-					inrementRollOverValue(&startTempGraphIndex, TEMP_GRAPH_LEN);
+					inrementRollOverValue(&startTempGraphIndex, TEMP_GRAPH_LEN - 1);
 
 					tempAccum = 0;
 					hourCount = 0;
 				}
 
 				lux = LightSensor.GetLightIntensity();// Get Lux value
-				//Serial.println(lux);
 
 				//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
 				//display.setContrast(0);  
@@ -313,8 +319,6 @@ void loop()
 				// Display routine
 				onDraw();
 			} while (display.nextPage());
-
-			Serial.println(iWeek);
 		}
 	}
 	else
@@ -344,8 +348,8 @@ void ReadStateEPROM()
 
 void WriteStateEPROM()
 {
-	EEPROM.write(0, iYear >> 8);
-	EEPROM.write(1, iYear);
+	EEPROM.write(0, (uint8_t)(iYear >> 8));
+	EEPROM.write(1, (uint8_t)iYear);
 	EEPROM.write(2, iMonth);
 	EEPROM.write(3, iDay);
 	EEPROM.write(4, iHour);
@@ -394,8 +398,6 @@ void getButtonInput(const byte pinNo, boolean *btnPinState, boolean *insideDebou
 
 		anyPinStateChanged = true;
 	}
-
-	//Serial.println(anyPinStateChanged);
 }
 
 /// <summary>
@@ -489,7 +491,7 @@ void calcDayOfWeek()
 /// </returns>
 inline boolean updateTime()
 {
-	short timeElapse = current_time_milis - prevClockTime;
+	short timeElapse = (short)(current_time_milis - prevClockTime);
 	if (timeElapse >= adjustedUpdateTimeInterval) // check if one second has elapsed
 	{
 		// Adjust next update time interval in order to reduce accumulated error
@@ -639,7 +641,7 @@ inline void floatToHiLo(byte* valHi, byte* valLo, float val)
 /// <returns>Float value</returns>
 float hiLoToFloat(byte valHi, byte valLo)
 {
-	return valHi + valLo / 100.0;
+	return valHi + valLo / (float)100.0;
 }
 
 /// <summary>
@@ -809,7 +811,7 @@ void prepareDrawSetMenu()
 /// </summary>
 inline void drawSetMenu()
 {
-	display.setFont(helvB10r);
+	display.setFont(helv10r);
 
 	display.drawHLine(29 + setPosition * 18, 12 + 14, 14);
 
@@ -832,7 +834,7 @@ inline void drawSetMenu()
 /// </summary>
 inline void drawStartUp()
 {
-	display.setFont(helvB10r);
+	display.setFont(helv10r);
 
 	//Arguments:
 	// u8g : Pointer to the u8g structure(C interface only).
@@ -860,7 +862,7 @@ void drawGraphLine(byte start, byte end, byte* x, float rescale)
 {
 	for (byte i = start; i < end; i++)
 	{
-		display.drawPixel((*x)++, 64 - ((hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - minTemp) * rescale));
+		display.drawPixel((*x)++, 61 - ((hiLoToFloat(tempGraphHi[i], tempGraphLo[i]) - minTemp) * rescale));
 	}
 }
 
@@ -877,18 +879,18 @@ void prepareDrawGraph()
 	findMaxMin();
 	minTemp = hiLoToFloat(minHi, minLo);
 	float diff = hiLoToFloat(maxHi, maxLo) - minTemp;
-	if (diff < 0.5)
+	if (diff < (float)0.5)
 	{
-		diff = 0.5;
+		diff = (float)0.5;
 	}
 
-	rescale = 64.0 / diff;
+	rescale = 60 / diff;
 
 	// draw scale
 	// calculate first y coord
 	byte startValHi, startValLo;
 	startValHi = minHi;
-	if ((minLo > 50))
+	if ((minLo >= 50))
 	{
 		startValHi += 1;
 		startValLo = 0;
@@ -899,9 +901,9 @@ void prepareDrawGraph()
 	}
 
 	yCoord = hiLoToFloat(startValHi, startValLo);
-	yScaleCount = diff / 0.5;
+	yScaleCount = (byte)(diff / (float)0.5);
 
-	display.setFont(helvB08r);
+	display.setFont(helv08r);
 	offsetMinSuff = prepareDrawTemp(minHi, minLo, temperatureMin);
 	offsetMaxSuff = prepareDrawTemp(maxHi, maxLo, temperatureMax);
 }
@@ -912,18 +914,18 @@ void prepareDrawGraph()
 void drawGraph()
 {
 	byte i;
-	byte xPos = 0;
+	byte xPos = 4;
 
 	for (i = 0; i < yScaleCount; i++)
 	{
 		// calculate y coord
 		display.drawHLine(0, (yCoord - minTemp) * rescale, 2);
-		yCoord += 0.5;
+		yCoord += (float)0.5;
 	}
 
-	for (i = 0; i < TEMP_GRAPH_LEN; i += 12)
+	for (i = 0; i <= TEMP_GRAPH_LEN; i += 12)
 	{
-		display.drawVLine(i, 62, 2);
+		display.drawVLine(i + xPos, 62, 2);
 	}
 
 	drawGraphLine(startTempGraphIndex, TEMP_GRAPH_LEN, &xPos, rescale);
@@ -948,8 +950,8 @@ void drawCalendar()
 {
 	byte x, y;
 	byte j, i, dayCnt = 1;
-	y = 10;
-	for (i = 0; i < 6; i++)
+	y = 8;
+	for (i = 0; i < 7; i++)
 	{
 		x = 5;
 		for (j = 0; j < 7; j++)
@@ -963,9 +965,28 @@ void drawCalendar()
 			{
 				if (!(i == 1 && monthOffset > j) && dayCnt <= daysInM)
 				{
+					if (dayCnt == iDay)
+					{
+						display.drawVLine(x - 3, y - 9, 10);
+						display.drawPixel(x - 2, y - 9);
+						display.drawPixel(x - 2, y);
+
+						display.drawVLine(x + 13, y - 9, 10);
+						display.drawPixel(x + 12, y - 9);
+						display.drawPixel(x + 12, y);
+					}
+
 					char day[3];
-					stoa(dayCnt++, day);
-					display.drawStr(x, y, day);
+					stoa(dayCnt, day);
+
+					byte offX = 0;
+					if (dayCnt < 10)
+					{
+						offX = 6;
+					}
+
+					display.drawStr(x + offX, y, day);
+					dayCnt++;
 				}
 			}
 
@@ -978,7 +999,7 @@ void drawCalendar()
 			display.drawHLine(2, y++, 124);
 		}
 
-		y += 10;
+		y += 9;
 	}
 }
 
@@ -988,7 +1009,7 @@ void drawCalendar()
 /// </summary>
 inline void drawMenu()
 {
-	display.setFont(helvB10r);
+	display.setFont(helv10r);
 	display.drawStr(10, 5, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME_FORMAT - 1])));
 	display.drawStr(10, 25, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME - 1])));
 	display.drawStr(10, 45, (const char*)pgm_read_word(&(menuItems[MENU_SET_DATE - 1])));
@@ -1008,9 +1029,9 @@ void prepareDrawClock()
 	switch (clockStyle)
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
-		display.setFont(helvB12r);
+		display.setFont(helv12r);
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
-		display.setFont(helvB14r);
+		display.setFont(helv14r);
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
 		prepareDrawLumens();
@@ -1018,7 +1039,7 @@ void prepareDrawClock()
 
 	case CLOCK_STYLE_SIMPLE_MIX:
 		//drawClockAnalog
-		display.setFont(helvB12r);
+		display.setFont(helv12r);
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
@@ -1027,13 +1048,13 @@ void prepareDrawClock()
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
 		//drawClockAnalog
-		display.setFont(helvB12r);
+		display.setFont(helv12r);
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawLumens();
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
-		display.setFont(helvB12r);
+		display.setFont(helv12r);
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawDateDigital();
 		prepareDrawClockDigital();
@@ -1062,70 +1083,70 @@ inline void drawClock()
 	switch (clockStyle)
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
-		display.setFont(helvB08r);
+		display.setFont(helv08r);
 		drawLumens(5, 63);
 
-		display.setFont(helvB14r);
+		display.setFont(helv14r);
 		drawDayAmPm(34, 15);
 
-		display.setFont(helvB24r);
+		display.setFont(helv24r);
 		drawClockDigital(20, 45);
 
-		display.setFont(helvB12r);
+		display.setFont(helv12r);
 		drawTemp(65, 63, temperature, offsetSuffix,0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
-		display.setFont(helvB08r);
+		display.setFont(helv08r);
 		drawLumens(5, 63);
 
 		drawClockAnalog(centerX - 33, centerY - 4, iRadius - 5);
 
-		display.setFont(helvB12r);
+		display.setFont(helv12r);
 		drawDayAmPm(67, 23);
 
-		display.setFont(helvB18r);
+		display.setFont(helv18r);
 		drawClockDigital(62, 45);
 
-		display.setFont(helvB12r);
+		display.setFont(helv12r);
 		drawTemp(65, 63, temperature, offsetSuffix,0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
-		display.setFont(helvB08r);
+		display.setFont(helv08r);
 		drawLumens(5, 63);
 
 		drawClockAnalog(centerX - 10, centerY, iRadius);
 
-		display.setFont(helvB12r);
+		display.setFont(helv12r);
 		drawTemp(85, 63, temperature, offsetSuffix - 20, -14);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
-		display.setFont(helvB08r);
+		display.setFont(helv08r);
 		drawLumens(5, 63);
 
-		display.setFont(helvB10r);
+		display.setFont(helv10r);
 		drawDateDigital(40, 12);
 		drawDay(10, 12);
 
-		display.setFont(helvB24r);
+		display.setFont(helv24r);
 		offset = drawClockDigital(14, 45);
 
-		display.setFont(helvB14r);
+		display.setFont(helv14r);
 		drawSecondsDigital(14 + offset + 3, 45);
 
-		display.setFont(helvB12r);
+		display.setFont(helv12r);
 		drawTemp(65, 63, temperature, offsetSuffix,0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_GRAPH:
-		display.setFont(helvB08r);
+		display.setFont(helv08r);
 		drawGraph();
 		break;
 
 	case CLOCK_STYLE_SIMPLE_CALENDAR:
-		display.setFont(helvB08r);
+		display.setFont(helv08r);
 		drawCalendar();
 		break;
 	}
