@@ -84,8 +84,8 @@ short iYear = 2014;
 byte iMonth = 12;
 byte iDay = 15;
 
-byte iHour = 16;
-byte iMinutes = 40;
+byte iHour = 7;
+byte iMinutes = 59;
 byte iSecond = 0;
 
 byte iWeek = 0;    // need to calculate this during setup and on date change
