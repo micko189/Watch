@@ -213,7 +213,7 @@ void setup()
 	TempSensor.setWaitForConversion(false);
 	TempSensor.requestTemperaturesByAddress(tempDeviceAddress);
 
-	Serial.begin(9600);    // Enable serial com.
+	//Serial.begin(9600);    // Enable serial com.
 
 	// Define button pins, turn on internal Pull-Up Resistor
 	pinMode(buttonPin, INPUT_PULLUP);
@@ -285,7 +285,6 @@ void loop()
 				}
 
 				lux = LightSensor.GetLightIntensity();// Get Lux value
-				//Serial.println(lux);
 
 				//dim display (Arduino\libraries\U8glib\utility\u8g_dev_ssd1306_128x64.c u8g_dev_ssd1306_128x64_fn)
 				//display.setContrast(0);  
@@ -302,8 +301,6 @@ void loop()
 				// Display routine
 				onDraw();
 			} while (display.nextPage());
-
-			Serial.println(iWeek);
 		}
 	}
 	else
@@ -383,8 +380,6 @@ void getButtonInput(const byte pinNo, boolean *btnPinState, boolean *insideDebou
 
 		anyPinStateChanged = true;
 	}
-
-	//Serial.println(anyPinStateChanged);
 }
 
 /// <summary>

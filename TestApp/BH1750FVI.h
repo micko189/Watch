@@ -10,7 +10,7 @@ public:
 	void begin(void){}
 	void SetAddress(uint8_t add){}
 	void SetMode(uint8_t MODE){}
-	uint16_t GetLightIntensity(void){ return 0; }
+	uint16_t GetLightIntensity(void){ return 123; }
 };
 
 #endif

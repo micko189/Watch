@@ -1707,7 +1707,7 @@ void GenerateReducedFontsCFile()
 
 void main()
 {
-	GenerateReducedFontsCFile();
+	//GenerateReducedFontsCFile();
 	setup();
 	for (;;)
 	{
