@@ -20,6 +20,9 @@
     <ClCompile Include="..\FontsBDFgen\helvBr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\U8glib\utility\u8g_font_data.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="u8g.h">

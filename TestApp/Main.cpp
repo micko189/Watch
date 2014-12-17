@@ -7,7 +7,8 @@
 #include <iostream>
 
 #include "u8g.h"
-#include "..\FontsBDFgen\helvBr.c"
+//#include "..\FontsBDFgen\helvBr.c"
+#include "..\U8glib\utility\u8g_font_data.c"
 
 using namespace std;
 
