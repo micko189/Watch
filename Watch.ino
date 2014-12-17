@@ -32,7 +32,7 @@ byte debugVal = 0;
    Serial.print(__LINE__); \
    Serial.print(' '); \
    Serial.println(str);
-#endif
+
 
 #define DEBUG_VAL(val) \
    if(val != debugVal) \
@@ -40,7 +40,7 @@ byte debugVal = 0;
    debugVal = val; \
    DEBUG_PRINT(val) \
    };
-#endif
+
 
 ////////////////////////////////////////////////////
 // 16x24 Logo
