@@ -1279,7 +1279,9 @@ void u8g_draw_circle(u8g_t *u8g, u8g_uint_t x0, u8g_uint_t y0, u8g_uint_t rad, u
 		u8g_draw_circle_section(u8g, x, y, x0, y0, option);
 	}
 }
+
 typedef char(*u8g_font_get_char_fn)(const void *s);
+
 u8g_uint_t u8g_font_calc_str_pixel_width(u8g_t *u8g, const char *s, u8g_font_get_char_fn get_char)
 {
 	u8g_uint_t  w;
