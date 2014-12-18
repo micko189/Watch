@@ -9,8 +9,8 @@ private:
 	uint8_t data[512];
 public:
 	byte read(int i)
-	{ 
-		return data[i]; 
+	{
+		return data[i];
 	}
 	void write(int i, uint8_t v)
 	{

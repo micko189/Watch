@@ -24,23 +24,24 @@ Watch Arduino v1.0
 #include <math.h>
 #include <EEPROM.h>
 
+/*
 byte debugVal = 0;
 
 #define DEBUG_PRINT(str) \
-   Serial.print(__FUNCTION__); \
-   Serial.print(':'); \ 
-   Serial.print(__LINE__); \
-   Serial.print(' '); \
-   Serial.println(str);
+Serial.print(__FUNCTION__); \
+Serial.print(':'); \
+Serial.print(__LINE__); \
+Serial.print(' '); \
+Serial.println(str);
 
 
 #define DEBUG_VAL(val) \
-   if(val != debugVal) \
-   { \ 
-   debugVal = val; \
-   DEBUG_PRINT(val) \
-   };
-
+if(val != debugVal) \
+{ \
+debugVal = val; \
+DEBUG_PRINT(val) \
+};
+*/
 
 ////////////////////////////////////////////////////
 // 16x24 Logo
@@ -930,8 +931,8 @@ void drawGraph()
 
 	drawGraphLine(startTempGraphIndex, TEMP_GRAPH_LEN, &xPos, rescale);
 	drawGraphLine(0, startTempGraphIndex, &xPos, rescale);
-	drawTemp(15, 10, temperatureMax, offsetMaxSuff,0);
-	drawTemp(15, 60, temperatureMin, offsetMinSuff,0);
+	drawTemp(15, 10, temperatureMax, offsetMaxSuff, 0);
+	drawTemp(15, 60, temperatureMin, offsetMinSuff, 0);
 
 }
 
@@ -1093,7 +1094,7 @@ inline void drawClock()
 		drawClockDigital(20, 45);
 
 		display.setFont(helv12r);
-		drawTemp(65, 63, temperature, offsetSuffix,0);
+		drawTemp(65, 63, temperature, offsetSuffix, 0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
@@ -1109,7 +1110,7 @@ inline void drawClock()
 		drawClockDigital(62, 45);
 
 		display.setFont(helv12r);
-		drawTemp(65, 63, temperature, offsetSuffix,0);
+		drawTemp(65, 63, temperature, offsetSuffix, 0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
@@ -1137,7 +1138,7 @@ inline void drawClock()
 		drawSecondsDigital(14 + offset + 3, 45);
 
 		display.setFont(helv12r);
-		drawTemp(65, 63, temperature, offsetSuffix,0);
+		drawTemp(65, 63, temperature, offsetSuffix, 0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_GRAPH:
@@ -1265,7 +1266,10 @@ void prepareDrawLumens()
 /// <param name="yPos">The y position.</param>
 void drawLumens(byte xPos, byte yPos)
 {
-	display.drawStr(xPos, yPos, lumens);
+	if (lux > 0)
+	{
+		display.drawStr(xPos, yPos, lumens);
+	}
 }
 
 char seconds[3];

@@ -614,7 +614,7 @@ void CreateEdge(u8g_t *u8g, uint8_t *r, uint8_t *p, uint8_t dataSize, uint8_t da
 	const u8g_pgm_uint8_t *data;
 	uint8_t w, h;
 	uint8_t i, j, k;
-	
+
 	// Copy data structure data
 	memcpy(r, p, data_structure_size);
 	r += data_structure_size;
@@ -1392,7 +1392,7 @@ public:
 		if (u.font != font)
 			u.font_calc_vref = u8g_font_calc_vref_font;
 		u.font = font;
-		
+
 	}
 
 	void drawPixel(u8g_uint_t x, u8g_uint_t y)
@@ -1596,7 +1596,8 @@ void digitalWrite(uint8_t, uint8_t)
 
 }
 
-byte pins[10] = { 1,1,1,1,1,1,1,1,1,1 };
+byte pins[10] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+unsigned long lastPinChange[10] = { 0 };
 
 int digitalRead(uint8_t pin)
 {
@@ -1660,7 +1661,7 @@ void GenerateReducedFontsCFile()
 	generateCFile("helvB14r", reduced, r_size, fout);
 
 	// 24
-	
+
 	u.font = helvB24r;
 	SetRequestEncoding(true, false, false, requested_encoding);
 	requested_encoding[58] = 1; // 58		:	 	Colon
@@ -1699,7 +1700,7 @@ void GenerateReducedFontsCFile()
 	SetRequestEncoding(true, true, true, requested_encoding);
 	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
 	generateCFile("helvR14r", reduced, r_size, fout);
-	
+
 
 	// close file
 	fout.close();
@@ -1714,11 +1715,23 @@ void main()
 		loop();
 		if (_kbhit())
 		{
- 			int ch = _getch();
+			int ch = _getch();
 			int i = ch - 48;
-			if (i >= 5 && i<=8 )
-				pins[i] = !pins[i];
-		} 
+			if (i >= 5 && i <= 8)
+			{
+				pins[i] = 0;
+				lastPinChange[i] = GetTickCount();
+			}
+		}
+
+		unsigned long time = GetTickCount();
+		for (int j = 5; j <= 8; j++)
+		{
+			if (pins[j] == 0 && (time - lastPinChange[j]) > 150)
+			{
+				pins[j] = 1;
+			}
+		}
 	}
 }
 
