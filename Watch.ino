@@ -210,12 +210,48 @@ DeviceAddress tempDeviceAddress;
 
 uint16_t lux;
 
-#define helv08r (lux > 0) ? helvB08r : helvR08r
-#define helv10r (lux > 0) ? helvB10r : helvR10r
-#define helv12r (lux > 0) ? helvB12r : helvR12r
-#define helv14r (lux > 0) ? helvB14r : helvR14r
-#define helv18r (lux > 0) ? helvB18r : helvR18r
-#define helv24r (lux > 0) ? helvB24r : helvB24re
+const u8g_fntpgm_uint8_t * helv08r()
+{
+	if (lux > 0) 
+		return helvB08r; 
+	else 
+		return helvR08r;
+}
+const u8g_fntpgm_uint8_t * helv10r()
+{
+	if (lux > 0) 
+		return helvB10r; 
+	else 
+		return helvR10r;
+}
+const u8g_fntpgm_uint8_t * helv12r()
+{
+	if (lux > 0) 
+		return helvB12r; 
+	else 
+		return helvR12r;
+}
+const u8g_fntpgm_uint8_t * helv14r()
+{
+	if (lux > 0) 
+		return helvB14r; 
+	else 
+		return helvR14r;
+}
+const u8g_fntpgm_uint8_t * helv18r()
+{
+	if (lux > 0) 
+		return helvB18r; 
+	else 
+		return helvR18r;
+}
+const u8g_fntpgm_uint8_t * helv24r()
+{
+	if (lux > 0) 
+		return helvB24r; 
+	else 
+		return helvB24re;
+}
 
 ///////////////////////////////////
 //----- Arduino setup and loop methods
@@ -812,7 +848,7 @@ void prepareDrawSetMenu()
 /// </summary>
 inline void drawSetMenu()
 {
-	display.setFont(helv10r);
+	display.setFont(helv10r());
 
 	display.drawHLine(29 + setPosition * 18, 12 + 14, 14);
 
@@ -835,7 +871,7 @@ inline void drawSetMenu()
 /// </summary>
 inline void drawStartUp()
 {
-	display.setFont(helv10r);
+	display.setFont(helv10r());
 
 	//Arguments:
 	// u8g : Pointer to the u8g structure(C interface only).
@@ -904,7 +940,7 @@ void prepareDrawGraph()
 	yCoord = hiLoToFloat(startValHi, startValLo);
 	yScaleCount = (byte)(diff / (float)0.5);
 
-	display.setFont(helv08r);
+	display.setFont(helv08r());
 	offsetMinSuff = prepareDrawTemp(minHi, minLo, temperatureMin);
 	offsetMaxSuff = prepareDrawTemp(maxHi, maxLo, temperatureMax);
 }
@@ -1010,7 +1046,7 @@ void drawCalendar()
 /// </summary>
 inline void drawMenu()
 {
-	display.setFont(helv10r);
+	display.setFont(helv10r());
 	display.drawStr(10, 5, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME_FORMAT - 1])));
 	display.drawStr(10, 25, (const char*)pgm_read_word(&(menuItems[MENU_SET_TIME - 1])));
 	display.drawStr(10, 45, (const char*)pgm_read_word(&(menuItems[MENU_SET_DATE - 1])));
@@ -1030,9 +1066,9 @@ void prepareDrawClock()
 	switch (clockStyle)
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
-		display.setFont(helv12r);
+		display.setFont(helv12r());
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
-		display.setFont(helv14r);
+		display.setFont(helv14r());
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
 		prepareDrawLumens();
@@ -1040,7 +1076,7 @@ void prepareDrawClock()
 
 	case CLOCK_STYLE_SIMPLE_MIX:
 		//drawClockAnalog
-		display.setFont(helv12r);
+		display.setFont(helv12r());
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
@@ -1049,13 +1085,13 @@ void prepareDrawClock()
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
 		//drawClockAnalog
-		display.setFont(helv12r);
+		display.setFont(helv12r());
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawLumens();
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
-		display.setFont(helv12r);
+		display.setFont(helv12r());
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		prepareDrawDateDigital();
 		prepareDrawClockDigital();
@@ -1084,70 +1120,70 @@ inline void drawClock()
 	switch (clockStyle)
 	{
 	case CLOCK_STYLE_SIMPLE_DIGIT:
-		display.setFont(helv08r);
+		display.setFont(helv08r());
 		drawLumens(5, 63);
 
-		display.setFont(helv14r);
+		display.setFont(helv14r());
 		drawDayAmPm(34, 15);
 
-		display.setFont(helv24r);
+		display.setFont(helv24r());
 		drawClockDigital(20, 45);
 
-		display.setFont(helv12r);
+		display.setFont(helv12r());
 		drawTemp(65, 63, temperature, offsetSuffix, 0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_MIX:
-		display.setFont(helv08r);
+		display.setFont(helv08r());
 		drawLumens(5, 63);
 
 		drawClockAnalog(centerX - 33, centerY - 4, iRadius - 5);
 
-		display.setFont(helv12r);
+		display.setFont(helv12r());
 		drawDayAmPm(67, 23);
 
-		display.setFont(helv18r);
+		display.setFont(helv18r());
 		drawClockDigital(62, 45);
 
-		display.setFont(helv12r);
+		display.setFont(helv12r());
 		drawTemp(65, 63, temperature, offsetSuffix, 0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_ANALOG:
-		display.setFont(helv08r);
+		display.setFont(helv08r());
 		drawLumens(5, 63);
 
 		drawClockAnalog(centerX - 10, centerY, iRadius);
 
-		display.setFont(helv12r);
+		display.setFont(helv12r());
 		drawTemp(85, 63, temperature, offsetSuffix - 20, -14);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_DIGIT_SEC:
-		display.setFont(helv08r);
+		display.setFont(helv08r());
 		drawLumens(5, 63);
 
-		display.setFont(helv10r);
+		display.setFont(helv10r());
 		drawDateDigital(40, 12);
 		drawDay(10, 12);
 
-		display.setFont(helv24r);
+		display.setFont(helv24r());
 		offset = drawClockDigital(14, 45);
 
-		display.setFont(helv14r);
+		display.setFont(helv14r());
 		drawSecondsDigital(14 + offset + 3, 45);
 
-		display.setFont(helv12r);
+		display.setFont(helv12r());
 		drawTemp(65, 63, temperature, offsetSuffix, 0);
 		break;
 
 	case CLOCK_STYLE_SIMPLE_GRAPH:
-		display.setFont(helv08r);
+		display.setFont(helv08r());
 		drawGraph();
 		break;
 
 	case CLOCK_STYLE_SIMPLE_CALENDAR:
-		display.setFont(helv08r);
+		display.setFont(helv08r());
 		drawCalendar();
 		break;
 	}

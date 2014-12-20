@@ -46,10 +46,8 @@
     <ClInclude Include="Wire.h">
       <Filter>Header Files\Fake</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\Watch.ino">
+    <ClInclude Include="..\Watch.ino">
       <Filter>Header Files</Filter>
-    </None>
+    </ClInclude>
   </ItemGroup>
 </Project>

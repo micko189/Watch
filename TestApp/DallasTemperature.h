@@ -9,10 +9,10 @@ typedef uint8_t DeviceAddress[8];
 class DallasTemperature
 {
 private:
-	int temp = 0;
+	int temp;
 public:
 
-	DallasTemperature(OneWire*){}
+	DallasTemperature(OneWire*){temp = 0;}
 
 	// initalise bus
 	void begin(void){}
