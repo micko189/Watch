@@ -46,6 +46,9 @@
     <ClInclude Include="Wire.h">
       <Filter>Header Files\Fake</Filter>
     </ClInclude>
+    <ClInclude Include="..\BuildDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Watch.ino">

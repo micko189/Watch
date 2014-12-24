@@ -23,6 +23,7 @@ Watch Arduino v1.0
 #include <BH1750FVI.h>
 #include <math.h>
 #include <EEPROM.h>
+#include <BuildDefs.h>
 
 /*
 byte debugVal = 0;
@@ -99,13 +100,13 @@ short adjustedUpdateTimeInterval = UPDATE_TIME_INTERVAL;
 unsigned long prevClockTime = 0;
 unsigned long current_time_milis = 0;
 
-short iYear = 2014;
-byte iMonth = 12;
-byte iDay = 15;
+short iYear = BUILD_YEAR;
+byte iMonth = BUILD_MONTH;
+byte iDay = BUILD_DAY;
 
-byte iHour = 7;
-byte iMinutes = 59;
-byte iSecond = 0;
+byte iHour = BUILD_HOUR;
+byte iMinutes = BUILD_MIN;
+byte iSecond = BUILD_SEC;
 
 byte iWeek = 0;    // need to calculate this during setup and on date change
 byte iAmPm = 1;    // need to calculate this during setup and on time change 0:AM, 1:PM
