@@ -23,7 +23,7 @@ Watch Arduino v1.0
 #include <BH1750FVI.h>
 #include <math.h>
 #include <EEPROM.h>
-#include <BuildDefs.h>
+#include "BuildDefs.h"
 
 /*
 byte debugVal = 0;
