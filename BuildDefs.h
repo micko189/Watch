@@ -52,10 +52,12 @@
 
 #define BUILD_MONTH (BUILD_MONTH_CH0-48) * 10 + (BUILD_MONTH_CH1-48)
 
+
 #define BUILD_DAY_CH0 ((__DATE__[4] >= '0') ? (__DATE__[4]) : '0')
 #define BUILD_DAY_CH1 (__DATE__[ 5])
 
 #define BUILD_DAY (BUILD_DAY_CH0-48) * 10 + (BUILD_DAY_CH1-48)
+
 
 // Example of __TIME__ string: "21:06:19"
 //                              01234567
@@ -65,10 +67,12 @@
 
 #define BUILD_HOUR (BUILD_HOUR_CH0-48) * 10 + (BUILD_HOUR_CH1-48)
 
+
 #define BUILD_MIN_CH0 (__TIME__[3])
 #define BUILD_MIN_CH1 (__TIME__[4])
 
 #define BUILD_MIN (BUILD_MIN_CH0-48) * 10 + (BUILD_MIN_CH1-48)
+
 
 #define BUILD_SEC_CH0 (__TIME__[6])
 #define BUILD_SEC_CH1 (__TIME__[7])
