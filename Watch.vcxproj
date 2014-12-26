@@ -76,6 +76,9 @@
     <ClInclude Include="bitmap.h">
       <FileType>CppCode</FileType>
     </ClInclude>
+    <ClInclude Include="BuildDefs.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
     <ClInclude Include="Visual Micro\.Watch.vsarduino.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

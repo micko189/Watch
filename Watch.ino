@@ -1024,6 +1024,7 @@ inline void drawMenu()
 
 	display.drawFrame(9, 5 + (menuMode - 1) * 20, w + 2, h + 2);
 }
+
 char temperature[6];
 byte offsetSuffix;
 void prepareDrawClock()
