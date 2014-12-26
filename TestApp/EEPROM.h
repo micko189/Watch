@@ -8,6 +8,10 @@ class EEPROMClass
 private:
 	uint8_t data[512];
 public:
+	EEPROMClass()
+	{
+		memset(data, 0, 512);
+	}
 	byte read(int i)
 	{
 		return data[i];
