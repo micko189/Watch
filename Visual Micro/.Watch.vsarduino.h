@@ -90,5 +90,6 @@ void showTimePin(byte center_x, byte center_y, double pl1, double pl2, byte angl
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\arduino.h"
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\avr\variants\eightanaloginputs\pins_arduino.h" 
 #include "C:\Users\milan.ajdinovic\Documents\GitHub\Watch\Watch.ino"
+#include "C:\Users\milan.ajdinovic\Documents\GitHub\Watch\BuildDefs.h"
 #include "C:\Users\milan.ajdinovic\Documents\GitHub\Watch\bitmap.h"
 #endif

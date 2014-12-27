@@ -165,6 +165,8 @@ struct u8g_box_t
 	u8g_uint_t x0, y0, x1, y1;
 };
 
+#define DISPLAY_WIDTH 128
+#define DISPLAY_HEIGHT 64
 struct u8g_t
 {
 	int8_t glyph_dx;
@@ -182,8 +184,8 @@ struct u8g_t
 
 	u8g_box_t current_page;		/* current box of the visible page */
 
-	uint8_t screenBuffNew[128][64];
-	uint8_t screenBuffOld[128][64];
+	uint8_t screenBuffNew[DISPLAY_WIDTH][DISPLAY_HEIGHT];
+	uint8_t screenBuffOld[DISPLAY_WIDTH][DISPLAY_HEIGHT];
 };
 
 u8g_uint_t u8g_font_calc_vref_font(u8g_t *u8g)
@@ -1404,15 +1406,15 @@ public:
 
 	void firstPage(void)
 	{
-		memcpy(u.screenBuffOld, u.screenBuffNew, 128 * 64);
-		memset(u.screenBuffNew, 0, 128 * 64);
+		memcpy(u.screenBuffOld, u.screenBuffNew, sizeof(u.screenBuffNew));
+		memset(u.screenBuffNew, 0, sizeof(u.screenBuffNew));
 	}
 
 	uint8_t nextPage(void)
 	{
-		for (size_t x = 0; x < 128; x++)
+		for (size_t x = 0; x < DISPLAY_WIDTH; x++)
 		{
-			for (size_t y = 0; y < 64; y++)
+			for (size_t y = 0; y < DISPLAY_HEIGHT; y++)
 			{
 				if (u.screenBuffOld[x][y] == 1 && u.screenBuffNew[x][y] == 0)
 				{
@@ -1424,8 +1426,6 @@ public:
 				}
 			}
 		}
-
-		//u.font_calc_vref = u8g_font_calc_vref_font;
 
 		return 0;
 	}
