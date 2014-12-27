@@ -213,45 +213,45 @@ uint16_t lux;
 
 const u8g_fntpgm_uint8_t * helv08r()
 {
-	if (lux > 0) 
-		return helvB08r; 
+	if (lux == 0) 
+		return helvR08r; 
 	else 
-		return helvR08r;
+		return helvB08r;
 }
 const u8g_fntpgm_uint8_t * helv10r()
 {
-	if (lux > 0) 
-		return helvB10r; 
+	if (lux == 0) 
+		return helvR10r; 
 	else 
-		return helvR10r;
+		return helvB10r;
 }
 const u8g_fntpgm_uint8_t * helv12r()
 {
-	if (lux > 0) 
-		return helvB12r; 
+	if (lux == 0) 
+		return helvR12r; 
 	else 
-		return helvR12r;
+		return helvB12r;
 }
 const u8g_fntpgm_uint8_t * helv14r()
 {
-	if (lux > 0) 
-		return helvB14r; 
+	if (lux == 0) 
+		return helvR14r; 
 	else 
-		return helvR14r;
+		return helvB14r;
 }
 const u8g_fntpgm_uint8_t * helv18r()
 {
-	if (lux > 0) 
-		return helvB18r; 
+	if (lux == 0) 
+		return helvR18r; 
 	else 
-		return helvR18r;
+		return helvB18r;
 }
 const u8g_fntpgm_uint8_t * helv24r()
 {
-	if (lux > 0) 
-		return helvB24r; 
+	if (lux == 0) 
+		return helvB24re; 
 	else 
-		return helvB24re;
+		return helvB24r;
 }
 
 ///////////////////////////////////
