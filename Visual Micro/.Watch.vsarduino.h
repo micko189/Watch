@@ -39,6 +39,12 @@
 typedef unsigned char byte;
 extern "C" void __cxa_pure_virtual() {;}
 
+const u8g_fntpgm_uint8_t * helv08r();
+const u8g_fntpgm_uint8_t * helv10r();
+const u8g_fntpgm_uint8_t * helv12r();
+const u8g_fntpgm_uint8_t * helv14r();
+const u8g_fntpgm_uint8_t * helv18r();
+const u8g_fntpgm_uint8_t * helv24r();
 //
 //
 void ReadStateEPROM();

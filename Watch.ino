@@ -211,46 +211,53 @@ DeviceAddress tempDeviceAddress;
 
 uint16_t lux;
 
+// Font change methods
+
 const u8g_fntpgm_uint8_t * helv08r()
 {
-	if (lux == 0) 
-		return helvR08r; 
-	else 
+	if (lux == 0)
+		return helvR08r;
+	else
 		return helvB08r;
 }
+
 const u8g_fntpgm_uint8_t * helv10r()
 {
-	if (lux == 0) 
-		return helvR10r; 
-	else 
+	if (lux == 0)
+		return helvR10r;
+	else
 		return helvB10r;
 }
+
 const u8g_fntpgm_uint8_t * helv12r()
 {
-	if (lux == 0) 
-		return helvR12r; 
-	else 
+	if (lux == 0)
+		return helvR12r;
+	else
 		return helvB12r;
 }
+
 const u8g_fntpgm_uint8_t * helv14r()
 {
-	if (lux == 0) 
-		return helvR14r; 
-	else 
+	if (lux == 0)
+		return helvR14r;
+	else
 		return helvB14r;
 }
+
 const u8g_fntpgm_uint8_t * helv18r()
 {
-	if (lux == 0) 
-		return helvR18r; 
-	else 
+	if (lux == 0)
+		return helvR18r;
+	else
 		return helvB18r;
 }
+
 const u8g_fntpgm_uint8_t * helv24r()
 {
-	if (lux == 0) 
-		return helvB24re; 
-	else 
+	if (lux == 0)
+		return helvB24re;
+	else
 		return helvB24r;
 }
 
