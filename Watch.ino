@@ -23,56 +23,8 @@ Watch Arduino v1.0
 #include <BH1750FVI.h>
 #include <math.h>
 #include <EEPROM.h>
+#include "bitmap.h"
 #include "BuildDefs.h"
-
-/*
-byte debugVal = 0;
-
-#define DEBUG_PRINT(str) \
-Serial.print(__FUNCTION__); \
-Serial.print(':'); \
-Serial.print(__LINE__); \
-Serial.print(' '); \
-Serial.println(str);
-
-
-#define DEBUG_VAL(val) \
-if(val != debugVal) \
-{ \
-debugVal = val; \
-DEBUG_PRINT(val) \
-};
-*/
-
-////////////////////////////////////////////////////
-// 16x24 Logo
-////////////////////////////////////////////////////
-const unsigned char PROGMEM IMG_logo_24x24[] = {
-	0x07, 0xff, 0xe0,
-	0x07, 0xff, 0xe0,
-	0x07, 0xff, 0xe0,
-	0x08, 0x10, 0x10,
-	0x10, 0x10, 0x08,
-	0x10, 0x00, 0x08,
-	0x10, 0x00, 0x08,
-	0x10, 0x00, 0x08,
-	0x10, 0x00, 0x08,
-	0x10, 0x02, 0x08,
-	0x10, 0x04, 0x08,
-	0x10, 0x08, 0x0c,
-	0x1c, 0x10, 0x3c,
-	0x10, 0x08, 0x0c,
-	0x10, 0x08, 0x08,
-	0x10, 0x04, 0x08,
-	0x10, 0x04, 0x08,
-	0x10, 0x02, 0x08,
-	0x10, 0x02, 0x08,
-	0x10, 0x10, 0x08,
-	0x08, 0x10, 0x10,
-	0x07, 0xff, 0xe0,
-	0x07, 0xff, 0xe0,
-	0x07, 0xff, 0xe0
-};
 
 ///////////////////////////////////////////////////////////////////
 //----- OLED instance
@@ -874,6 +826,8 @@ inline void drawSetMenu()
 	}
 }
 
+byte bitmapCnt = 0;
+
 /// <summary>
 /// Draws the start up splash screen.
 /// </summary>
@@ -888,6 +842,9 @@ inline void drawStartUp()
 	// cnt : Number of bytes of the bitmap in horizontal direction.The width of the bitmap is cnt*8.
 	// h : Height of the bitmap. 
 	display.drawBitmapP(5, 10, 3, 24, IMG_logo_24x24);
+
+	//display.drawBitmapP(5, 45, 2, 16, bitmap_array[bitmapCnt]);
+	//inrementRollOverValue(&bitmapCnt, ICON_ARRAY_SIZE);
 
 	display.drawStr(25, 12, "Temperature");
 

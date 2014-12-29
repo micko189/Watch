@@ -79,5 +79,24 @@
 
 #define BUILD_SEC (BUILD_SEC_CH0-48) * 10 + (BUILD_SEC_CH1-48)
 
+#ifdef _DEBUG_
+
+byte debugVal = 0;
+
+#define DEBUG_PRINT(str) \
+	Serial.print(__FUNCTION__); \
+	Serial.print(':'); \
+	Serial.print(__LINE__); \
+	Serial.print(' '); \
+	Serial.println(str);
+
+#define DEBUG_VAL(val) \
+	if(val != debugVal) \
+	{ \
+		debugVal = val; \
+		DEBUG_PRINT(val) \
+	};
+
+#endif
 
 #endif // BUILD_DEFS_H
