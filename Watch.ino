@@ -770,10 +770,10 @@ void prepareDrawSetMenu()
 		case 2: // YYYY
 			if (btnPinStateUp == LOW) // pressed
 			if (++iYear > 32767)
-				iYear = 2000;
+				iYear = BUILD_YEAR;
 			if (btnPinStateDown == LOW) // pressed
-			if (--iYear < 2000)
-				iYear = 2000;
+			if (--iYear < BUILD_YEAR)
+				iYear = BUILD_YEAR;
 			break;
 		}
 
