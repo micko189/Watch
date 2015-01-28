@@ -72,3 +72,5 @@ Debug/Watch.log
 *.log
 *.log
 *.log
+Visual Micro/Compile.vmps.xml
+Visual Micro/Configuration.Debug.vmps.xml
