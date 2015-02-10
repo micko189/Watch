@@ -134,6 +134,12 @@ boolean btnPinStateBack = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x
 boolean insideDebounceBack = false;
 unsigned long lastDebounceTimeBack = 0;  // the last time the output pin was toggled
 
+#define analogPWMOutPin 7
+#define analogInPin 6
+
+int val = 0; // variable to store the read value
+float volt = 0; // variable to hold the voltage read
+
 boolean anyPinStateChanged = false;
 #define debounceDelay 50    // the debounce time; increase if the output flickers
 
@@ -236,6 +242,9 @@ void setup()
 	pinMode(buttonPinDown, INPUT_PULLUP);
 	pinMode(buttonPinBack, INPUT_PULLUP);
 
+	pinMode(analogInPin, INPUT);
+	pinMode(analogPWMOutPin, OUTPUT);
+
 	// Define otput pin for button debugung
 	pinMode(ouputLedPin, OUTPUT);    // Use Built-In LED for Indication
 
@@ -259,6 +268,12 @@ void setup()
 
 void loop()
 {
+
+	val = analogRead(analogInPin); // read the input pin
+	volt = (5.0 * val) / 1023;
+	val = 255 * (volt / 5);
+	analogWrite(analogPWMOutPin, val);
+
 	anyPinStateChanged = false;
 
 	// Update clock time

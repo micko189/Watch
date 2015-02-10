@@ -1606,6 +1606,9 @@ int digitalRead(uint8_t pin)
 	return pins[pin];
 }
 
+int analogRead(uint8_t){ return 0; }
+void analogWrite(uint8_t, int){}
+
 class SerialClass
 {
 public:
