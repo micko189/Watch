@@ -134,8 +134,7 @@ boolean btnPinStateBack = HIGH; // LOW = false = 0x0 = Pressed, HIGH = true = 0x
 boolean insideDebounceBack = false;
 unsigned long lastDebounceTimeBack = 0;  // the last time the output pin was toggled
 
-#define analogPWMOutPin 7
-#define analogInPin 6
+#define analogPWMOutPin 11
 
 int val = 0; // variable to store the read value
 float volt = 0; // variable to hold the voltage read
@@ -225,6 +224,9 @@ const u8g_fntpgm_uint8_t * helv24r()
 
 void setup()
 {
+	pinMode(analogPWMOutPin, OUTPUT);
+	analogWrite(analogPWMOutPin, 255);
+
 	// Start up the temperature sensor library
 	TempSensor.begin();
 	TempSensor.getAddress(tempDeviceAddress, 0);
@@ -241,9 +243,6 @@ void setup()
 	pinMode(buttonPinUp, INPUT_PULLUP);
 	pinMode(buttonPinDown, INPUT_PULLUP);
 	pinMode(buttonPinBack, INPUT_PULLUP);
-
-	pinMode(analogInPin, INPUT);
-	pinMode(analogPWMOutPin, OUTPUT);
 
 	// Define otput pin for button debugung
 	pinMode(ouputLedPin, OUTPUT);    // Use Built-In LED for Indication
@@ -263,14 +262,12 @@ void setup()
 
 	//WriteStateEPROM();
 
-	//ReadStateEPROM();
+	//ReadStateEPROM(); 
 }
 
 void loop()
 {
-
-	val = analogRead(analogInPin); // read the input pin
-	volt = (5.0 * val) / 1023;
+	volt = 4.5;
 	val = 255 * (volt / 5);
 	analogWrite(analogPWMOutPin, val);
 
