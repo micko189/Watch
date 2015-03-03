@@ -399,7 +399,6 @@ void getButtonInput(const byte pinNo, boolean *btnPinState, boolean *insideDebou
 	{
 		// it has passed debounce time since last change of reading press/release of button (start of debouncing) 
 		// now read the pin state and update last debounce time
-
 		*btnPinState = reading;
 		*lastDebounceTime = current_time_milis;
 		*insideDebounce = false;
@@ -419,14 +418,16 @@ boolean isLeapYear(short year)
 }
 
 /// <summary>
-/// Get number of days in the month.
+/// Get number of days in the month except feb.
 /// </summary>
 /// <param name="month">The month.</param>
 /// <returns>Number of days in the given month</returns>
 inline byte daysInMonth(byte month)
 {
+	// in first 7 months odd months have 31 days
 	byte odd = month % 2;
-
+	
+	// from 8th month even months have 31 days
 	if (month > 7)
 	{
 		odd = !odd;
