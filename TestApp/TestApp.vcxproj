@@ -92,6 +92,7 @@
     <ClInclude Include="DallasTemperature.h" />
     <ClInclude Include="EEPROM.h" />
     <ClInclude Include="OneWire.h" />
+    <ClInclude Include="Serial.h" />
     <ClInclude Include="u8g.h" />
     <ClInclude Include="U8glib.h" />
     <ClInclude Include="Wire.h" />

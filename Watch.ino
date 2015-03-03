@@ -261,7 +261,6 @@ void setup()
 	tempSufix[0] = '°', tempSufix[1] = 'C', tempSufix[2] = '\0';
 
 	//WriteStateEPROM();
-
 	//ReadStateEPROM(); 
 }
 

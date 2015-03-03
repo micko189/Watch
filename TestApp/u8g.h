@@ -78,10 +78,7 @@ typedef unsigned char boolean;
 #define HIGH 1
 #define LOW 0
 
-
-
 /* method def */
-
 void ReadStateEPROM();
 void WriteStateEPROM();
 void calcAmPm();

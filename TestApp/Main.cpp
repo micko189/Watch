@@ -7,8 +7,12 @@
 #include <iostream>
 
 #include "u8g.h"
-//#include "..\FontsBDFgen\helvBr.c"
+
+#ifdef GENERATE
+#include "..\FontsBDFgen\helvBr.c"
+#else
 #include "..\U8glib\utility\u8g_font_data.c"
+#endif
 
 using namespace std;
 
@@ -159,7 +163,9 @@ size_t u8g_font_GetSize(const u8g_fntpgm_uint8_t *font)
 
 	return p - (uint8_t *)font;
 }
-
+ 
+// -----------------------------------------------------------------------
+// Display structures
 struct u8g_box_t
 {
 	u8g_uint_t x0, y0, x1, y1;
@@ -226,10 +232,11 @@ uint8_t u8g_GetFontCapitalAHeight(u8g_t *u8g)
 	return u8g_font_GetCapitalAHeight(u8g->font);
 }
 
-typedef void * u8g_glyph_t;
 
 /*========================================================================*/
 /* glyph handling */
+
+typedef void * u8g_glyph_t;
 
 static void u8g_CopyGlyphDataToCache(u8g_t *u8g, u8g_glyph_t g)
 {
@@ -673,7 +680,6 @@ void CreateEdge(u8g_t *u8g, uint8_t *r, uint8_t *p, uint8_t dataSize, uint8_t da
 				if (pixel & mask)
 				{
 					//now check if this is edge pixel
-
 					if (k > 0)
 					{
 						mask = mask << 1;
@@ -768,7 +774,6 @@ void CreateEdge(u8g_t *u8g, uint8_t *r, uint8_t *p, uint8_t dataSize, uint8_t da
 							edgeCount++;
 						if ((pixelRLower & maskR) == 0)
 							edgeCount++;
-
 					}
 					else
 					{
@@ -836,7 +841,6 @@ void CreateEdge(u8g_t *u8g, uint8_t *r, uint8_t *p, uint8_t dataSize, uint8_t da
 				if (u8g_pgm_read(dataAdjOrig) & mask)
 				{
 					//now check if this is edge pixel
-
 					if (k > 0)
 					{
 						mask = mask << 1;
@@ -903,7 +907,6 @@ void CreateEdge(u8g_t *u8g, uint8_t *r, uint8_t *p, uint8_t dataSize, uint8_t da
 							pixCount++;
 						}
 					}
-
 
 					// check middle
 					if (pixelUpper & mask)
@@ -988,7 +991,6 @@ void CreateEdge(u8g_t *u8g, uint8_t *r, uint8_t *p, uint8_t dataSize, uint8_t da
 					}
 
 					//check if there is 2 pixels next eo each other, if not, set pixel
-
 					if (pixCount == 2 && (abs(x[0] - x[1]) > 1 || abs(y[0] - y[1]) > 1))
 					{
 						//pixels are not next to each other and result pixel will be next to each pixel
@@ -1166,8 +1168,6 @@ byte getStrPixelWidth(char* s)
 {
 	return strlen(s);
 }
-
-#define pgm_read_word(x) *(x)
 
 void u8g_draw_hline(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t w)
 {
@@ -1375,7 +1375,6 @@ public:
 	{
 		//u.font_ref_ascent = u8g_font_GetFontAscent(u.font);
 		//u.font_ref_descent = u8g_font_GetFontDescent(u.font);
-
 		u.font_calc_vref = u8g_font_calc_vref_font;
 	}
 
@@ -1578,6 +1577,9 @@ public:
 	void setColorIndex(uint8_t color_index){}
 };
 
+//-------------------------------------------------------
+// Arduino fake functions
+
 unsigned long millis(void)
 {
 	return GetTickCount();
@@ -1588,18 +1590,12 @@ void delay(unsigned long t)
 	Sleep(t);
 }
 
-void pinMode(uint8_t, uint8_t)
-{
-
-}
-
-void digitalWrite(uint8_t, uint8_t)
-{
-
-}
-
 byte pins[10] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 unsigned long lastPinChange[10] = { 0 };
+
+void pinMode(uint8_t, uint8_t){}
+
+void digitalWrite(uint8_t, uint8_t){}
 
 int digitalRead(uint8_t pin)
 {
@@ -1607,23 +1603,18 @@ int digitalRead(uint8_t pin)
 }
 
 int analogRead(uint8_t){ return 0; }
+
 void analogWrite(uint8_t, int){}
 
-class SerialClass
-{
-public:
-	void begin(int i){}
-	void print(char* s){}
-	void print(int i){}
-	void println(char* s){}
-	void println(int i){}
-};
+#define pgm_read_word(x) *(x)
+
+#include "Serial.h"
+#include "EEPROM.h"
 
 SerialClass Serial;
+EEPROMClass EEPROM;
 
 #include "Watch.ino"
-
-EEPROMClass EEPROM;
 
 void GenerateReducedFontsCFile()
 {
@@ -1666,7 +1657,6 @@ void GenerateReducedFontsCFile()
 	generateCFile("helvB14r", reduced, r_size, fout);
 
 	// 24
-
 	u.font = helvB24r;
 	SetRequestEncoding(true, false, false, requested_encoding);
 	requested_encoding[58] = 1; // 58		:	 	Colon
@@ -1706,14 +1696,16 @@ void GenerateReducedFontsCFile()
 	r_size = u8g_CreateReduced(&u, reduced, requested_encoding);
 	generateCFile("helvR14r", reduced, r_size, fout);
 
-
 	// close file
 	fout.close();
 }
 
 void main()
 {
-	//GenerateReducedFontsCFile();
+	#ifdef GENERATE
+	GenerateReducedFontsCFile();
+	#endif
+
 	setup();
 	for (;;)
 	{
