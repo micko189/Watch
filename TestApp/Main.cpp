@@ -447,7 +447,7 @@ void GotoXY(byte x, byte y)
 void printPixel(byte x, byte y)
 {
 	GotoXY(x, y);
-	printf("%c", 178);
+	printf("%c", 219);
 }
 
 void clearPixel(byte x, byte y)
@@ -1700,12 +1700,277 @@ void GenerateReducedFontsCFile()
 }
 
 //-------------------------------------------------------
+// Anti aliased functions
+
+void plot(int x, int y, float val)
+{
+	//plot the pixel at (x, y) with brightness c (where 0 < c < 1)
+	GotoXY(x, y);
+	if (val > 0 && val <= 0.25)
+	{
+		printf("%c", 176);
+	}
+	else if (val > 0.25 && val <= 0.5)
+	{
+		printf("%c", 177);
+	}
+	else if (val > 0.5 && val <= 0.75)
+	{
+		printf("%c", 178);
+	}
+	else if (val > 0.75 && val <= 1)
+	{
+		printf("%c", 219);
+	}
+}
+
+// integer part of x
+int ipart(float x)
+{
+	return int(x);
+}
+
+int round1(float x)
+{
+	return ipart(x + 0.5);
+}
+
+// fractional part of x
+float fpart(float  x)
+{
+	if (x < 0)
+	{
+		return 1 - (x - floor(x));
+	}
+
+	return x - floor(x);
+}
+
+float rfpart(float x)
+{
+	return 1 - fpart(x);
+}
+
+void drawLine(int x0, int  y0, int x1, int y1)
+{
+	bool steep = abs(y1 - y0) > abs(x1 - x0);
+
+	if (steep)
+	{
+		swap(x0, y0);
+		swap(x1, y1);
+	}
+
+	if (x0 > x1)
+	{
+		swap(x0, x1);
+		swap(y0, y1);
+	}
+
+	float dx = x1 - x0;
+	float dy = y1 - y0;
+	float gradient = dy / dx;
+
+	// handle first end point
+	float xend = round1(x0);
+	float yend = y0 + gradient * (xend - x0);
+	float xgap = rfpart(x0 + 0.5);
+	int xpxl1 = xend; // this will be used in the main loop
+	int ypxl1 = ipart(yend);
+	if (steep)
+	{
+		plot(ypxl1, xpxl1, rfpart(yend) * xgap);
+		plot(ypxl1 + 1, xpxl1, fpart(yend) * xgap);
+	}
+	else
+	{
+		plot(xpxl1, ypxl1, rfpart(yend) * xgap);
+		plot(xpxl1, ypxl1 + 1, fpart(yend) * xgap);
+	}
+
+	float intery = yend + gradient; // first y-intersection for the main loop
+
+	// handle second end point
+	xend = round1(x1);
+	yend = y1 + gradient * (xend - x1);
+	xgap = fpart(x1 + 0.5);
+	int xpxl2 = xend; // this will be used in the main loop
+	int ypxl2 = ipart(yend);
+
+	if (steep)
+	{
+		plot(ypxl2, xpxl2, rfpart(yend) * xgap);
+		plot(ypxl2 + 1, xpxl2, fpart(yend) * xgap);
+	}
+	else
+	{
+		plot(xpxl2, ypxl2, rfpart(yend) * xgap);
+		plot(xpxl2, ypxl2 + 1, fpart(yend) * xgap);
+	}
+
+	// main loop
+	for (int x = xpxl1 + 1; x <= xpxl2 - 1; x++)
+	{
+		if (steep)
+		{
+			plot(ipart(intery), x, rfpart(intery));
+			plot(ipart(intery) + 1, x, fpart(intery));
+		}
+		else
+		{
+			plot(x, ipart(intery), rfpart(intery));
+			plot(x, ipart(intery) + 1, fpart(intery));
+		}
+
+		intery = intery + gradient;
+	}
+}
+
+typedef struct
+{
+	int center_x;
+	int center_y;
+
+}center_params_type;
+
+void plot_4_points(int x, int y, float  f, center_params_type p, bool take_max = false)
+{
+	if (f == 0)
+	{
+		return;
+	}
+
+	if (x > 0 && y > 0)
+	{
+		plot(x + p.center_x, p.center_y + y, f);
+		plot(p.center_x - x, p.center_y + y, f);
+		plot(p.center_x + x, p.center_y - y, f);
+		plot(p.center_x - x, p.center_y - y, f);
+
+	}
+	else if (x == 0)
+	{
+		plot(x + p.center_x, p.center_y + y, f);
+		plot(x + p.center_x, p.center_y - y, f);
+
+	}
+	else if (y == 0)
+	{
+		plot(p.center_x + x, p.center_y + y, f);
+		plot(p.center_x - x, p.center_y + y, f);
+	}
+}
+
+void wu_circle(int x, int y, int r)
+{
+	int xi, yi; // the integer iterators. I could have used 'i' for both x and y but this was less confusing.
+	float xj, yj; // 'single' is a float type. this is the real-value y calculated from the integer x (and vice-versa)
+	int ffd;  // the forty-five degree coordinate: stop drawing and switch from horizontal to vertical mode.
+	float rsq;  // for convenience: radius squared
+	float frc;  // the fractional part of the calculated real. its inverse will also be used.
+	int flr;  // xj or yj rounded down (the "floor"). We'll use this twice, so give it a variable.
+	center_params_type p4_params;  // parameters to the actual plot function, which plots 4 points at once
+
+	// initialization section
+
+	if (r <= 0) {
+		return;
+	}
+
+	p4_params.center_x = x;
+	p4_params.center_y = y;
+
+	// Now here's the stuff you've been looking for:
+	rsq = r*r;
+	ffd = round(r / sqrt(2));  // forty-five-degree coord
+
+	for (xi = 0; xi <= ffd; xi++) {
+		yj = sqrt(rsq - xi*xi);  // the "step 2" formula noted above
+		frc = fpart(yj);
+		flr = floor(yj);
+		plot_4_points(xi, flr, 1 - frc, p4_params);
+		plot_4_points(xi, flr + 1, frc, p4_params);
+	}
+
+	for (yi = 0; yi <= ffd; yi++) {
+		xj = sqrt(rsq - yi*yi);
+		frc = fpart(xj);
+		flr = floor(xj);
+		plot_4_points(flr, yi, 1 - frc, p4_params);
+		plot_4_points(flr + 1, yi, frc, p4_params);
+	}
+}
+
+void wu_ellipse(int x, int y, int ell_width, int ell_height)
+{
+	int xi, yi;
+	float xj, yj;
+	float a, b;  // the defining characteristics of an ellipse, width/2 and height/2
+	float asq, bsq;  // a squared and b squared
+	int ffd;  // forty-five-degree coord
+	float frc;  // frac, as with the circle
+	int flr;  // floor, as with the circle
+	center_params_type p4_params;
+
+	// initialization stuff...
+	if (ell_width <= 0 || ell_height <= 0)
+	{
+		return;
+	}
+
+	if (ell_width == ell_height)
+	{
+		wu_circle(x, y, ell_width / 2);
+		return;
+	}
+
+	a = ell_width / 2;
+	asq = a*a;
+	b = ell_height / 2;
+	bsq = b*b;
+
+	p4_params.center_x = x;
+	p4_params.center_y = y;
+
+	// let's do this thing!
+	ffd = round(asq / sqrt(bsq + asq));
+	for (xi = 0; xi <= ffd; xi++)  {
+		yj = b*sqrt(1 - xi*xi / asq);
+		frc = fpart(yj);
+		flr = floor(yj);
+		plot_4_points(xi, flr, 1 - frc, p4_params);
+		plot_4_points(xi, flr + 1, frc, p4_params);
+	}
+
+	ffd = round(bsq / sqrt(bsq + asq));
+	for (yi = 0; yi <= ffd; yi++)
+	{
+		xj = a*sqrt(1 - yi*yi / bsq);
+		frc = fpart(xj);
+		flr = floor(xj);
+		plot_4_points(flr, yi, 1 - frc, p4_params);
+		plot_4_points(flr + 1, yi, frc, p4_params);
+	}
+}
+
+//-------------------------------------------------------
 // Main function
 
 void main()
 {
 	#ifdef GENERATE
 	GenerateReducedFontsCFile();
+	#endif
+
+
+	#ifdef TEST_AA
+	wu_circle(32, 32, 31);
+
+	wu_ellipse(64, 32, 126, 62);
+
+	drawLine(1, 1, 21, 21);
+
+	drawLine(25, 13, 8, 1);
 	#endif
 
 	setup();
