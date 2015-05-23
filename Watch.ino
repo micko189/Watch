@@ -47,7 +47,9 @@ BH1750FVI LightSensor;
 ///////////////////////////////////////////////////////////////////
 
 //----- Time
-#define UPDATE_TIME_INTERVAL 1000 // 1s
+short UPDATE_TIME_INTERVAL = 1000; // 1s
+byte countRemoveOneMilisec = 0;
+#define COUNT_REMOVE_ONE_MILISEC_ROLLOVER 21 // every 21 second remove 1 milisecond to compensate 2min of delay over one month
 short adjustedUpdateTimeInterval = UPDATE_TIME_INTERVAL;
 unsigned long prevClockTime = 0;
 unsigned long current_time_milis = 0;
@@ -158,7 +160,7 @@ float minTemp = 0;
 
 byte setPosition = 0; // position of value currently being set
 
-#define HOUR_COUNT 1 //3600
+#define HOUR_COUNT 3600
 
 char tempSufix[3];
 
@@ -499,7 +501,7 @@ void calcDayOfWeek()
 /// whether time is updated - one seccond is ellapsed
 /// </returns>
 inline boolean updateTime()
-{
+{    
 	short timeElapse = (short)(current_time_milis - prevClockTime);
 	if (timeElapse >= adjustedUpdateTimeInterval) // check if one second has elapsed
 	{
@@ -534,6 +536,16 @@ inline boolean updateTime()
 		}
 
 		prevClockTime = current_time_milis;
+
+                inrementRollOverValue(&countRemoveOneMilisec, COUNT_REMOVE_ONE_MILISEC_ROLLOVER);
+                if(countRemoveOneMilisec == 0)
+                {
+                  UPDATE_TIME_INTERVAL = 999;
+                }
+                else
+                {
+                  UPDATE_TIME_INTERVAL = 1000;
+                }
 
 		return true;
 	}
@@ -1047,6 +1059,7 @@ void prepareDrawClock()
 		display.setFont(helv12r());
 		offsetSuffix = prepareDrawTemp(tempHi, tempLo, temperature);
 		display.setFont(helv14r());
+                prepareDrawDateOnlyDigital();
 		prepareDrawDayAmPm();
 		prepareDrawClockDigital();
 		prepareDrawLumens();
@@ -1103,6 +1116,7 @@ inline void drawClock()
 
 		display.setFont(helv14r());
 		drawDayAmPm(34, 15);
+                drawDateOnlyDigital(10, 15);
 
 		display.setFont(helv24r());
 		drawClockDigital(20, 45);
@@ -1324,6 +1338,22 @@ void prepareDrawDateDigital()
 void drawDateDigital(byte xPos, byte yPos)
 {
 	display.drawStr(xPos, yPos, dateDigital);
+}
+
+char dateOnlyDigital[3];
+void prepareDrawDateOnlyDigital()
+{
+	byteToStr(iDay, dateOnlyDigital);
+}
+
+/// <summary>
+/// Draws the date digital.
+/// </summary>
+/// <param name="xPos">The x position.</param>
+/// <param name="yPos">The y position.</param>
+void drawDateOnlyDigital(byte xPos, byte yPos)
+{
+	display.drawStr(xPos, yPos, dateOnlyDigital);
 }
 
 /// <summary>
